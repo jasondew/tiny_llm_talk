@@ -19,7 +19,7 @@ defmodule TinyLlmTalkWeb.PresenterLive do
   def mount(_params, _session, socket) do
     if connected?(socket), do: :timer.send_interval(1_000, :tick)
     Position.subscribe(socket)
-    {:ok, assign(socket, elapsed: 0, running?: true), layout: false}
+    {:ok, assign(socket, elapsed: 0, running?: true, controls: %{}), layout: false}
   end
 
   @impl true
@@ -55,7 +55,7 @@ defmodule TinyLlmTalkWeb.PresenterLive do
       <div class="presenter__now">
         <div class="stage-preview">
           <div class="stage stage--preview">
-            <SlideComponents.slide slide={@slide} step={@step} />
+            <SlideComponents.slide slide={@slide} step={@step} controls={@controls} />
           </div>
         </div>
         <div class="presenter__next">

@@ -352,3 +352,349 @@
   font-size: 14px;
   color: var(--ink-dim);
 }
+
+/* Slide furniture -------------------------------------------------------- */
+
+.slide--tight {
+  padding: 40px 64px 88px;
+  gap: 18px;
+}
+
+.slide__title--small {
+  font-size: 40px;
+}
+
+.slide__statement--wide {
+  max-width: 32ch;
+}
+
+.slide__note {
+  max-width: 78ch;
+  font-size: 22px;
+  line-height: 1.45;
+  color: var(--ink-dim);
+}
+
+.slide__note code,
+.slide__lede code {
+  font-family: var(--mono);
+  font-size: 0.9em;
+  color: var(--accent-cool);
+}
+
+.claims--compact {
+  gap: 10px;
+  font-size: 26px;
+}
+
+.claims--lit {
+  color: var(--accent);
+}
+
+.beats--numbered {
+  counter-reset: beat;
+  color: var(--ink);
+  font-size: 30px;
+}
+
+.beats--numbered li {
+  counter-increment: beat;
+}
+
+.beats--numbered li::before {
+  content: counter(beat) ". ";
+  color: var(--accent);
+  font-family: var(--mono);
+  font-size: 0.8em;
+}
+
+/* Words ------------------------------------------------------------------ */
+
+.word {
+  font-family: var(--serif);
+}
+
+.word--lit,
+.probe__word--answer {
+  color: var(--accent);
+}
+
+.word--subject {
+  color: var(--accent);
+}
+
+.word--distractor {
+  color: var(--accent-cool);
+}
+
+.probe--wide {
+  font-size: 40px;
+}
+
+.word-groups {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 18px 48px;
+}
+
+.word-group__name {
+  font-size: 16px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+}
+
+.word-group__words {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  font-family: var(--serif);
+  font-size: 27px;
+}
+
+.word-group .word--lit {
+  color: var(--accent);
+}
+
+/* Lists of sentences ----------------------------------------------------- */
+
+.examples {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-family: var(--serif);
+  font-size: 30px;
+}
+
+.examples--generated {
+  font-family: var(--mono);
+  font-size: 24px;
+  color: var(--ink-dim);
+}
+
+.rules {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-size: 24px;
+  color: var(--accent);
+  counter-reset: rule;
+}
+
+.rules li::before {
+  content: counter(rule) ". ";
+  counter-increment: rule;
+  font-family: var(--mono);
+}
+
+.row-caption {
+  font-size: 22px;
+  color: var(--ink-dim);
+}
+
+/* Numbers ---------------------------------------------------------------- */
+
+.stat-row {
+  display: flex;
+  gap: 56px;
+  align-items: flex-start;
+}
+
+.stat__value {
+  font-family: var(--mono);
+  font-size: 76px;
+  line-height: 1;
+  color: var(--ink);
+}
+
+.stat__label {
+  margin-top: 8px;
+  max-width: 22ch;
+  font-size: 21px;
+  color: var(--ink-dim);
+}
+
+.stat__note {
+  margin-top: 4px;
+  font-family: var(--mono);
+  font-size: 17px;
+  color: var(--ink-dim);
+  opacity: 0.7;
+}
+
+.stat--good .stat__value { color: var(--accent); }
+.stat--bad .stat__value { color: var(--ink-dim); }
+.stat--cool .stat__value { color: var(--accent-cool); }
+
+/* Small diagrams --------------------------------------------------------- */
+
+.lookup {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  font-family: var(--serif);
+  font-size: 40px;
+}
+
+.lookup__id {
+  font-family: var(--mono);
+  color: var(--accent);
+}
+
+.lookup__arrow {
+  color: var(--ink-dim);
+}
+
+.lookup__row {
+  flex: 1;
+}
+
+.arithmetic {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  font-family: var(--mono);
+  font-size: 32px;
+}
+
+.arithmetic__row span {
+  display: inline-block;
+  width: 9em;
+  font-family: var(--sans);
+  font-size: 20px;
+  color: var(--ink-dim);
+}
+
+.arithmetic__row--work {
+  color: var(--ink-dim);
+}
+
+.arithmetic__row--total {
+  color: var(--accent);
+}
+
+.definitions {
+  display: grid;
+  grid-template-columns: 170px 1fr;
+  gap: 14px 28px;
+  align-items: baseline;
+  font-size: 28px;
+}
+
+.definitions .step {
+  display: contents;
+}
+
+.definitions dt {
+  font-family: var(--mono);
+  color: var(--accent);
+}
+
+.definitions dd {
+  color: var(--ink);
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+}
+
+.stack__layer {
+  width: 520px;
+  padding: 14px;
+  text-align: center;
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  background: var(--paper-raised);
+  font-family: var(--mono);
+  font-size: 22px;
+  color: var(--ink-dim);
+}
+
+.stack__layer--attention {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.stack__layer--mlp {
+  border-color: var(--accent-cool);
+  color: var(--accent-cool);
+}
+
+.stack__layer--norm {
+  width: 360px;
+  font-size: 18px;
+}
+
+.widths {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  font-family: var(--mono);
+  font-size: 44px;
+}
+
+.widths__step {
+  padding: 18px 30px;
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  background: var(--paper-raised);
+}
+
+.widths__step--wide {
+  border-color: var(--accent-cool);
+  color: var(--accent-cool);
+}
+
+.widths__arrow {
+  color: var(--ink-dim);
+}
+
+/* Multi-column layouts --------------------------------------------------- */
+
+.two-up {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 28px 48px;
+  width: 100%;
+}
+
+.two-up--lists {
+  align-items: start;
+}
+
+.three-up {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 36px;
+  width: 100%;
+}
+
+.three-up__panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* The one control the room watches you turn ------------------------------ */
+
+.dial {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  width: 100%;
+}
+
+.dial__range {
+  flex: 1;
+  accent-color: var(--accent);
+  height: 28px;
+}
+
+.dial__value {
+  font-family: var(--mono);
+  font-size: 34px;
+  color: var(--accent);
+}

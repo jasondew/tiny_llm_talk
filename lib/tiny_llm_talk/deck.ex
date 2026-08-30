@@ -163,7 +163,7 @@ defmodule TinyLlmTalk.Deck do
         },
         %Slide{
           id: :the_floor,
-          title: "1.9021",
+          title: "1.904",
           notes: """
           Computed from the grammar itself: the best score anything can reach
           seeing only the previous word. A count table with enough data sits on
@@ -242,7 +242,7 @@ defmodule TinyLlmTalk.Deck do
         },
         %Slide{
           id: :learning_was_not_the_problem,
-          title: "55.3%, again",
+          title: "Zero, again",
           notes: """
           Identical to the count table, to the decimal, because it sees the same
           one word and gives the same answer. Learning was never the problem.
@@ -358,8 +358,8 @@ defmodule TinyLlmTalk.Deck do
           """
         },
         %Slide{
-          id: :seventy_seven_four,
-          title: "77.4%",
+          id: :the_number,
+          title: "Zero, zero, and sixty-nine",
           notes: """
           Against 55.3% for both bigrams. The one-word models could not do
           better than chance when a noun intervened; this one can. Do not quote
@@ -456,7 +456,7 @@ defmodule TinyLlmTalk.Deck do
         %Slide{
           id: :the_loop,
           title: "Ask, pick, append, ask again",
-          steps: 3,
+          steps: 4,
           notes: """
           Start with start. Ask the function. Pick a word. Append it. Stop at
           the period. Say the uncomfortable part: no state carries between

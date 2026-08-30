@@ -11,8 +11,7 @@ defmodule TinyLlmTalk.Application do
       TinyLlmTalkWeb.Telemetry,
       {DNSCluster, query: Application.get_env(:tiny_llm_talk, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: TinyLlmTalk.PubSub},
-      # Start a worker by calling: TinyLlmTalk.Worker.start_link(arg)
-      # {TinyLlmTalk.Worker, arg},
+      TinyLlmTalk.Model,
       # Start to serve requests, typically the last entry
       TinyLlmTalkWeb.Endpoint
     ]
@@ -20,7 +19,25 @@ defmodule TinyLlmTalk.Application do
     # See https://elixir.hexdocs.pm/Supervisor.html
     # for other strategies and supported options
     opts = [strategy: :one_for_one, name: TinyLlmTalk.Supervisor]
-    Supervisor.start_link(children, opts)
+    started = Supervisor.start_link(children, opts)
+
+    warm_the_figures()
+
+    started
+  end
+
+  # Counting two thousand sentences takes a moment. Pay for it at boot, in an
+  # empty room, rather than on the first slide that shows a heatmap.
+  defp warm_the_figures do
+    Task.start(fn ->
+      TinyLlmTalk.Model.bigram()
+      TinyLlmTalk.Model.bigram_floor()
+      TinyLlmTalk.Model.bigram_held_out()
+      TinyLlmTalk.Model.attention(TinyLlmTalk.Model.probe())
+      Enum.each([:bigram, :embedder, :transformer], &TinyLlmTalk.Model.agreement/1)
+      TinyLlmTalk.Model.embedding_scatter()
+      TinyLlmTalk.Model.temperature_curve()
+    end)
   end
 
   # Tell Phoenix to update the endpoint configuration

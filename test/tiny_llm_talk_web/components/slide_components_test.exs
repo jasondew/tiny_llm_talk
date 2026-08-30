@@ -19,17 +19,19 @@ defmodule TinyLlmTalkWeb.SlideComponentsTest do
   end
 
   describe "steps/1" do
-    test "gives a stub one beat, however many the arc plans for" do
-      stub = Enum.find(Deck.slides(), &(&1.steps > 1 and not SlideComponents.drawn?(&1.id)))
+    test "gives a drawn slide its planned beats and a stub exactly one" do
+      for slide <- Deck.slides() do
+        planned = if SlideComponents.drawn?(slide.id), do: slide.steps, else: 1
 
-      assert stub.steps > 1
-      assert SlideComponents.steps(stub.index) == 1
+        assert SlideComponents.steps(slide.index) == planned,
+               "#{slide.id} navigates in #{SlideComponents.steps(slide.index)} steps, not #{planned}"
+      end
     end
 
-    test "gives a drawn slide the beats the arc plans for" do
-      drawn = Enum.find(Deck.slides(), &(&1.steps > 1 and SlideComponents.drawn?(&1.id)))
+    test "walks the deck in as many presses as the drawn slides ask for" do
+      presses = Deck.slides() |> Enum.map(&SlideComponents.steps(&1.index)) |> Enum.sum()
 
-      assert SlideComponents.steps(drawn.index) == drawn.steps
+      assert presses >= Deck.count()
     end
   end
 end

@@ -1,0 +1,333 @@
+/* Figures.
+ *
+ * Colour has one job per figure. Magnitude (heatmaps, bars) gets a single hue
+ * from the surface up to the accent, so it reads as more and less. Identity
+ * (the scatter, the two-series chart) gets a fixed categorical order, assigned
+ * in order and never cycled; the six hues below pass the lightness band, chroma
+ * floor, colour-vision separation, and contrast checks against this surface.
+ * Text always wears text colours, never the series colour. */
+
+:root {
+  --heat-hue: #f0b429;
+
+  --series-1: #3987e5;
+  --series-2: #d95926;
+  --series-3: #199e70;
+  --series-4: #c98500;
+  --series-5: #d55181;
+  --series-6: #9085e9;
+}
+
+/* The recurring box ------------------------------------------------------ */
+
+.function-box {
+  display: grid;
+  grid-template-columns: 1fr auto auto auto 1fr;
+  align-items: center;
+  gap: 28px;
+  width: 100%;
+}
+
+.function-box__input,
+.function-box__output {
+  font-size: 24px;
+  color: var(--ink-dim);
+}
+
+.function-box__input {
+  text-align: right;
+  font-family: var(--serif);
+  font-size: 30px;
+  color: var(--ink);
+}
+
+.function-box__arrow {
+  font-size: 32px;
+  color: var(--ink-dim);
+}
+
+.function-box__box {
+  padding: 32px 40px;
+  min-width: 300px;
+  text-align: center;
+  border: 2px solid var(--accent);
+  border-radius: 10px;
+  background: var(--paper-raised);
+  font-family: var(--mono);
+  font-size: 24px;
+  color: var(--accent);
+}
+
+.function-box__caption {
+  margin-top: 10px;
+  font-size: 18px;
+  color: var(--ink-dim);
+}
+
+.spark {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 90px;
+}
+
+.spark__bar {
+  flex: 1;
+  min-height: 2px;
+  border-radius: 2px 2px 0 0;
+  background: var(--accent);
+}
+
+/* Labelled bars ---------------------------------------------------------- */
+
+.bars {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+
+.bars__row {
+  display: grid;
+  grid-template-columns: 160px 1fr 90px;
+  align-items: center;
+  gap: 18px;
+  font-size: 26px;
+  opacity: 0.55;
+}
+
+.bars__row--lit {
+  opacity: 1;
+}
+
+.bars__label {
+  text-align: right;
+  font-family: var(--serif);
+}
+
+.bars__track {
+  height: 20px;
+  background: var(--paper-raised);
+  border-radius: 4px;
+}
+
+.bars__fill {
+  display: block;
+  height: 100%;
+  border-radius: 4px;
+  background: var(--accent);
+}
+
+.bars__value {
+  font-family: var(--mono);
+  font-size: 20px;
+  color: var(--ink-dim);
+}
+
+/* Heatmap ---------------------------------------------------------------- */
+
+.heatmap {
+  display: grid;
+  grid-template-columns: auto repeat(var(--heatmap-columns), var(--heatmap-cell));
+  gap: 2px;
+  font-family: var(--mono);
+}
+
+.heatmap__corner {
+  grid-column: 1;
+}
+
+.heatmap__column-label {
+  height: 92px;
+  position: relative;
+  font-size: 11px;
+  color: var(--ink-dim);
+}
+
+.heatmap__column-label span {
+  position: absolute;
+  bottom: 4px;
+  left: 50%;
+  transform-origin: left bottom;
+  transform: rotate(-90deg) translateX(0);
+  white-space: nowrap;
+}
+
+.heatmap__row-label {
+  padding-right: 10px;
+  text-align: right;
+  font-size: 11px;
+  line-height: var(--heatmap-cell);
+  color: var(--ink-dim);
+}
+
+.heatmap__row-label--lit {
+  color: var(--accent);
+}
+
+.heatmap__cell {
+  aspect-ratio: 1;
+  border-radius: 2px;
+  display: grid;
+  place-items: center;
+  font-size: 13px;
+  color: var(--paper);
+  /* One hue, surface to accent. Ordering is the only promise a sequential
+   * scale makes, and mixing in one direction keeps it. */
+  background: color-mix(in oklab, var(--heat-hue) calc(var(--heat) * 100%), var(--paper-raised));
+}
+
+.heatmap__cell--lit {
+  outline: 2px solid var(--accent-cool);
+  outline-offset: 1px;
+}
+
+/* Charts ----------------------------------------------------------------- */
+
+.chart {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+
+.chart__svg {
+  width: 100%;
+  height: auto;
+}
+
+.chart__grid {
+  stroke: var(--rule);
+  stroke-width: 1;
+}
+
+.chart__tick {
+  fill: var(--ink-dim);
+  font-family: var(--mono);
+  font-size: 15px;
+}
+
+.chart__reference {
+  stroke: var(--ink-dim);
+  stroke-width: 2;
+  stroke-dasharray: 6 6;
+}
+
+.chart__reference--floor {
+  stroke: var(--accent-cool);
+}
+
+.chart__reference-label {
+  fill: var(--ink-dim);
+  font-family: var(--mono);
+  font-size: 16px;
+}
+
+.chart__reference-label--floor {
+  fill: var(--accent-cool);
+}
+
+.chart__line {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.chart__line--series-1 {
+  stroke: var(--series-1);
+}
+
+.chart__line--series-2 {
+  stroke: var(--series-2);
+}
+
+.chart__caption,
+.chart__legend {
+  display: flex;
+  gap: 24px;
+  align-items: center;
+  font-family: var(--mono);
+  font-size: 17px;
+  color: var(--ink-dim);
+}
+
+.chart__legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.chart__legend-note {
+  margin-left: auto;
+}
+
+.chart__swatch {
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  background: currentColor;
+}
+
+.chart__legend-item--series-1 .chart__swatch {
+  background: var(--series-1);
+}
+
+.chart__legend-item--series-2 .chart__swatch {
+  background: var(--series-2);
+}
+
+/* Scatter: identity, so a fixed categorical order --------------------------- */
+
+.scatter circle {
+  stroke: var(--paper);
+  stroke-width: 2;
+}
+
+.scatter text {
+  fill: var(--ink-dim);
+  font-family: var(--mono);
+  font-size: 14px;
+}
+
+.scatter--noun circle,
+.scatter--noun .chart__swatch { fill: var(--series-1); background: var(--series-1); }
+.scatter--verb circle,
+.scatter--verb .chart__swatch { fill: var(--series-2); background: var(--series-2); }
+.scatter--adjective circle,
+.scatter--adjective .chart__swatch { fill: var(--series-3); background: var(--series-3); }
+.scatter--determiner circle,
+.scatter--determiner .chart__swatch { fill: var(--series-4); background: var(--series-4); }
+.scatter--connective circle,
+.scatter--connective .chart__swatch { fill: var(--series-5); background: var(--series-5); }
+.scatter--boundary circle,
+.scatter--boundary .chart__swatch { fill: var(--series-6); background: var(--series-6); }
+
+/* Before mix talk.train -------------------------------------------------- */
+
+.untrained {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 32px 36px;
+  border: 1px dashed var(--rule);
+  border-radius: 8px;
+  background: var(--paper-raised);
+}
+
+.untrained__title {
+  font-family: var(--mono);
+  font-size: 20px;
+  color: var(--accent);
+}
+
+.untrained__body {
+  font-size: 22px;
+  color: var(--ink-dim);
+}
+
+.untrained code {
+  font-family: var(--mono);
+  color: var(--accent-cool);
+}

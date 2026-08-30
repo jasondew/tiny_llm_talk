@@ -16,7 +16,7 @@ defmodule TinyLlmTalkWeb.DeckLive do
   @impl true
   def mount(_params, _session, socket) do
     Position.subscribe(socket)
-    {:ok, socket, layout: false}
+    {:ok, assign(socket, controls: %{}), layout: false}
   end
 
   @impl true
@@ -29,6 +29,12 @@ defmodule TinyLlmTalkWeb.DeckLive do
     {:noreply, Position.move(socket, key)}
   end
 
+  # The one thing a slide can hold that a picture cannot: a control the room
+  # watches you turn, with the model answering in the same BEAM.
+  def handle_event("control", %{"name" => name, "value" => value}, socket) do
+    {:noreply, update(socket, :controls, &Map.put(&1, name, value))}
+  end
+
   @impl true
   def handle_info({:position, index, step}, socket) do
     {:noreply, Position.follow(socket, index, step)}
@@ -39,7 +45,7 @@ defmodule TinyLlmTalkWeb.DeckLive do
     ~H"""
     <div class="deck" phx-window-keydown="key">
       <div class="stage">
-        <SlideComponents.slide slide={@slide} step={@step} />
+        <SlideComponents.slide slide={@slide} step={@step} controls={@controls} />
         <.footer slide={@slide} />
       </div>
     </div>

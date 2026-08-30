@@ -73,10 +73,37 @@ the code, not a simplified version of it.
 Snippets size themselves to the space a slide has. If the type comes out small,
 the snippet is too long for a room; quote a range instead of the whole function.
 
+## Figures come from the model, not from a screenshot
+
+`TinyLlmTalk.Model` holds the corpus, the count table, and the trained weights,
+memoized behind an Agent and warmed at boot. Every figure is handed the plain
+lists of floats the model returns:
+
+```elixir
+<.heatmap values={Model.bigram()} row_labels={Vocab.words()} ... />
+<.bars values={Model.bigram_row("dogs")} words={Vocab.words()} ... />
+```
+
+So a slide cannot quote a number this checkpoint does not produce. Change the
+model and the slides change with it.
+
+Colour has one job per figure. Magnitude (heatmaps, bars) gets a single hue from
+the surface up to the accent. Identity (the scatter, the two-series chart) gets a
+fixed categorical order, validated against this surface for lightness, chroma,
+colour-vision separation, and contrast. Text never wears a series colour.
+
+## Checkpoints
+
+    mix talk.train
+
+Trains the neural bigram (about 11 seconds) and the transformer (about 77
+seconds) and writes `priv/checkpoints/`, which is committed. Both runs are
+seeded, so the attention weights the slides quote reproduce exactly.
+
+Without checkpoints the deck still runs; the figures that need trained weights
+say so and tell you to run the task.
+
 ## Still to build
 
-- The three demo moments, as slides rather than a Livebook alongside: the
-  training loss chart, the attention heatmap, and the temperature slider. The
-  model is in the same BEAM, so these are LiveView state, not screenshots.
 - PDF export, for the conference and as the backup if the server dies.
-- The 40 slides that are still stubs.
+- The pass over wording and pacing that only rehearsal finds.
