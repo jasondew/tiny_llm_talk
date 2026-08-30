@@ -1,0 +1,334 @@
+/* The deck.
+ *
+ * Every slide is authored on a fixed 1280x720 stage and the whole stage is
+ * scaled to the projector with one CSS transform. That is the trick that makes
+ * type sizes predictable: 48px means 48px on every screen the talk lands on,
+ * and nothing reflows between the laptop and the room.
+ *
+ * Fonts are system stacks on purpose. A deck that fetches a webfont is a deck
+ * that depends on conference wifi. */
+
+:root {
+  --stage-width: 1280px;
+  --stage-height: 720px;
+
+  --ink: #e8e6e3;
+  --ink-dim: #8b9099;
+  --paper: #0e1116;
+  --paper-raised: #161b22;
+  --rule: #262c36;
+  --accent: #f0b429;
+  --accent-cool: #5cc8ff;
+
+  --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+  --sans: ui-sans-serif, -apple-system, "Helvetica Neue", Arial, sans-serif;
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+
+/* Stage ------------------------------------------------------------------ */
+
+.deck {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: #000;
+}
+
+.stage {
+  position: relative;
+  width: var(--stage-width);
+  height: var(--stage-height);
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--sans);
+  transform: scale(var(--stage-scale, min(100vw / 1280, 100vh / 720)));
+  transform-origin: center;
+}
+
+.stage--preview {
+  --stage-scale: 0.45;
+  transform-origin: top left;
+}
+
+.stage-preview {
+  width: calc(1280px * 0.45);
+  height: calc(720px * 0.45);
+  overflow: hidden;
+  border: 1px solid var(--rule);
+}
+
+/* Slides ----------------------------------------------------------------- */
+
+.slide {
+  position: absolute;
+  inset: 0;
+  padding: 72px 96px 104px;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.slide--centred {
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.slide__eyebrow {
+  font-size: 20px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+}
+
+.slide__title {
+  font-family: var(--serif);
+  font-size: 56px;
+  line-height: 1.1;
+  font-weight: 400;
+}
+
+.slide__punchline {
+  font-family: var(--serif);
+  font-size: 36px;
+  color: var(--accent);
+}
+
+.claims {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  font-size: 34px;
+  line-height: 1.35;
+}
+
+.claims code {
+  font-family: var(--mono);
+  font-size: 0.9em;
+  color: var(--accent-cool);
+}
+
+/* Reveal steps ----------------------------------------------------------- */
+
+.step {
+  opacity: 0;
+  transition: opacity 120ms linear;
+}
+
+.step--shown {
+  opacity: 1;
+}
+
+/* The probe sentence ----------------------------------------------------- */
+
+.probe {
+  max-width: 100%;
+  display: inline-grid;
+  grid-template-columns: repeat(var(--probe-columns), auto);
+  grid-template-rows: auto 40px;
+  column-gap: 0.4em;
+  font-family: var(--serif);
+  font-size: 52px;
+  line-height: 1.2;
+}
+
+.probe--huge {
+  font-size: 56px;
+}
+
+.probe__word {
+  grid-row: 1;
+  transition: color 160ms linear;
+}
+
+.probe__word--blank {
+  color: var(--ink-dim);
+  letter-spacing: 0.05em;
+}
+
+.probe__word--marked.probe__word--subject {
+  color: var(--accent);
+}
+
+.probe__word--marked.probe__word--distractor {
+  color: var(--accent-cool);
+}
+
+.probe__bracket {
+  grid-row: 2;
+  margin: 12px 0.2em 0;
+  border: 2px solid var(--accent);
+  border-top: none;
+  border-radius: 0 0 14px 14px;
+  opacity: 0;
+  transition: opacity 200ms linear;
+}
+
+.probe__bracket--shown {
+  opacity: 1;
+}
+
+/* Code ------------------------------------------------------------------- */
+
+.code {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.code pre.makeup {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  margin: 0;
+  padding: 12px 24px;
+  background: var(--paper-raised);
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  font-family: var(--mono);
+  line-height: 1.45;
+  /* Lines are block elements, so the whitespace between them in the template
+   * must collapse; each line preserves its own indentation instead. */
+  white-space: normal;
+}
+
+.code__line {
+  display: block;
+  white-space: pre;
+  transition: opacity 140ms linear;
+}
+
+.code__line--dim {
+  opacity: 0.28;
+}
+
+.code__number {
+  display: inline-block;
+  width: 2.5em;
+  padding-right: 1em;
+  text-align: right;
+  color: var(--ink-dim);
+  opacity: 0.5;
+  user-select: none;
+}
+
+.code__caption {
+  font-family: var(--mono);
+  font-size: 18px;
+  color: var(--ink-dim);
+}
+
+/* Footer ----------------------------------------------------------------- */
+
+.deck-footer {
+  position: absolute;
+  left: 96px;
+  right: 96px;
+  bottom: 40px;
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--mono);
+  font-size: 18px;
+  color: var(--ink-dim);
+}
+
+/* The stub every unwritten slide falls through to ------------------------ */
+
+.slide--stub {
+  justify-content: center;
+  background:
+    repeating-linear-gradient(
+      45deg,
+      transparent,
+      transparent 14px,
+      rgba(255, 255, 255, 0.02) 14px,
+      rgba(255, 255, 255, 0.02) 28px
+    ),
+    var(--paper);
+}
+
+.slide__stub-notes {
+  max-width: 900px;
+  font-size: 24px;
+  line-height: 1.5;
+  color: var(--ink-dim);
+}
+
+.slide__stub-flag {
+  font-family: var(--mono);
+  font-size: 18px;
+  color: var(--accent);
+}
+
+.slide__stub-flag code {
+  color: var(--accent-cool);
+}
+
+/* Presenter -------------------------------------------------------------- */
+
+.presenter {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 620px) 1fr;
+  gap: 32px;
+  padding: 32px;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--sans);
+}
+
+.presenter__now {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.presenter__aside {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+.presenter__clock {
+  font-family: var(--mono);
+  font-size: 64px;
+  line-height: 1;
+  color: var(--accent);
+}
+
+.presenter__label {
+  font-size: 15px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+}
+
+.presenter__lands {
+  font-family: var(--serif);
+  font-size: 22px;
+  color: var(--accent-cool);
+}
+
+.presenter__notes {
+  flex: 1;
+  overflow-y: auto;
+  font-size: 26px;
+  line-height: 1.5;
+}
+
+.presenter__next-title {
+  font-family: var(--serif);
+  font-size: 26px;
+}
+
+.presenter__keys {
+  font-family: var(--mono);
+  font-size: 14px;
+  color: var(--ink-dim);
+}

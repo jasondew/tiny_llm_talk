@@ -1,0 +1,82 @@
+# tiny_llm_talk
+
+The slide deck for **the llama who chases the dogs**, as a Phoenix LiveView app.
+
+It lives beside `tiny_llm` rather than inside it, and depends on it by path, so
+that `tiny_llm/mix.exs` keeps an empty dependency list. The talk's strongest
+claim is that nothing is hidden and there are no dependencies; a reader who
+follows the repo link on a slide has to find that claim intact.
+
+    ~/src/
+      tiny_llm/        the model, zero deps
+      tiny_llm_talk/   this deck, path dep on ../tiny_llm
+
+## Running it
+
+    mix setup
+    mix phx.server
+
+- <http://localhost:4000/> the deck, for the room
+- <http://localhost:4000/presenter> notes, clock, and what comes next
+
+Either window can hold the clicker; they follow each other over PubSub. Put the
+deck on the projector and the presenter view on the laptop.
+
+Keys: space or the arrows move, `Home` and `End` jump to either end, and in the
+presenter view `t` pauses the clock and `r` resets it.
+
+Run it on localhost at the podium. Do not deploy it and do not depend on
+conference wifi.
+
+## How a slide gets written
+
+The running order is data, in `TinyLlmTalk.Deck`: eight sections, every slide
+the outline names, with its speaker notes and its count of reveal steps. It is
+one readable file that can be diffed against `docs/talk-outline.md`.
+
+Drawing is separate. `TinyLlmTalkWeb.SlideComponents.slide/1` has one function
+clause per slide id, and any slide without a clause falls through to a stub that
+shows its title and notes on a hatched background. So the deck is presentable
+from the first minute and gets less grey as it gets written.
+
+To write a slide, add a clause:
+
+```elixir
+def slide(%{slide: %Slide{id: :the_floor}} = assigns) do
+  ~H"""
+  <section class="slide slide--centred">
+    <h2 class="slide__title">{@slide.title}</h2>
+    <.step n={2} step={@step}>...</.step>
+  </section>
+  """
+end
+```
+
+`@step` is the current reveal step, `<.step n={2}>` shows its contents from step
+two onward, and `steps:` in the deck says how many the slide has.
+
+## Code slides
+
+Code is quoted out of the sibling checkout at request time, never pasted:
+
+```elixir
+<.code path="lib/tiny_llm/attention.ex" range={198..213} step={@step}
+       focus={[:all, 1..3, 5..8, 9..13, 14..14, 16..16, :all]} />
+```
+
+`function={:forward}` takes a whole function instead of a range. `focus` is one
+window per step; everything outside it dims rather than disappearing, because a
+function is easier to follow when you can see where the current lines sit. The
+caption names the file and lines, which is the claim the talk rests on: this is
+the code, not a simplified version of it.
+
+Snippets size themselves to the space a slide has. If the type comes out small,
+the snippet is too long for a room; quote a range instead of the whole function.
+
+## Still to build
+
+- The three demo moments, as slides rather than a Livebook alongside: the
+  training loss chart, the attention heatmap, and the temperature slider. The
+  model is in the same BEAM, so these are LiveView state, not screenshots.
+- PDF export, for the conference and as the backup if the server dies.
+- The 40 slides that are still stubs.
