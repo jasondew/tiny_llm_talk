@@ -96,6 +96,29 @@
   color: var(--accent);
 }
 
+.slide__statement {
+  max-width: 20ch;
+  font-family: var(--serif);
+  font-size: 64px;
+  line-height: 1.1;
+  font-weight: 400;
+}
+
+.slide__lede {
+  font-size: 30px;
+  color: var(--ink-dim);
+}
+
+.beats {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  font-family: var(--serif);
+  font-size: 34px;
+  line-height: 1.25;
+  color: var(--accent);
+}
+
 .claims {
   display: flex;
   flex-direction: column;

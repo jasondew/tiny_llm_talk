@@ -33,8 +33,20 @@ defmodule TinyLlmTalk.Deck do
           steps: 3,
           notes: """
           A plural noun sits right next to the blank pointing the wrong way.
-          That bracket is the talk. We are going to build, from nothing, a
+          Say the line out loud rather than putting it on the slide: that
+          bracket is the talk, and we are going to build, from nothing, a
           program that draws it.
+          """
+        },
+        %Slide{
+          id: :what_you_leave_with,
+          title: "You will leave able to explain how a transformer works",
+          steps: 3,
+          notes: """
+          The promise, before the constraints. Attention is the part they will
+          be able to describe out loud: each position looks back at the ones
+          before it, scores them, and pulls in what it needs. Everything else in
+          the talk is in service of those three verbs.
           """
         },
         %Slide{

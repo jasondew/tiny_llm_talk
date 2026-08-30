@@ -22,6 +22,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
   @drawn [
     :the_sentence,
     :the_bracket,
+    :what_you_leave_with,
     :from_nothing,
     :linear_and_softmax,
     :attention_code
@@ -73,8 +74,26 @@ defmodule TinyLlmTalkWeb.SlideComponents do
         show_bracket={@step >= 3}
         class="probe--huge"
       />
-      <.step n={3} step={@step} class="slide__punchline">
-        That bracket is the talk.
+    </section>
+    """
+  end
+
+  def slide(%{slide: %Slide{id: :what_you_leave_with}} = assigns) do
+    ~H"""
+    <section class="slide slide--centred">
+      <p class="slide__eyebrow">what you leave with</p>
+      <h2 class="slide__statement">
+        You will be able to explain how a transformer works.
+      </h2>
+      <.step n={2} step={@step} class="slide__lede">
+        Attention is the part you will be able to describe out loud.
+      </.step>
+      <.step n={3} step={@step}>
+        <ol class="beats">
+          <li>each position looks back at the ones before it</li>
+          <li>scores them</li>
+          <li>and pulls in what it needs</li>
+        </ol>
       </.step>
     </section>
     """
