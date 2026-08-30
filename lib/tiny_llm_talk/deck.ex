@@ -547,39 +547,59 @@ defmodule TinyLlmTalk.Deck do
   end
 
   @doc """
+  The steps a slide plans for.
+
+  `steps:` in the arc above is a plan, not a fact: it says how many beats a
+  slide will have once it is drawn. Navigation takes the count from the
+  renderer instead, because a slide that ignores `@step` would otherwise be
+  shown several times over, identically. Callers pass their own function; this
+  is the one that trusts the plan.
+  """
+  @spec steps(pos_integer()) :: pos_integer()
+  def steps(index), do: at(index).steps
+
+  @doc """
   Turns whatever came in on the URL into a position that exists. A slide index
   in the address bar is the whole crash-recovery story: a LiveView that dies
   mid-talk reconnects to the slide it was on, not to slide one.
   """
-  @spec position(term(), term()) :: {pos_integer(), pos_integer()}
-  def position(index_param, step_param) do
+  @spec position(term(), term(), (pos_integer() -> pos_integer())) ::
+          {pos_integer(), pos_integer()}
+  def position(index_param, step_param, steps_of \\ &steps/1) do
     index = index_param |> to_integer() |> clamp(1, @count)
-    step = step_param |> to_integer() |> clamp(1, at(index).steps)
+    step = step_param |> to_integer() |> clamp(1, steps_of.(index))
     {index, step}
   end
 
   @doc "Where a keypress moves the deck. Unknown keys stay put."
-  @spec move(String.t(), {pos_integer(), pos_integer()}) :: {pos_integer(), pos_integer()}
-  def move(key, {index, step}) when key in @forward_keys, do: advance(index, step)
-  def move(key, {index, step}) when key in @backward_keys, do: retreat(index, step)
-  def move("Home", _position), do: {1, 1}
-  def move("End", _position), do: {@count, at(@count).steps}
-  def move(_key, position), do: position
+  @spec move(String.t(), {pos_integer(), pos_integer()}, (pos_integer() -> pos_integer())) ::
+          {pos_integer(), pos_integer()}
+  def move(key, position, steps_of \\ &steps/1)
+
+  def move(key, {index, step}, steps_of) when key in @forward_keys,
+    do: advance(index, step, steps_of)
+
+  def move(key, {index, step}, steps_of) when key in @backward_keys,
+    do: retreat(index, step, steps_of)
+
+  def move("Home", _position, _steps_of), do: {1, 1}
+  def move("End", _position, steps_of), do: {@count, steps_of.(@count)}
+  def move(_key, position, _steps_of), do: position
 
   ## PRIVATE FUNCTIONS
 
-  defp advance(index, step) do
+  defp advance(index, step, steps_of) do
     cond do
-      step < at(index).steps -> {index, step + 1}
+      step < steps_of.(index) -> {index, step + 1}
       index < @count -> {index + 1, 1}
       true -> {index, step}
     end
   end
 
-  defp retreat(index, step) do
+  defp retreat(index, step, steps_of) do
     cond do
       step > 1 -> {index, step - 1}
-      index > 1 -> {index - 1, at(index - 1).steps}
+      index > 1 -> {index - 1, steps_of.(index - 1)}
       true -> {index, step}
     end
   end

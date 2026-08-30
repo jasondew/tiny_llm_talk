@@ -260,12 +260,9 @@
 
 .slide__stub-flag {
   font-family: var(--mono);
-  font-size: 18px;
-  color: var(--accent);
-}
-
-.slide__stub-flag code {
-  color: var(--accent-cool);
+  font-size: 16px;
+  color: var(--ink-dim);
+  opacity: 0.6;
 }
 
 /* Presenter -------------------------------------------------------------- */

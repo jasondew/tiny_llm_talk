@@ -4,6 +4,7 @@ defmodule TinyLlmTalkWeb.DeckLiveTest do
   import Phoenix.LiveViewTest
 
   alias TinyLlmTalk.Deck
+  alias TinyLlmTalkWeb.SlideComponents
 
   test "opens on the cold open", %{conn: conn} do
     {:ok, _view, html} = live(conn, ~p"/")
@@ -21,7 +22,7 @@ defmodule TinyLlmTalkWeb.DeckLiveTest do
   end
 
   test "walks a slide's steps before moving on", %{conn: conn} do
-    stepped = Enum.find(Deck.slides(), &(&1.steps > 1))
+    stepped = Enum.find(Deck.slides(), &(&1.steps > 1 and SlideComponents.drawn?(&1.id)))
     {:ok, view, _html} = live(conn, ~p"/s/#{stepped.index}")
 
     render_keydown(view, "key", %{"key" => "ArrowRight"})
@@ -37,7 +38,7 @@ defmodule TinyLlmTalkWeb.DeckLiveTest do
 
   test "walks the whole deck, every step, without raising", %{conn: conn} do
     {:ok, view, _html} = live(conn, ~p"/s/1/1")
-    steps = Deck.slides() |> Enum.map(& &1.steps) |> Enum.sum()
+    steps = Deck.slides() |> Enum.map(&SlideComponents.steps(&1.index)) |> Enum.sum()
 
     for _press <- 2..steps do
       assert render_keydown(view, "key", %{"key" => "ArrowRight"}) =~ "deck-footer"

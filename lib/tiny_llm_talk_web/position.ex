@@ -11,6 +11,7 @@ defmodule TinyLlmTalkWeb.Position do
   import Phoenix.LiveView, only: [connected?: 1, push_patch: 2]
 
   alias TinyLlmTalk.Deck
+  alias TinyLlmTalkWeb.SlideComponents
 
   @topic "deck:position"
 
@@ -23,7 +24,7 @@ defmodule TinyLlmTalkWeb.Position do
   @doc "Reads the position out of the URL params and tells the other window."
   @spec apply(Phoenix.LiveView.Socket.t(), map()) :: Phoenix.LiveView.Socket.t()
   def apply(socket, params) do
-    {index, step} = Deck.position(params["index"], params["step"])
+    {index, step} = Deck.position(params["index"], params["step"], &SlideComponents.steps/1)
 
     Phoenix.PubSub.broadcast_from(
       TinyLlmTalk.PubSub,
@@ -40,7 +41,7 @@ defmodule TinyLlmTalkWeb.Position do
   def move(socket, key) do
     current = {socket.assigns.slide.index, socket.assigns.step}
 
-    case Deck.move(key, current) do
+    case Deck.move(key, current, &SlideComponents.steps/1) do
       ^current -> socket
       {index, step} -> patch(socket, index, step)
     end

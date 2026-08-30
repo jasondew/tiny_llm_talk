@@ -15,6 +15,33 @@ defmodule TinyLlmTalkWeb.SlideComponents do
 
   alias TinyLlmTalk.{Deck, Slide}
 
+  # The slides that have a clause below. A slide that is still a stub ignores
+  # `@step`, so navigation must treat it as a single beat or it gets shown
+  # several times over, identically. The list is checked against the clauses in
+  # the tests, so it cannot quietly drift.
+  @drawn [
+    :the_sentence,
+    :the_bracket,
+    :from_nothing,
+    :linear_and_softmax,
+    :attention_code
+  ]
+
+  @doc "Whether this slide has been drawn yet, or is still a stub."
+  @spec drawn?(atom()) :: boolean()
+  def drawn?(id), do: id in @drawn
+
+  @doc """
+  The steps a slide actually has: what the arc plans for once it is drawn, and
+  one until then.
+  """
+  @spec steps(pos_integer()) :: pos_integer()
+  def steps(index) do
+    slide = Deck.at(index)
+
+    if drawn?(slide.id), do: slide.steps, else: 1
+  end
+
   attr :slide, Slide, required: true
   attr :step, :integer, required: true
 
@@ -116,7 +143,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
     assigns =
       assign(assigns,
         section: Deck.section(assigns.slide),
-        clause: "slide(%{slide: %Slide{id: :#{assigns.slide.id}}} = assigns)"
+        clause: "not drawn yet · :#{assigns.slide.id}"
       )
 
     ~H"""
@@ -124,9 +151,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
       <p class="slide__eyebrow">{@section.number}. {@section.title}</p>
       <h2 class="slide__title">{@slide.title}</h2>
       <p class="slide__stub-notes">{Slide.prose(@slide)}</p>
-      <p class="slide__stub-flag">
-        not drawn yet &middot; add a <code>{@clause}</code> clause
-      </p>
+      <p class="slide__stub-flag">{@clause}</p>
     </section>
     """
   end

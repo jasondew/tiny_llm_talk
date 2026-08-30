@@ -73,6 +73,13 @@ defmodule TinyLlmTalk.DeckTest do
       assert Deck.move("ArrowRight", {last, Deck.at(last).steps}) == {last, Deck.at(last).steps}
     end
 
+    test "takes the step count from whoever is doing the drawing" do
+      stepped = Enum.find(Deck.slides(), &(&1.steps > 1))
+      undrawn = fn _index -> 1 end
+
+      assert Deck.move("ArrowRight", {stepped.index, 1}, undrawn) == {stepped.index + 1, 1}
+    end
+
     test "ignores keys it does not know" do
       assert Deck.move("q", {4, 1}) == {4, 1}
     end
