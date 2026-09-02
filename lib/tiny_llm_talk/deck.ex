@@ -28,6 +28,17 @@ defmodule TinyLlmTalk.Deck do
           """
         },
         %Slide{
+          id: :the_vote,
+          title: "flees, or flee?",
+          activity: :verb_vote,
+          steps: 2,
+          notes: """
+          Put the code up and wait. Do not fill the silence; let the bars move.
+          Everyone in the room knows the answer and nobody can say how they know
+          it in fewer than a paragraph. That gap is the talk.
+          """
+        },
+        %Slide{
           id: :the_bracket,
           title: "The word that decides it is five back",
           steps: 3,
@@ -337,6 +348,17 @@ defmodule TinyLlmTalk.Deck do
           """
         },
         %Slide{
+          id: :attention_bet,
+          title: "Where will it look?",
+          activity: :attention_bet,
+          steps: 2,
+          notes: """
+          Ask before revealing. Most rooms say llama, because that is the answer
+          to the grammar question. The model says who. Being wrong together is
+          what makes the next slide land.
+          """
+        },
+        %Slide{
           id: :demo_attention_heatmap,
           title: "Demo: where the blank looks",
           notes: """
@@ -355,6 +377,16 @@ defmodule TinyLlmTalk.Deck do
           number off chases, which already agrees with the head noun. The point
           is not that it draws the bracket we imagined. The point is that it is
           visibly structured, not flat, and it gets the answer.
+          """
+        },
+        %Slide{
+          id: :audience_sentence,
+          title: "Your sentence",
+          activity: :sentence,
+          notes: """
+          Let a few land, then tap one to put it on the screen. Any prefix works;
+          the vocabulary is the only thing they can say. If nobody sends
+          anything, type one yourself and carry on.
           """
         },
         %Slide{

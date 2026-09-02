@@ -698,3 +698,148 @@
   font-size: 34px;
   color: var(--accent);
 }
+
+/* Asking the audience something ------------------------------------------ */
+
+.ask {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 48px;
+  align-items: center;
+  width: 100%;
+}
+
+.join-card {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 18px 22px;
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  background: var(--paper-raised);
+}
+
+.join-card__label {
+  font-size: 15px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+}
+
+.join-card__url {
+  font-family: var(--mono);
+  font-size: 34px;
+  line-height: 1.2;
+  color: var(--accent);
+}
+
+.join-card__aside {
+  margin-top: 4px;
+  font-size: 16px;
+  color: var(--ink-dim);
+}
+
+.join-card__code {
+  display: grid;
+  place-items: center;
+  padding: 8px;
+  border-radius: 6px;
+  background: #fff;
+}
+
+.join-card__code svg {
+  display: block;
+}
+
+/* Live vote -------------------------------------------------------------- */
+
+.tally {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+.tally__row {
+  display: grid;
+  grid-template-columns: 170px 1fr 90px;
+  align-items: center;
+  gap: 20px;
+  font-size: 32px;
+  opacity: 0.75;
+}
+
+.tally__row--answer {
+  opacity: 1;
+}
+
+.tally__label {
+  text-align: right;
+  font-family: var(--serif);
+}
+
+.tally__row--answer .tally__label {
+  color: var(--accent);
+}
+
+.tally__track {
+  height: 30px;
+  border-radius: 5px;
+  background: var(--paper-raised);
+}
+
+.tally__fill {
+  display: block;
+  height: 100%;
+  border-radius: 5px;
+  background: var(--ink-dim);
+  transition: width 220ms ease-out;
+}
+
+.tally__row--answer .tally__fill {
+  background: var(--accent);
+}
+
+.tally__count {
+  font-family: var(--mono);
+  font-size: 26px;
+  color: var(--ink-dim);
+}
+
+.tally__total {
+  font-family: var(--mono);
+  font-size: 18px;
+  color: var(--ink-dim);
+}
+
+/* What the audience sent ------------------------------------------------- */
+
+.submissions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+
+.submissions__item {
+  padding: 12px 18px;
+  text-align: left;
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  background: var(--paper-raised);
+  color: var(--ink);
+  font-family: var(--serif);
+  font-size: 27px;
+  cursor: pointer;
+}
+
+.submissions__item:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.presenter__phones {
+  font-family: var(--mono);
+  font-size: 20px;
+  color: var(--accent-cool);
+}

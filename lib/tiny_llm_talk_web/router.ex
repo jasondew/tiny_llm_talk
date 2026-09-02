@@ -21,6 +21,8 @@ defmodule TinyLlmTalkWeb.Router do
     live "/s/:index", DeckLive
     live "/s/:index/:step", DeckLive
 
+    live "/join", JoinLive
+
     live "/presenter", PresenterLive
     live "/presenter/:index", PresenterLive
     live "/presenter/:index/:step", PresenterLive

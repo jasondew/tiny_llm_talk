@@ -47,6 +47,54 @@ defmodule TinyLlmTalkWeb.DeckLiveTest do
     assert render(view) =~ "#{Deck.count()} / #{Deck.count()}"
   end
 
+  describe "the audience activities" do
+    setup do
+      TinyLlmTalk.Room.open(nil)
+      :ok
+    end
+
+    test "opens a slide's activity on arrival", %{conn: conn} do
+      slide = Enum.find(Deck.slides(), &(&1.activity == :verb_vote))
+      {:ok, _view, _html} = live(conn, ~p"/s/#{slide.index}")
+
+      assert TinyLlmTalk.Room.state().activity == :verb_vote
+    end
+
+    test "closes it again on the way out", %{conn: conn} do
+      slide = Enum.find(Deck.slides(), &(&1.activity == :verb_vote))
+      {:ok, view, _html} = live(conn, ~p"/s/#{slide.index}/#{slide.steps}")
+
+      render_keydown(view, "key", %{"key" => "ArrowRight"})
+
+      assert is_nil(TinyLlmTalk.Room.state().activity)
+    end
+
+    test "keeps the votes when advancing a step within the slide", %{conn: conn} do
+      slide = Enum.find(Deck.slides(), &(&1.activity == :verb_vote))
+      {:ok, view, _html} = live(conn, ~p"/s/#{slide.index}")
+      TinyLlmTalk.Room.vote(self(), "flees")
+
+      render_keydown(view, "key", %{"key" => "ArrowRight"})
+
+      assert TinyLlmTalk.Room.state().activity == :verb_vote
+
+      assert TinyLlmTalk.Room.tally(TinyLlmTalk.Room.state(), :verb_vote) == [
+               {"flees", 1},
+               {"flee", 0}
+             ]
+    end
+
+    test "puts a submitted sentence on the screen when it is picked", %{conn: conn} do
+      slide = Enum.find(Deck.slides(), &(&1.activity == :sentence))
+      {:ok, view, _html} = live(conn, ~p"/s/#{slide.index}")
+
+      render_click(view, "feature", %{"words" => "the llama flees"})
+
+      assert TinyLlmTalk.Room.state().featured == ~w(the llama flees)
+      assert render(view) =~ "the llama flees"
+    end
+  end
+
   test "shows the speaker's notes and clock in the presenter view", %{conn: conn} do
     {:ok, _view, html} = live(conn, ~p"/presenter/1/1")
 

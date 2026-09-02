@@ -1,0 +1,24 @@
+# One app serves both surfaces: the deck you present and the page the audience
+# joins. They share a room in memory, so they have to be the same machine.
+app = "tiny-llm-talk"
+primary_region = "ord"
+
+[build]
+
+[env]
+  PHX_HOST = "tiny-llm-talk.fly.dev"
+  PORT = "8080"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  # Never scale to zero and never run two of these. A second machine would hold
+  # a second room, and half the audience would vote into a tally nobody sees.
+  auto_stop_machines = false
+  auto_start_machines = true
+  min_machines_running = 1
+
+[[vm]]
+  memory = "1gb"
+  cpu_kind = "shared"
+  cpus = 1

@@ -12,6 +12,7 @@ defmodule TinyLlmTalk.Application do
       {DNSCluster, query: Application.get_env(:tiny_llm_talk, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: TinyLlmTalk.PubSub},
       TinyLlmTalk.Model,
+      TinyLlmTalk.Room,
       # Start to serve requests, typically the last entry
       TinyLlmTalkWeb.Endpoint
     ]

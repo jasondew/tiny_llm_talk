@@ -112,7 +112,75 @@ defmodule TinyLlmTalkWeb.DeckComponents do
     """
   end
 
+  @doc """
+  How to join, over a screen share.
+
+  The URL leads, because everyone watching is already in a browser and a link is
+  one paste in the chat. The code is small and secondary: it is only there for
+  the people watching on a television or a second monitor, who reach for a phone
+  instead. In a room those weightings would be the other way round.
+  """
+  attr :size, :integer, default: 150
+
+  def qr(assigns) do
+    assigns = assign(assigns, url: join_url(), svg: qr_svg(assigns.size))
+
+    ~H"""
+    <div class="join-card">
+      <div class="join-card__words">
+        <p class="join-card__label">join at</p>
+        <p class="join-card__url">{display_url(@url)}</p>
+        <p class="join-card__aside">also in the chat</p>
+      </div>
+      <div class="join-card__code">{@svg}</div>
+    </div>
+    """
+  end
+
+  @doc """
+  A live vote, as bars in the order the activity lists its options, so nothing
+  reorders under the audience while they are still voting.
+  """
+  attr :tally, :list, required: true
+  attr :answer, :string, default: nil
+  attr :reveal, :boolean, default: false
+
+  def tally(assigns) do
+    assigns = assign(assigns, total: assigns.tally |> Enum.map(&elem(&1, 1)) |> Enum.sum())
+
+    ~H"""
+    <div class="tally">
+      <div
+        :for={{option, count} <- @tally}
+        class={["tally__row", (@reveal and option == @answer) && "tally__row--answer"]}
+      >
+        <span class="tally__label">{option}</span>
+        <span class="tally__track">
+          <span class="tally__fill" style={"width: #{share(count, @total)}%"} />
+        </span>
+        <span class="tally__count">{count}</span>
+      </div>
+      <p class="tally__total">{@total} {if @total == 1, do: "vote", else: "votes"}</p>
+    </div>
+    """
+  end
+
   ## PRIVATE FUNCTIONS
+
+  defp join_url, do: Application.fetch_env!(:tiny_llm_talk, :join_url)
+
+  # Nobody types a scheme. Show what a person would actually key in.
+  defp display_url(url), do: String.replace(url, ~r{^https?://}, "")
+
+  defp qr_svg(size) do
+    join_url()
+    |> EQRCode.encode()
+    |> EQRCode.svg(width: size, color: "#000000", background_color: "#FFFFFF")
+    |> Phoenix.HTML.raw()
+  end
+
+  defp share(_count, 0), do: 0
+  defp share(count, total), do: Float.round(count / total * 100, 1)
 
   defp quote_source(%{function: name, path: path}) when is_atom(name) and not is_nil(name) do
     Source.function(path, name)

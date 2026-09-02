@@ -17,10 +17,11 @@ defmodule TinyLlmTalkWeb.SlideComponents do
   import TinyLlmTalkWeb.FigureComponents
 
   alias TinyLlm.Vocab
-  alias TinyLlmTalk.{Deck, Model, Slide}
+  alias TinyLlmTalk.{Deck, Model, Room, Slide}
 
   @drawn [
     :the_sentence,
+    :the_vote,
     :the_bracket,
     :what_you_leave_with,
     :from_nothing,
@@ -49,8 +50,10 @@ defmodule TinyLlmTalkWeb.SlideComponents do
     :causal_mask,
     :positions,
     :attention_code,
+    :attention_bet,
     :demo_attention_heatmap,
     :reading_the_heatmap,
+    :audience_sentence,
     :the_number,
     :attention_sink,
     :architecture,
@@ -85,6 +88,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
   attr :slide, Slide, required: true
   attr :step, :integer, required: true
   attr :controls, :map, default: %{}
+  attr :room, Room, default: %Room{}
 
   # 0. Cold open ------------------------------------------------------------
 
@@ -92,6 +96,21 @@ defmodule TinyLlmTalkWeb.SlideComponents do
     ~H"""
     <section class="slide slide--centred">
       <.probe words={~w(the llama who chases the dogs ____)} class="probe--huge" />
+    </section>
+    """
+  end
+
+  def slide(%{slide: %Slide{id: :the_vote}} = assigns) do
+    ~H"""
+    <section class="slide slide--tight">
+      <.probe words={~w(the llama who chases the dogs ____)} class="probe--wide" />
+      <div class="ask">
+        <.qr />
+        <.tally tally={Room.tally(@room, :verb_vote)} answer="flees" reveal={@step >= 2} />
+      </div>
+      <p :if={@step >= 2} class="slide__note">
+        Everybody knew. Nobody can say how, in fewer than a paragraph.
+      </p>
     </section>
     """
   end
@@ -283,7 +302,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
         column_labels={Vocab.words()}
         highlight={@highlight}
         scale={:sqrt}
-        cell={13}
+        cell={15}
       />
     </section>
     """
@@ -663,6 +682,25 @@ defmodule TinyLlmTalkWeb.SlideComponents do
     """
   end
 
+  def slide(%{slide: %Slide{id: :attention_bet}} = assigns) do
+    ~H"""
+    <section class="slide slide--tight">
+      <h2 class="slide__title slide__title--small">
+        Which word will the blank look at hardest?
+      </h2>
+      <.probe words={probe_marks() ++ [{"____", :blank}]} show_marks class="probe--wide" />
+      <div class="ask">
+        <.qr size={200} />
+        <.tally tally={Room.tally(@room, :attention_bet)} answer="who" reveal={@step >= 2} />
+      </div>
+      <p :if={@step >= 2} class="slide__note">
+        It is <span class="word word--lit">who</span>. Nobody guesses that, including me,
+        the first time.
+      </p>
+    </section>
+    """
+  end
+
   def slide(%{slide: %Slide{id: :demo_attention_heatmap}} = assigns) do
     assigns = assign(assigns, weights: Model.attention(Model.probe()))
 
@@ -709,6 +747,48 @@ defmodule TinyLlmTalkWeb.SlideComponents do
         The point is not that it draws the bracket we imagined. The point is that it is
         visibly structured rather than flat, and it gets the answer.
       </.step>
+    </section>
+    """
+  end
+
+  def slide(%{slide: %Slide{id: :audience_sentence}} = assigns) do
+    assigns =
+      assign(assigns,
+        submissions: Room.popular(assigns.room, 6),
+        featured: assigns.room.featured,
+        weights: featured_attention(assigns.room)
+      )
+
+    ~H"""
+    <section class="slide slide--tight">
+      <h2 class="slide__title slide__title--small">Your sentence</h2>
+
+      <div :if={is_nil(@featured)} class="ask">
+        <.qr size={200} />
+        <div class="submissions">
+          <p :if={@submissions == []} class="slide__note">Nothing yet. Keep tapping.</p>
+          <button
+            :for={{words, _times} <- @submissions}
+            type="button"
+            phx-click="feature"
+            phx-value-words={Enum.join(words, " ")}
+            class="submissions__item"
+          >{Enum.join(words, " ")}</button>
+        </div>
+      </div>
+
+      <div :if={@featured}>
+        <p class="row-caption">{Enum.join(@featured, " ")}</p>
+        <.heatmap
+          :if={@weights}
+          values={@weights}
+          row_labels={["<start>" | @featured]}
+          column_labels={["<start>" | @featured]}
+          show_values
+          cell={heatmap_cell(@featured)}
+        />
+        <.untrained :if={is_nil(@weights)} what="This heatmap" />
+      </div>
     </section>
     """
   end
@@ -1154,6 +1234,22 @@ defmodule TinyLlmTalkWeb.SlideComponents do
     case Model.distribution(Model.probe(), 1.0) do
       nil -> nil
       distribution -> Enum.at(distribution, Vocab.word_to_id(word))
+    end
+  end
+
+  # The audience can only send words from the vocabulary, so any submission
+  # encodes; the context length is the only thing that can bite.
+  defp featured_attention(%Room{featured: nil}), do: nil
+
+  defp featured_attention(%Room{featured: words}) do
+    Model.attention(Enum.take(["<start>" | words], 16))
+  end
+
+  defp heatmap_cell(words) do
+    case length(words) + 1 do
+      size when size <= 8 -> 44
+      size when size <= 11 -> 34
+      _longer -> 26
     end
   end
 

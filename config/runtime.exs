@@ -53,6 +53,11 @@ if config_env() == :prod do
 
   host = System.get_env("PHX_HOST") || "example.com"
 
+  # The link the audience follows, shown on the join slides and pasted into the
+  # chat. It has to be the public host, because over a screen share nobody is on
+  # the same network as this machine.
+  config :tiny_llm_talk, join_url: System.get_env("JOIN_URL") || "https://#{host}/join"
+
   config :tiny_llm_talk, :dns_cluster_query, System.get_env("DNS_CLUSTER_QUERY")
 
   config :tiny_llm_talk, TinyLlmTalkWeb.Endpoint,

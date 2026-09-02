@@ -103,6 +103,35 @@ seeded, so the attention weights the slides quote reproduce exactly.
 Without checkpoints the deck still runs; the figures that need trained weights
 say so and tell you to run the task.
 
+## The audience
+
+The talk is delivered over Zoom, so the audience is already in a browser. They
+open `/join` on any device and it shows whatever question the deck is on:
+
+- **section 0** flees, or flee? A live vote, before anyone has been told anything.
+- **section 4** where will the blank look? They bet, then the heatmap answers.
+- **section 4** their own sentence, built from the 32 words, run through
+  attention on the big screen.
+
+`TinyLlmTalk.Room` holds it. Arriving at a slide opens its activity and leaving
+closes it, so there is nothing extra to remember while presenting, and walking
+backwards asks the question again rather than showing a stale answer. Every one
+of those slides renders correctly with nobody in the room.
+
+Because it is a screen share, the join card leads with the URL and keeps the QR
+code small: everyone watching can click a link, and only the people on a
+television reach for a phone. Paste the link in the chat when the first vote
+opens.
+
+This is the part that has to be deployed. The audience is not on your network.
+
+    fly deploy
+
+`JOIN_URL` overrides what the card shows, if the deployed host is not where you
+want people to land. One machine, never scaled to zero and never two: a second
+machine would hold a second room and half the audience would vote into a tally
+nobody sees.
+
 ## Still to build
 
 - PDF export, for the conference and as the backup if the server dies.

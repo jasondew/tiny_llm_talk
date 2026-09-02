@@ -138,9 +138,9 @@
 }
 
 .heatmap__column-label {
-  height: 92px;
+  height: 96px;
   position: relative;
-  font-size: 11px;
+  font-size: 13px;
   color: var(--ink-dim);
 }
 
@@ -156,7 +156,7 @@
 .heatmap__row-label {
   padding-right: 10px;
   text-align: right;
-  font-size: 11px;
+  font-size: 13px;
   line-height: var(--heatmap-cell);
   color: var(--ink-dim);
 }

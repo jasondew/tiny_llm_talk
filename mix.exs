@@ -45,6 +45,8 @@ defmodule TinyLlmTalk.MixProject do
       # follows the repo link must find that claim intact.
       {:tiny_llm, path: "../tiny_llm"},
       # Syntax highlighting for the code slides.
+      # The join URL, as something a phone can point a camera at.
+      {:eqrcode, "~> 0.2"},
       {:makeup, "~> 1.2"},
       {:makeup_elixir, "~> 1.0"},
       {:phoenix, "~> 1.8.9"},

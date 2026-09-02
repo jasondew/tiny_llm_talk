@@ -32,8 +32,10 @@ defmodule TinyLlmTalk.Code do
   @doc """
   The font size that fits `line_count` lines in the space a code slide has.
 
-  A number small enough to be worth noticing is the signal that the snippet is
-  too long for a room, not an invitation to squint.
+  The floor is the smallest thing that survives a screen share and its
+  compression. Hitting it means the snippet is too long for the medium, so it
+  overflows visibly rather than shrinking into an unreadable grey block: quote a
+  narrower range instead.
   """
   @spec font_size(pos_integer()) :: float()
   def font_size(line_count) do
