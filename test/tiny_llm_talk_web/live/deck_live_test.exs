@@ -1,10 +1,15 @@
 defmodule TinyLlmTalkWeb.DeckLiveTest do
-  use TinyLlmTalkWeb.ConnCase, async: true
+  use TinyLlmTalkWeb.ConnCase, async: false
 
   import Phoenix.LiveViewTest
 
-  alias TinyLlmTalk.Deck
+  alias TinyLlmTalk.{Deck, Room}
   alias TinyLlmTalkWeb.SlideComponents
+
+  setup do
+    Room.reset()
+    :ok
+  end
 
   test "opens on the cold open", %{conn: conn} do
     {:ok, _view, html} = live(conn, ~p"/")
@@ -48,16 +53,11 @@ defmodule TinyLlmTalkWeb.DeckLiveTest do
   end
 
   describe "the audience activities" do
-    setup do
-      TinyLlmTalk.Room.open(nil)
-      :ok
-    end
-
     test "opens a slide's activity on arrival", %{conn: conn} do
       slide = Enum.find(Deck.slides(), &(&1.activity == :verb_vote))
       {:ok, _view, _html} = live(conn, ~p"/s/#{slide.index}")
 
-      assert TinyLlmTalk.Room.state().activity == :verb_vote
+      assert Room.state().activity == :verb_vote
     end
 
     test "closes it again on the way out", %{conn: conn} do
@@ -66,22 +66,30 @@ defmodule TinyLlmTalkWeb.DeckLiveTest do
 
       render_keydown(view, "key", %{"key" => "ArrowRight"})
 
-      assert is_nil(TinyLlmTalk.Room.state().activity)
+      assert is_nil(Room.state().activity)
     end
 
-    test "keeps the votes when advancing a step within the slide", %{conn: conn} do
+    test "keeps the votes and reveals the answer on the second step", %{conn: conn} do
       slide = Enum.find(Deck.slides(), &(&1.activity == :verb_vote))
       {:ok, view, _html} = live(conn, ~p"/s/#{slide.index}")
-      TinyLlmTalk.Room.vote(self(), "flees")
+      Room.vote(self(), "flees")
+      refute Room.state().revealed
 
       render_keydown(view, "key", %{"key" => "ArrowRight"})
 
-      assert TinyLlmTalk.Room.state().activity == :verb_vote
+      assert Room.state().activity == :verb_vote
+      assert Room.state().revealed
+      assert Room.tally(Room.state(), :verb_vote) == [{"flees", 1}, {"flee", 0}]
+    end
 
-      assert TinyLlmTalk.Room.tally(TinyLlmTalk.Room.state(), :verb_vote) == [
-               {"flees", 1},
-               {"flee", 0}
-             ]
+    test "records the room's answer once the deck moves on", %{conn: conn} do
+      slide = Enum.find(Deck.slides(), &(&1.activity == :verb_vote))
+      {:ok, view, _html} = live(conn, ~p"/s/#{slide.index}/#{slide.steps}")
+      Room.vote(self(), "flees")
+
+      render_keydown(view, "key", %{"key" => "ArrowRight"})
+
+      assert [{:verb_vote, %{correct?: true}}] = Room.results(Room.state())
     end
 
     test "puts a submitted sentence on the screen when it is picked", %{conn: conn} do
@@ -90,8 +98,37 @@ defmodule TinyLlmTalkWeb.DeckLiveTest do
 
       render_click(view, "feature", %{"words" => "the llama flees"})
 
-      assert TinyLlmTalk.Room.state().featured == ~w(the llama flees)
+      assert Room.state().featured == ~w(the llama flees)
       assert render(view) =~ "the llama flees"
+    end
+  end
+
+  describe "the controls" do
+    test "a control turned in the presenter view shows up in the room's", %{conn: conn} do
+      slide = Enum.find(Deck.slides(), &(&1.id == :walkthrough))
+      {:ok, deck, _html} = live(conn, ~p"/s/#{slide.index}")
+      {:ok, presenter, _html} = live(conn, ~p"/presenter/#{slide.index}")
+
+      render_click(presenter, "control", %{"name" => "position", "value" => "2"})
+
+      assert render(deck) =~ "walk__word--chosen"
+      assert render(deck) =~ ~s(phx-value-value="2")
+    end
+
+    test "writes a sentence one word at a time and can start over", %{conn: conn} do
+      slide = Enum.find(Deck.slides(), &(&1.id == :one_word_at_a_time))
+      {:ok, view, _html} = live(conn, ~p"/s/#{slide.index}")
+
+      render_click(view, "next_word", %{})
+      render_click(view, "next_word", %{})
+
+      words = view |> render() |> written_words()
+      assert length(words) in 1..2
+      assert Enum.all?(words, &(&1 in TinyLlm.Vocab.words()))
+
+      render_click(view, "restart", %{})
+
+      assert view |> render() |> written_words() == []
     end
   end
 
@@ -100,5 +137,11 @@ defmodule TinyLlmTalkWeb.DeckLiveTest do
 
     assert html =~ "presenter__clock"
     assert html =~ "Cold open"
+  end
+
+  defp written_words(html) do
+    ~r/class="written__word">([^<]+)</
+    |> Regex.scan(html)
+    |> Enum.map(fn [_match, word] -> String.trim(word) end)
   end
 end

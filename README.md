@@ -30,9 +30,11 @@ conference wifi.
 
 ## How a slide gets written
 
-The running order is data, in `TinyLlmTalk.Deck`: eight sections, every slide
+The running order is data, in `TinyLlmTalk.Deck`: ten sections, every slide
 the outline names, with its speaker notes and its count of reveal steps. It is
-one readable file that can be diffed against `docs/talk-outline.md`.
+one readable file that can be diffed against `docs/talk-outline.md`. The arc is
+one sentence going through one forward pass, in the order
+`TinyLlm.Transformer.forward/2` runs it.
 
 Drawing is separate. `TinyLlmTalkWeb.SlideComponents.slide/1` has one function
 clause per slide id, and any slide without a clause falls through to a stub that
@@ -103,20 +105,39 @@ seeded, so the attention weights the slides quote reproduce exactly.
 Without checkpoints the deck still runs; the figures that need trained weights
 say so and tell you to run the task.
 
+## The speaker's controls
+
+Some slides have a control the room watches you turn: the softmax slider, the
+fuzzy map's query word, the mask toggle, the position in the walkthrough, the
+next-word button, the temperature dial. They live in the socket's `controls`
+map and travel over the same PubSub topic as the position, so a control turned
+in the presenter view's preview turns on the projector. Every demo is driven
+from the podium; nobody reaches for the big screen's mouse.
+
+`TinyLlmTalkWeb.Controls` handles them, for both windows.
+
 ## The audience
 
 The talk is delivered over Zoom, so the audience is already in a browser. They
 open `/join` on any device and it shows whatever question the deck is on:
 
 - **section 0** flees, or flee? A live vote, before anyone has been told anything.
-- **section 4** where will the blank look? They bet, then the heatmap answers.
+- **section 1** you are a count table: what follows `chases`? Then the real row.
+- **section 4** where will the blank look? They bet, then the walkthrough answers.
 - **section 4** their own sentence, built from the 32 words, run through
   attention on the big screen.
+- **section 7** spot the human: one grammar sentence among two of the model's.
+- **section 9** a rematch on a sentence the model has never seen, room against
+  model.
+
+Every question with a right answer reveals it on the slide's second step. The
+room does the revealing, so every phone says whether its owner agreed, and the
+room's record accumulates for the scoreboard at the end.
 
 `TinyLlmTalk.Room` holds it. Arriving at a slide opens its activity and leaving
 closes it, so there is nothing extra to remember while presenting, and walking
-backwards asks the question again rather than showing a stale answer. Every one
-of those slides renders correctly with nobody in the room.
+backwards asks the question again rather than showing a stale answer. Every
+one of those slides renders correctly with nobody in the room.
 
 Because it is a screen share, the join card leads with the URL and keeps the QR
 code small: everyone watching can click a link, and only the people on a

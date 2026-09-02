@@ -1,7 +1,7 @@
 defmodule TinyLlmTalkWeb.FigureComponents do
   @moduledoc """
-  The pictures: heatmaps, distributions, loss curves, the scatter, and the box
-  the whole talk keeps coming back to.
+  The pictures: heatmaps, distributions, the loss curve, and the box the whole
+  talk keeps coming back to.
 
   Every one of these is handed plain Elixir terms straight out of
   `TinyLlmTalk.Model`, which is the reason the deck is a Phoenix app. There is
@@ -9,8 +9,8 @@ defmodule TinyLlmTalkWeb.FigureComponents do
   rendered.
 
   Colour follows the job. Magnitude gets one hue, light to dark, so a heatmap
-  reads as more and less rather than as a rainbow. Identity gets the fixed
-  categorical order in `deck.css`, assigned in order and never cycled.
+  reads as more and less rather than as a rainbow. Text always wears text
+  colours, never a series colour.
   """
 
   use Phoenix.Component
@@ -20,8 +20,8 @@ defmodule TinyLlmTalkWeb.FigureComponents do
   @doc """
   The recurring figure: words in, a box, and 32 probabilities out.
 
-  It appears once per model with a different label inside the box, which is the
-  spine of the arc. Same function, more context each time.
+  It appears at the start and again at the end with the lid off, which is the
+  spine of the arc. Same function, and now you know what is in the box.
   """
   attr :label, :string, required: true
   attr :input, :string, default: "the words so far"
@@ -132,12 +132,16 @@ defmodule TinyLlmTalkWeb.FigureComponents do
   @doc """
   A loss curve, with the two lines every loss chart in this talk carries:
   knowing nothing at the top, and the floor a one-word model cannot cross.
+
+  With `draw`, the line draws itself from left to right over a few seconds, so
+  the room watches the loss fall rather than being shown that it fell.
   """
   attr :losses, :list, required: true
   attr :knowing_nothing, :float, required: true
   attr :floor, :float, required: true
   attr :floor_label, :string, default: "one-word floor"
   attr :series_label, :string, default: "held-out loss"
+  attr :draw, :boolean, default: false
   attr :width, :integer, default: 900
   attr :height, :integer, default: 400
 
@@ -211,131 +215,13 @@ defmodule TinyLlmTalkWeb.FigureComponents do
           {@floor_label} &middot; {:erlang.float_to_binary(@floor, decimals: 3)}
         </text>
 
-        <polyline class="chart__line" points={Chart.polyline(@chart, @losses)} />
+        <polyline
+          :if={@draw}
+          class="chart__line chart__line--draw"
+          points={Chart.polyline(@chart, @losses)}
+        />
       </svg>
       <figcaption class="chart__caption">{@series_label}, against training step</figcaption>
-    </figure>
-    """
-  end
-
-  @doc """
-  The learned embeddings, flattened onto their two strongest directions.
-
-  Coloured by part of speech and direct-labelled, so identity never rests on
-  colour alone.
-  """
-  attr :points, :list, required: true
-  attr :width, :integer, default: 880
-  attr :height, :integer, default: 440
-  attr :labels, :boolean, default: true
-
-  def scatter(assigns) do
-    assigns = assign(assigns, chart: scatter_scale(assigns))
-
-    ~H"""
-    <figure class="chart">
-      <svg
-        viewBox={"0 0 #{@width} #{@height}"}
-        class="chart__svg"
-        role="img"
-        aria-label="learned embeddings, projected onto two dimensions"
-      >
-        <g :for={point <- @points} class={"scatter scatter--#{point.kind}"}>
-          <circle cx={Chart.x(@chart, point.x)} cy={Chart.y(@chart, point.y)} r="7" />
-          <text :if={@labels} x={Chart.x(@chart, point.x) + 12} y={Chart.y(@chart, point.y) + 4}>
-            {point.word}
-          </text>
-        </g>
-      </svg>
-      <figcaption class="chart__legend">
-        <span
-          :for={kind <- ~w(noun verb adjective determiner connective boundary)a}
-          class={"chart__legend-item scatter--#{kind}"}
-        >
-          <span class="chart__swatch" />{kind}
-        </span>
-      </figcaption>
-    </figure>
-    """
-  end
-
-  @doc """
-  Two measures of the same kind, on one axis, as temperature rises.
-
-  Both are percentages, so they share a scale honestly. Two series get a
-  legend, and each is direct-labelled at its end.
-  """
-  attr :curve, :list, required: true
-  attr :width, :integer, default: 900
-  attr :height, :integer, default: 400
-
-  def tradeoff_chart(assigns) do
-    assigns =
-      assign(assigns,
-        chart:
-          Chart.new(
-            width: assigns.width,
-            height: assigns.height,
-            x_domain: {0.0, 3.0},
-            y_domain: {0.0, 1.0}
-          ),
-        grammatical: Enum.map(assigns.curve, &{&1.temperature, &1.grammatical}),
-        distinct: Enum.map(assigns.curve, &{&1.temperature, &1.distinct})
-      )
-
-    ~H"""
-    <figure class="chart">
-      <svg
-        viewBox={"0 0 #{@width} #{@height}"}
-        class="chart__svg"
-        role="img"
-        aria-label="grammaticality and distinctness against temperature"
-      >
-        <line
-          :for={value <- Chart.ticks({0.0, 1.0}, 5)}
-          class="chart__grid"
-          x1={Chart.x(@chart, 0.0)}
-          x2={Chart.x(@chart, 3.0)}
-          y1={Chart.y(@chart, value)}
-          y2={Chart.y(@chart, value)}
-        />
-        <text
-          :for={value <- Chart.ticks({0.0, 1.0}, 5)}
-          class="chart__tick"
-          x={Chart.x(@chart, 0.0) - 12}
-          y={Chart.y(@chart, value) + 5}
-          text-anchor="end"
-        >
-          {round(value * 100)}%
-        </text>
-        <text
-          :for={value <- Chart.ticks({0.0, 3.0}, 7)}
-          class="chart__tick"
-          x={Chart.x(@chart, value)}
-          y={@height - 14}
-          text-anchor="middle"
-        >
-          {:erlang.float_to_binary(value, decimals: 1)}
-        </text>
-
-        <polyline
-          class="chart__line chart__line--series-1"
-          points={Chart.polyline(@chart, @grammatical)}
-        />
-        <polyline
-          class="chart__line chart__line--series-2"
-          points={Chart.polyline(@chart, @distinct)}
-        />
-      </svg>
-      <figcaption class="chart__legend">
-        <span class="chart__legend-item chart__legend-item--series-1">
-          <span class="chart__swatch" />grammatical
-        </span>
-        <span class="chart__legend-item chart__legend-item--series-2">
-          <span class="chart__swatch" />distinct
-        </span>
-        <span class="chart__legend-note">temperature &rarr;</span>
-      </figcaption>
     </figure>
     """
   end
@@ -417,19 +303,6 @@ defmodule TinyLlmTalkWeb.FigureComponents do
       height: assigns.height,
       x_domain: {0, Enum.max(steps)},
       y_domain: {1.5, ceil_to(assigns.knowing_nothing)}
-    )
-  end
-
-  defp scatter_scale(assigns) do
-    xs = Enum.map(assigns.points, & &1.x)
-    ys = Enum.map(assigns.points, & &1.y)
-
-    Chart.new(
-      width: assigns.width,
-      height: assigns.height,
-      x_domain: {Enum.min(xs), Enum.max(xs)},
-      y_domain: {Enum.min(ys), Enum.max(ys)},
-      padding: %{top: 24, right: 90, bottom: 24, left: 24}
     )
   end
 

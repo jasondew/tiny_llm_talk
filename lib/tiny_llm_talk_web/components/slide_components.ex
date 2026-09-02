@@ -9,6 +9,10 @@ defmodule TinyLlmTalkWeb.SlideComponents do
   Figures are handed the model's own numbers from `TinyLlmTalk.Model` rather
   than a transcription of them, so a slide cannot quote a number the checkpoint
   does not produce. That is the whole reason the deck is a Phoenix app.
+
+  Slides read two things besides the model: `@controls`, what the speaker has
+  clicked or dragged, and `@room`, what the audience has answered. Both are
+  allowed to be empty, and every slide renders correctly when they are.
   """
 
   use Phoenix.Component
@@ -16,59 +20,34 @@ defmodule TinyLlmTalkWeb.SlideComponents do
   import TinyLlmTalkWeb.DeckComponents
   import TinyLlmTalkWeb.FigureComponents
 
-  alias TinyLlm.Vocab
-  alias TinyLlmTalk.{Deck, Model, Room, Slide}
+  alias TinyLlm.{Tensor, Vocab}
+  alias TinyLlmTalk.{Deck, FuzzyMap, Model, Room, Slide}
+  alias TinyLlmTalkWeb.Controls
 
-  @drawn [
-    :the_sentence,
-    :the_vote,
-    :the_bracket,
-    :what_you_leave_with,
-    :from_nothing,
-    :vocabulary,
-    :grammar,
-    :one_function,
-    :how_we_score_it,
-    :counting_pairs,
-    :bigram_heatmap,
-    :bigram_box,
-    :bigram_wins,
-    :bigram_fails,
-    :the_floor,
-    :what_does_learning_buy,
-    :embeddings,
-    :linear_and_softmax,
-    :training,
-    :demo_training_loss,
-    :pca_scatter,
-    :learning_was_not_the_problem,
-    :what_we_want,
-    :dot_product,
-    :query_key_value,
-    :scores,
-    :pulling_in,
-    :causal_mask,
-    :positions,
-    :attention_code,
-    :attention_bet,
-    :demo_attention_heatmap,
-    :reading_the_heatmap,
-    :audience_sentence,
-    :the_number,
-    :attention_sink,
-    :architecture,
-    :residuals,
-    :mlp,
-    :rmsnorm,
-    :two_hop,
-    :scale,
-    :the_loop,
-    :temperature,
-    :demo_temperature,
-    :the_tradeoff,
-    :what_is_not_here,
-    :the_sentence_again
-  ]
+  # Every slide in the arc is drawn. The test suite renders each one and fails
+  # if any falls through to the stub, so this list is a promise, not a record.
+  @drawn Enum.map(Deck.slides(), & &1.id)
+
+  # The public surface of the model's entire math library, in file order. The
+  # two that matter are lit; the rest are dimmed to make the point that this
+  # is all there is.
+  @tensor_functions ~w(zeros ones fan_scale random one_hot shape transpose add sub hadamard scale
+    map dot outer_product matmul add_bias unit normalize softmax add_row cross_entropy argmax
+    weighted_random_index)
+  @tensor_lit ~w(dot softmax)
+
+  # The four scores the softmax playground turns into a budget.
+  @playground_scores [{"llama", 2.0}, {"dogs", 1.0}, {"who", 0.5}, {"chases", -1.0}]
+
+  @map_get_snippet """
+  plural = %{"llama" => 0.0, "llamas" => 1.0, "dog" => 0.0, "dogs" => 1.0}
+
+  Map.get(plural, "llamas")
+  #=> 1.0
+
+  Map.get(plural, "geese")
+  #=> nil
+  """
 
   @doc "Whether this slide has been drawn yet, or is still a stub."
   @spec drawn?(atom()) :: boolean()
@@ -101,12 +80,14 @@ defmodule TinyLlmTalkWeb.SlideComponents do
   end
 
   def slide(%{slide: %Slide{id: :the_vote}} = assigns) do
+    assigns = assign(assigns, activity: Room.activity(:verb_vote))
+
     ~H"""
     <section class="slide slide--tight">
       <.probe words={~w(the llama who chases the dogs ____)} class="probe--wide" />
       <div class="ask">
         <.qr />
-        <.tally tally={Room.tally(@room, :verb_vote)} answer="flees" reveal={@step >= 2} />
+        <.tally tally={Room.tally(@room, :verb_vote)} answer={@activity.answer} reveal={@step >= 2} />
       </div>
       <p :if={@step >= 2} class="slide__note">
         Everybody knew. Nobody can say how, in fewer than a paragraph.
@@ -133,6 +114,9 @@ defmodule TinyLlmTalkWeb.SlideComponents do
         show_bracket={@step >= 3}
         class="probe--huge"
       />
+      <.step n={3} step={@step} class="slide__note">
+        Humans get this wrong too. "The key to the cabinets were rusty."
+      </.step>
     </section>
     """
   end
@@ -145,7 +129,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
         You will be able to explain how a transformer works.
       </h2>
       <.step n={2} step={@step} class="slide__lede">
-        Attention is the part you will be able to describe out loud.
+        To the person next to you. In three verbs.
       </.step>
       <.step n={3} step={@step}>
         <ol class="beats">
@@ -159,6 +143,8 @@ defmodule TinyLlmTalkWeb.SlideComponents do
   end
 
   def slide(%{slide: %Slide{id: :from_nothing}} = assigns) do
+    assigns = assign(assigns, parameters: format_count(Model.parameter_count()))
+
     ~H"""
     <section class="slide">
       <h2 class="slide__title">From nothing</h2>
@@ -170,10 +156,10 @@ defmodule TinyLlmTalkWeb.SlideComponents do
           <li><code>mix.exs</code> deps are empty.</li>
         </.step>
         <.step n={3} step={@step}>
-          <li>15,104 parameters.</li>
+          <li>{@parameters} parameters. Lists of lists of floats.</li>
         </.step>
         <.step n={4} step={@step}>
-          <li>Trains in under a minute and a half on this laptop.</li>
+          <li>Trains in about a minute on this laptop.</li>
         </.step>
         <.step n={5} step={@step}>
           <li>Every gradient by hand, and checked.</li>
@@ -183,7 +169,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
     """
   end
 
-  # 1. The setup ------------------------------------------------------------
+  # 1. Words become numbers -------------------------------------------------
 
   def slide(%{slide: %Slide{id: :vocabulary}} = assigns) do
     assigns = assign(assigns, groups: vocabulary_groups())
@@ -220,8 +206,8 @@ defmodule TinyLlmTalkWeb.SlideComponents do
         <li>A relative clause's verb agrees with the head noun, not with whatever is nearest.</li>
       </ol>
       <p class="slide__note">
-        We own the training data because then we know the right answer to every question
-        we ask the model. Nobody knows that about a real corpus.
+        We wrote the grammar, so "did it learn agreement" is a measurement, not a vibe.
+        Nobody knows that about a real corpus.
       </p>
     </section>
     """
@@ -238,298 +224,57 @@ defmodule TinyLlmTalkWeb.SlideComponents do
         input="the words so far"
         distribution={@distribution}
       />
-      <p class="slide__note">Every model in this talk is that function. Only the context changes.</p>
+      <p class="slide__note">Everything we build today goes inside the box.</p>
     </section>
     """
   end
 
-  def slide(%{slide: %Slide{id: :how_we_score_it}} = assigns) do
-    assigns =
-      assign(assigns, knowing_nothing: Model.knowing_nothing(), floor: Model.bigram_floor())
-
-    ~H"""
-    <section class="slide">
-      <h2 class="slide__title">How surprised is it?</h2>
-      <.step n={1} step={@step} class="slide__lede">
-        Held-out loss: how surprised the model is by sentences it has not seen. Lower is better.
-      </.step>
-      <div class="stat-row">
-        <.step n={2} step={@step}>
-          <.stat value={format_loss(@knowing_nothing)} label="knowing nothing" note="ln(32)" />
-        </.step>
-        <.step n={3} step={@step}>
-          <.stat
-            value={format_loss(@floor)}
-            label="the best anything can do seeing one word"
-            note="H(next | previous)"
-            tone="cool"
-          />
-        </.step>
-      </div>
-      <.step n={3} step={@step} class="slide__note">
-        Both lines are on every loss chart from here on.
-      </.step>
-    </section>
-    """
-  end
-
-  # 2. Bigram ---------------------------------------------------------------
-
-  def slide(%{slide: %Slide{id: :counting_pairs}} = assigns) do
-    assigns = assign(assigns, row: Model.bigram_row("chases"))
-
-    ~H"""
-    <section class="slide">
-      <h2 class="slide__title">Count every adjacent pair</h2>
-      <p class="slide__lede">
-        Two thousand sentences. For every word, what came after it, and how often.
-      </p>
-      <p class="row-caption">what follows <span class="word word--lit">chases</span></p>
-      <.bars values={@row} words={Vocab.words()} top={5} highlight={~w(the a)} />
-    </section>
-    """
-  end
-
-  def slide(%{slide: %Slide{id: :bigram_heatmap}} = assigns) do
-    assigns = assign(assigns, highlight: bigram_highlight(assigns.step))
+  def slide(%{slide: %Slide{id: :be_the_bigram}} = assigns) do
+    assigns = assign(assigns, activity: Room.activity(:bigram_next))
 
     ~H"""
     <section class="slide slide--tight">
-      <h2 class="slide__title slide__title--small">Thirty-two by thirty-two</h2>
-      <.heatmap
-        values={Model.bigram()}
-        row_labels={Vocab.words()}
-        column_labels={Vocab.words()}
-        highlight={@highlight}
-        scale={:sqrt}
-        cell={15}
-      />
-    </section>
-    """
-  end
-
-  def slide(%{slide: %Slide{id: :bigram_box}} = assigns) do
-    ~H"""
-    <section class="slide slide--centred">
-      <h2 class="slide__title">The same function, with a table in it</h2>
-      <.function_box
-        label="count table"
-        input="the last word"
-        distribution={Model.bigram_row("dogs")}
-      />
-      <p class="slide__note">Look up the row for the last word. Pick from it.</p>
-    </section>
-    """
-  end
-
-  def slide(%{slide: %Slide{id: :bigram_wins}} = assigns) do
-    assigns = assign(assigns, sentences: Model.bigram_sentences(8))
-
-    ~H"""
-    <section class="slide">
-      <h2 class="slide__title">It gets a surprising amount right</h2>
-      <ul class="examples examples--generated">
-        <li :for={sentence <- @sentences}>{Enum.join(sentence, " ")}</li>
-      </ul>
-      <p class="slide__note">
-        Determiners, the period, and agreement whenever the noun is right there.
-      </p>
-    </section>
-    """
-  end
-
-  def slide(%{slide: %Slide{id: :bigram_fails}} = assigns) do
-    assigns = assign(assigns, agreement: Model.agreement(:bigram))
-
-    ~H"""
-    <section class="slide">
-      <h2 class="slide__title">Where it cannot</h2>
-      <.probe words={probe_marks() ++ [{"____", :blank}]} show_marks class="probe--wide" />
+      <h2 class="slide__title slide__title--small">
+        You have read two thousand sentences. You just saw <span class="word word--lit">chases</span>. What comes next?
+      </h2>
+      <div class="ask">
+        <.qr />
+        <.tally tally={Room.tally(@room, :bigram_next)} answer={@activity.answer} reveal={@step >= 2} />
+      </div>
       <.step n={2} step={@step}>
         <p class="row-caption">
-          all it sees is <span class="word word--distractor">dogs</span>, and this is that row
+          what actually followed <span class="word word--lit">chases</span>, in two thousand
+          sentences. You just ran the dumbest model that works.
         </p>
-        <.bars values={Model.bigram_row("dogs")} words={Vocab.words()} top={4} highlight={~w(flee)} />
-      </.step>
-      <.step n={3} step={@step}>
-        <.stat
-          value={format_percent(@agreement)}
-          label="right, on probes where the nearest noun disagrees"
-          tone="bad"
+        <.bars
+          values={Model.bigram_row("chases")}
+          words={Vocab.words()}
+          top={2}
+          highlight={~w(the a)}
         />
       </.step>
     </section>
     """
   end
 
-  def slide(%{slide: %Slide{id: :the_floor}} = assigns) do
-    assigns =
-      assign(assigns, floor: Model.bigram_floor(), held_out: Model.bigram_held_out())
+  # 2. All the math there is ------------------------------------------------
+
+  def slide(%{slide: %Slide{id: :all_the_math}} = assigns) do
+    assigns = assign(assigns, functions: @tensor_functions, lit: @tensor_lit)
 
     ~H"""
-    <section class="slide slide--centred">
-      <h2 class="slide__statement">Nothing that sees one word beats {format_loss(@floor)}.</h2>
-      <div class="stat-row">
-        <.stat value={format_loss(@floor)} label="the floor" note="H(next | previous)" tone="cool" />
-        <.stat value={format_loss(@held_out)} label="what the count table scores" note="held out" />
+    <section class="slide">
+      <h2 class="slide__title">The entire math library</h2>
+      <div class="chips">
+        <span
+          :for={name <- @functions}
+          class={["chip", @step >= 2 && if(name in @lit, do: "chip--lit", else: "chip--dim")]}
+        >{name}</span>
       </div>
-      <p class="slide__note">
-        The floor comes from the grammar, not from the model. The gap between the two is
-        the price of counting rather than knowing.
-      </p>
-    </section>
-    """
-  end
-
-  # 3. Neural bigram --------------------------------------------------------
-
-  def slide(%{slide: %Slide{id: :what_does_learning_buy}} = assigns) do
-    ~H"""
-    <section class="slide slide--centred">
-      <h2 class="slide__statement">If counting is optimal, what does learning buy?</h2>
-      <p class="slide__lede">For this model: nothing.</p>
-      <p class="slide__note">
-        We build it anyway, because every part of it survives into the transformer.
-      </p>
-    </section>
-    """
-  end
-
-  def slide(%{slide: %Slide{id: :embeddings}} = assigns) do
-    assigns = assign(assigns, row: Model.embedding("llama"))
-
-    ~H"""
-    <section class="slide">
-      <h2 class="slide__title">A word becomes a point</h2>
-      <div class="lookup">
-        <span class="lookup__word">llama</span>
-        <span class="lookup__arrow">&rarr;</span>
-        <span class="lookup__id">{Vocab.word_to_id("llama")}</span>
-        <span class="lookup__arrow">&rarr;</span>
-        <span class="lookup__row">
-          <.spark :if={@row} values={Enum.map(@row, &abs/1)} />
-          <.untrained :if={is_nil(@row)} what="This row of floats" />
-        </span>
-      </div>
-      <p class="slide__note">
-        Thirty-two floats, looked up from a table that starts random. Words that behave
-        the same should end up near each other, and the model moves them there itself.
-      </p>
-    </section>
-    """
-  end
-
-  def slide(%{slide: %Slide{id: :linear_and_softmax}} = assigns) do
-    ~H"""
-    <section class="slide">
-      <h2 class="slide__title">{@slide.title}</h2>
-      <.code
-        path="lib/tiny_llm/embedder.ex"
-        function={:forward}
-        step={@step}
-        focus={[:all, 2..2, 3..3, :all]}
-      />
-    </section>
-    """
-  end
-
-  def slide(%{slide: %Slide{id: :training}} = assigns) do
-    ~H"""
-    <section class="slide">
-      <h2 class="slide__title">Training, all of it</h2>
-      <ol class="beats beats--numbered">
-        <.step n={1} step={@step}>
-          <li>Loss is surprise at the right answer.</li>
-        </.step>
-        <.step n={2} step={@step}>
-          <li>Every parameter has a slope: nudge it, and the loss goes up or down.</li>
-        </.step>
-        <.step n={3} step={@step}>
-          <li>Move every parameter a small step downhill.</li>
-        </.step>
-        <.step n={4} step={@step}>
-          <li>Repeat a few hundred times.</li>
-        </.step>
-      </ol>
-      <.step n={4} step={@step} class="slide__note">
-        Every slope in this repo is derived by hand and checked against a finite
-        difference. No chain rule on screen.
+      <p class="code__caption">lib/tiny_llm/tensor.ex, every public function</p>
+      <.step n={2} step={@step} class="slide__lede">
+        Two of these are ideas. The rest are bookkeeping.
       </.step>
-    </section>
-    """
-  end
-
-  def slide(%{slide: %Slide{id: :demo_training_loss}} = assigns) do
-    assigns = assign(assigns, losses: Model.losses(:embedder))
-
-    ~H"""
-    <section class="slide">
-      <h2 class="slide__title">It falls to the floor and stops</h2>
-      <.loss_chart
-        :if={@losses}
-        losses={@losses}
-        knowing_nothing={Model.knowing_nothing()}
-        floor={Model.bigram_floor()}
-        series_label="held-out loss, one word of context"
-      />
-      <.untrained :if={is_nil(@losses)} what="This loss curve" />
-    </section>
-    """
-  end
-
-  def slide(%{slide: %Slide{id: :pca_scatter}} = assigns) do
-    assigns = assign(assigns, points: Model.embedding_scatter())
-
-    ~H"""
-    <section class="slide slide--tight">
-      <h2 class="slide__title slide__title--small">What the embeddings learned</h2>
-      <.scatter :if={@points} points={@points} />
-      <.untrained :if={is_nil(@points)} what="This scatter" />
-    </section>
-    """
-  end
-
-  def slide(%{slide: %Slide{id: :learning_was_not_the_problem}} = assigns) do
-    assigns =
-      assign(assigns,
-        bigram: Model.agreement(:bigram),
-        embedder: Model.agreement(:embedder)
-      )
-
-    ~H"""
-    <section class="slide slide--centred">
-      <h2 class="slide__statement">Learning was never the problem.</h2>
-      <div class="stat-row">
-        <.stat value={format_percent(@bigram)} label="count table" tone="bad" />
-        <.stat value={format_percent(@embedder)} label="learned, same context" tone="bad" />
-      </div>
-      <p class="slide__lede">
-        Not close to each other by luck. They see the same one word, so they give the
-        same answer, and on these probes that word is the one that lies.
-      </p>
-    </section>
-    """
-  end
-
-  # 4. Attention ------------------------------------------------------------
-
-  def slide(%{slide: %Slide{id: :what_we_want}} = assigns) do
-    ~H"""
-    <section class="slide slide--centred">
-      <h2 class="slide__title">Reach back past the distractor</h2>
-      <.probe
-        words={probe_marks() ++ [{"____", :blank}]}
-        bracket={3..8}
-        show_marks
-        show_bracket
-        class="probe--wide"
-      />
-      <p class="slide__lede">
-        A fixed window would not do it. The subject can be anywhere.
-      </p>
-      <p class="slide__note">
-        So let the blank look at every earlier word and decide for itself which ones matter.
-      </p>
     </section>
     """
   end
@@ -553,17 +298,223 @@ defmodule TinyLlmTalkWeb.SlideComponents do
         </.step>
       </div>
       <.step n={3} step={@step} class="slide__note">
-        Big when two vectors point the same way, near zero when they are unrelated.
-        And we can learn what "similar" ought to mean.
+        Big when two lists point the same way. Near zero when unrelated. Negative when opposed.
+        That is the only arithmetic in attention.
       </.step>
     </section>
     """
   end
 
-  def slide(%{slide: %Slide{id: :query_key_value}} = assigns) do
+  def slide(%{slide: %Slide{id: :softmax_playground}} = assigns) do
+    sharpness = Controls.number(assigns.controls, "sharpness", 1.0)
+    scores = Enum.map(@playground_scores, &elem(&1, 1))
+    [budget] = Tensor.softmax([Enum.map(scores, &(&1 * sharpness))])
+
+    assigns =
+      assign(assigns,
+        sharpness: sharpness,
+        words: Enum.map(@playground_scores, &elem(&1, 0)),
+        scores: @playground_scores,
+        budget: budget
+      )
+
     ~H"""
     <section class="slide">
-      <h2 class="slide__title">Query, key, value</h2>
+      <h2 class="slide__title slide__title--small">A softmax turns scores into a budget</h2>
+      <div class="two-up">
+        <div>
+          <p class="row-caption">scores in</p>
+          <div class="arithmetic">
+            <p :for={{word, score} <- @scores} class="arithmetic__row">
+              <span>{word}</span> {format_signed(score)}
+            </p>
+          </div>
+        </div>
+        <div>
+          <p class="row-caption">budget out &middot; sums to {format_weight(Enum.sum(@budget))}</p>
+          <.bars values={@budget} words={@words} top={4} highlight={@words} />
+        </div>
+      </div>
+      <form id="sharpness-dial" phx-change="control" class="dial">
+        <input type="hidden" name="name" value="sharpness" />
+        <input
+          type="range"
+          name="value"
+          min="0.1"
+          max="4"
+          step="0.1"
+          value={@sharpness}
+          class="dial__range"
+        />
+        <output class="dial__value">sharpness {:erlang.float_to_binary(@sharpness, decimals: 1)}</output>
+      </form>
+      <p class="slide__note">
+        Sharp commits to the top score. Soft spreads the budget. Either way it sums to one.
+      </p>
+    </section>
+    """
+  end
+
+  # 3. Embedding and position -----------------------------------------------
+
+  def slide(%{slide: %Slide{id: :a_word_is_a_row}} = assigns) do
+    assigns = assign(assigns, row: Model.embedding("llama"))
+
+    ~H"""
+    <section class="slide slide--tight">
+      <h2 class="slide__title slide__title--small">A word becomes a row of floats</h2>
+      <div class="lookup">
+        <span class="lookup__word">llama</span>
+        <span class="lookup__arrow">&rarr;</span>
+        <span class="lookup__id">{Vocab.word_to_id("llama")}</span>
+        <span class="lookup__arrow">&rarr;</span>
+        <span class="lookup__row">
+          <.spark :if={@row} values={Enum.map(@row, &abs/1)} />
+          <.untrained :if={is_nil(@row)} what="This row of floats" />
+        </span>
+      </div>
+      <p :if={@row} class="floats">
+        {@row |> Enum.take(6) |> Enum.map_join("  ", &format_signed/1)} &hellip;
+      </p>
+      <.step n={2} step={@step}>
+        <.code path="lib/tiny_llm/transformer.ex" range={114..116} step={@step} focus={[1..1, 1..1]} />
+      </.step>
+      <p class="slide__note">
+        Looked up from a table that starts random. The model moves the rows itself. This is
+        the real row, from the checkpoint.
+      </p>
+    </section>
+    """
+  end
+
+  def slide(%{slide: %Slide{id: :positions_added}} = assigns) do
+    assigns = assign(assigns, row: Model.position(2))
+
+    ~H"""
+    <section class="slide">
+      <h2 class="slide__title">Position is another row, added on</h2>
+      <div class="lookup">
+        <span class="lookup__word">position 2</span>
+        <span class="lookup__arrow">&rarr;</span>
+        <span class="lookup__row">
+          <.spark :if={@row} values={Enum.map(@row, &abs/1)} />
+          <.untrained :if={is_nil(@row)} what="This row of floats" />
+        </span>
+      </div>
+      <.code path="lib/tiny_llm/transformer.ex" range={114..116} step={@step} focus={[2..2, 3..3]} />
+      <.step n={2} step={@step} class="slide__note">
+        Added, not appended. Same width in, same width out, so nothing downstream has to know
+        that position exists. Sixteen positions, sixteen learned rows.
+      </.step>
+    </section>
+    """
+  end
+
+  def slide(%{slide: %Slide{id: :forgets_the_words}} = assigns) do
+    assigns = assign(assigns, rows: input_rows())
+
+    ~H"""
+    <section class="slide slide--tight">
+      <h2 class="slide__title slide__title--small">
+        From here on, the model has forgotten it ever saw words
+      </h2>
+      <.heatmap
+        :if={@rows}
+        values={@rows}
+        row_labels={Model.probe()}
+        column_labels={Enum.map(0..31, &to_string/1)}
+        cell={26}
+      />
+      <.untrained :if={is_nil(@rows)} what="This grid" />
+      <p class="slide__note">
+        Seven positions in. Seven rows of thirty-two floats out. This grid is what attention
+        actually sees.
+      </p>
+    </section>
+    """
+  end
+
+  # 4. Attention, from Map --------------------------------------------------
+
+  def slide(%{slide: %Slide{id: :map_get}} = assigns) do
+    assigns = assign(assigns, source: @map_get_snippet)
+
+    ~H"""
+    <section class="slide">
+      <h2 class="slide__title">Start with a lookup you already trust</h2>
+      <.snippet source={@source} step={@step} focus={[:all, 6..7]} />
+      <.step n={2} step={@step} class="slide__lede">
+        Ask for a key that is not there, and you get nothing. That is the problem.
+      </.step>
+    </section>
+    """
+  end
+
+  def slide(%{slide: %Slide{id: :fuzzy_map}} = assigns) do
+    query = Controls.choice(assigns.controls, "query", "geese")
+    lookup = FuzzyMap.lookup(query)
+
+    assigns =
+      assign(assigns,
+        query: lookup.query,
+        lookup: lookup,
+        exact: FuzzyMap.exact(lookup.query),
+        options: FuzzyMap.query_words()
+      )
+
+    ~H"""
+    <section class="slide slide--tight">
+      <h2 class="slide__title slide__title--small">Now make it fuzzy</h2>
+      <div class="fuzzy-head">
+        <.picker name="query" options={@options} chosen={@query} />
+        <p class="row-caption">
+          <code>Map.get</code>
+          says {if @exact, do: format_weight(@exact), else: "nil"} &middot; query vector {format_vector(
+            @lookup.vector
+          )}
+        </p>
+      </div>
+      <table class="fuzzy">
+        <thead>
+          <tr>
+            <th>key</th>
+            <th>key vector</th>
+            <th>1. score (dot)</th>
+            <th class={@step < 2 && "fuzzy--hidden"}>2. budget (softmax)</th>
+            <th class={@step < 3 && "fuzzy--hidden"}>3. value &times; budget</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr :for={row <- @lookup.scores}>
+            <td class="fuzzy__key">{row.key}</td>
+            <td class="fuzzy__vector">{format_vector(entry_vector(row.key))}</td>
+            <td class="fuzzy__number">{format_signed(row.score)}</td>
+            <td class={["fuzzy__budget", @step < 2 && "fuzzy--hidden"]}>
+              <span class="fuzzy__track">
+                <span class="fuzzy__fill" style={"width: #{round(row.weight * 100)}%"} />
+              </span>
+              {format_weight(row.weight)}
+            </td>
+            <td class={["fuzzy__number", @step < 3 && "fuzzy--hidden"]}>
+              {format_weight(row.value)} &times; {format_weight(row.weight)}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <.step n={3} step={@step} class="fuzzy-answer">
+        how plural is <span class="word word--lit">{@query}</span>?
+        <span class="fuzzy-answer__value">{format_weight(@lookup.blend)}</span>
+      </.step>
+    </section>
+    """
+  end
+
+  def slide(%{slide: %Slide{id: :learn_the_lookup}} = assigns) do
+    ~H"""
+    <section class="slide">
+      <h2 class="slide__title slide__title--small">
+        Then let it learn what to ask, what to offer, and what to hand over
+      </h2>
       <dl class="definitions">
         <.step n={1} step={@step}>
           <dt>query</dt>
@@ -578,92 +529,13 @@ defmodule TinyLlmTalkWeb.SlideComponents do
           <dd>what this position hands over if it gets chosen</dd>
         </.step>
       </dl>
-      <.step n={4} step={@step} class="slide__note">
-        Three weighted sums of the same embedding, through three learned tables: <code>Wq</code>, <code>Wk</code>, <code>Wv</code>. Nothing else.
-      </.step>
-    </section>
-    """
-  end
-
-  def slide(%{slide: %Slide{id: :scores}} = assigns) do
-    assigns = assign(assigns, weights: blank_row())
-
-    ~H"""
-    <section class="slide">
-      <h2 class="slide__title">Score every earlier word</h2>
-      <ol class="beats beats--numbered">
-        <.step n={1} step={@step}>
-          <li>Take the blank's query. Dot it against every earlier key.</li>
-        </.step>
-        <.step n={2} step={@step}>
-          <li>Divide by the square root of the width, so the numbers stay tame.</li>
-        </.step>
-        <.step n={3} step={@step}>
-          <li>Softmax across them. Now it is a probability of where to look.</li>
-        </.step>
-      </ol>
       <.step n={4} step={@step}>
-        <.bars
-          :if={@weights}
-          values={@weights}
-          words={Model.probe()}
-          top={4}
-          highlight={~w(who dogs llama)}
-        />
-        <.untrained :if={is_nil(@weights)} what="These attention weights" />
+        <.code path="lib/tiny_llm/attention.ex" range={198..200} step={@step} caption={false} />
       </.step>
-    </section>
-    """
-  end
-
-  def slide(%{slide: %Slide{id: :pulling_in}} = assigns) do
-    ~H"""
-    <section class="slide slide--centred">
-      <h2 class="slide__title">Pull in what you chose</h2>
-      <p class="slide__statement slide__statement--wide">
-        Multiply each earlier position's value by its weight, and add them up.
-      </p>
-      <p class="slide__lede">
-        The blank now holds a blend of the words it decided to look at.
-      </p>
-      <p class="slide__note">
-        One more weighted sum, <code>Wo</code>, and out through the same softmax as before.
-      </p>
-    </section>
-    """
-  end
-
-  def slide(%{slide: %Slide{id: :causal_mask}} = assigns) do
-    ~H"""
-    <section class="slide">
-      <h2 class="slide__title">Each position may only see what came before it</h2>
-      <.heatmap
-        values={causal_mask(length(Model.probe()))}
-        row_labels={Model.probe()}
-        column_labels={Model.probe()}
-        cell={44}
-      />
-      <p class="slide__note">
-        Every position predicts at once during training, so the future gets a score of
-        minus a billion before the softmax, which rounds to no attention at all.
-      </p>
-    </section>
-    """
-  end
-
-  def slide(%{slide: %Slide{id: :positions}} = assigns) do
-    ~H"""
-    <section class="slide slide--centred">
-      <h2 class="slide__statement">Attention is a bag until you tell it otherwise.</h2>
-      <p class="slide__lede">
-        As described, it does not know that <span class="word word--subject">llama</span>
-        came before <span class="word word--distractor">dogs</span>.
-      </p>
-      <p class="slide__note">
-        So each position gets a learned vector of its own, added to the word's embedding.
-        Sixteen positions, sixteen vectors. Now it can tell the noun near the start from
-        the noun near the end.
-      </p>
+      <.step n={4} step={@step} class="slide__note">
+        Each one is the position's row times a learned table. Three matrices, and the fuzzy
+        map is an attention head.
+      </.step>
     </section>
     """
   end
@@ -671,7 +543,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
   def slide(%{slide: %Slide{id: :attention_code}} = assigns) do
     ~H"""
     <section class="slide">
-      <h2 class="slide__title">{@slide.title}</h2>
+      <h2 class="slide__title">The whole head</h2>
       <.code
         path="lib/tiny_llm/attention.ex"
         range={198..213}
@@ -682,7 +554,58 @@ defmodule TinyLlmTalkWeb.SlideComponents do
     """
   end
 
+  def slide(%{slide: %Slide{id: :three_details}} = assigns) do
+    mask = Controls.choice(assigns.controls, "mask", "on")
+
+    assigns =
+      assign(assigns,
+        mask: mask,
+        weights:
+          if(mask == "on",
+            do: Model.attention(Model.probe()),
+            else: Model.unmasked_attention(Model.probe())
+          )
+      )
+
+    ~H"""
+    <section class="slide slide--tight">
+      <h2 class="slide__title slide__title--small">Three details do all the work</h2>
+      <div class="two-up two-up--lists">
+        <ol class="beats beats--numbered">
+          <.step n={1} step={@step}>
+            <li>Divide by the square root of the width, so the softmax does not saturate.</li>
+          </.step>
+          <.step n={2} step={@step}>
+            <li>Mask the future before the softmax, so the rows still sum to one.</li>
+          </.step>
+          <.step n={3} step={@step}>
+            <li>Every position at once, in one matrix multiply. No loop over time.</li>
+          </.step>
+        </ol>
+        <div>
+          <.step n={2} step={@step}>
+            <.picker name="mask" options={~w(on off)} chosen={@mask} class="picker--small" />
+          </.step>
+          <.heatmap
+            :if={@weights}
+            values={@weights}
+            row_labels={Model.probe()}
+            column_labels={Model.probe()}
+            cell={34}
+          />
+          <.untrained :if={is_nil(@weights)} what="This heatmap" />
+        </div>
+      </div>
+      <.step n={3} step={@step} class="slide__note">
+        The third one is why this scales, and why the thing that came before it did not.
+      </.step>
+    </section>
+    """
+  end
+
   def slide(%{slide: %Slide{id: :attention_bet}} = assigns) do
+    assigns = assign(assigns, activity: Room.activity(:attention_bet))
+
     ~H"""
     <section class="slide slide--tight">
       <h2 class="slide__title slide__title--small">
@@ -691,22 +614,98 @@ defmodule TinyLlmTalkWeb.SlideComponents do
       <.probe words={probe_marks() ++ [{"____", :blank}]} show_marks class="probe--wide" />
       <div class="ask">
         <.qr size={200} />
-        <.tally tally={Room.tally(@room, :attention_bet)} answer="who" reveal={@step >= 2} />
+        <.tally
+          tally={Room.tally(@room, :attention_bet)}
+          answer={@activity.answer}
+          reveal={@step >= 2}
+        />
       </div>
-      <p :if={@step >= 2} class="slide__note">
-        It is <span class="word word--lit">who</span>. Nobody guesses that, including me,
-        the first time.
+      <p :if={@step >= 2 and @activity.answer} class="slide__note">
+        It is <span class="word word--lit">{@activity.answer}</span>. Nobody guesses that,
+        including me, the first time.
       </p>
     </section>
     """
   end
 
-  def slide(%{slide: %Slide{id: :demo_attention_heatmap}} = assigns) do
+  def slide(%{slide: %Slide{id: :walkthrough}} = assigns) do
+    trace = Model.trace(Model.probe())
+    last = length(Model.probe()) - 1
+    # Starts on `who`, which has a future to mask. The last position is where
+    # the slide should end, by a click.
+    position = assigns.controls |> Controls.number("position", 3.0) |> round() |> min(last)
+
+    assigns = assign(assigns, trace: trace, position: position, words: Model.probe())
+
+    ~H"""
+    <section class="slide slide--tight">
+      <h2 class="slide__title slide__title--small">One position, all the way through</h2>
+      <div :if={@trace} class="walk" style={"--walk-columns: #{length(@words)}"}>
+        <span class="walk__label">position</span>
+        <button
+          :for={{word, index} <- Enum.with_index(@words)}
+          type="button"
+          phx-click="control"
+          phx-value-name="position"
+          phx-value-value={index}
+          class={["walk__word", index == @position && "walk__word--chosen"]}
+        >{word}</button>
+
+        <span class="walk__label">query</span>
+        <span
+          :for={index <- 0..(length(@words) - 1)}
+          class={["walk__cell", index == @position && "walk__cell--query"]}
+        >{if index == @position, do: "q", else: ""}</span>
+
+        <span class="walk__label">keys</span>
+        <span :for={_index <- 0..(length(@words) - 1)} class="walk__cell walk__cell--key">k</span>
+
+        <.step n={2} step={@step} class="walk__row">
+          <span class="walk__label">q &middot; k / &radic;d</span>
+          <span
+            :for={score <- Enum.at(@trace.scores, @position)}
+            class="walk__cell walk__cell--number"
+          >
+            {format_signed(score)}
+          </span>
+        </.step>
+
+        <.step n={3} step={@step} class="walk__row">
+          <span class="walk__label">mask the future</span>
+          <span
+            :for={score <- Enum.at(@trace.masked, @position)}
+            class={["walk__cell walk__cell--number", is_nil(score) && "walk__cell--masked"]}
+          >{if score, do: format_signed(score), else: "-1e9"}</span>
+        </.step>
+
+        <.step n={4} step={@step} class="walk__row">
+          <span class="walk__label">softmax</span>
+          <span
+            :for={weight <- Enum.at(@trace.weights, @position)}
+            class="walk__cell walk__cell--weight"
+          >
+            <span class="walk__fill" style={"height: #{round(weight * 100)}%"} />
+            <span class="walk__percent">{format_percent(weight)}</span>
+          </span>
+        </.step>
+      </div>
+      <.untrained :if={is_nil(@trace)} what="This walkthrough" />
+      <.step n={4} step={@step} class="slide__note">
+        Multiply every value by its share, add them up, and that blend is what this position
+        carries forward. Click any position; the future is always masked.
+      </.step>
+    </section>
+    """
+  end
+
+  # 5. Look at what it did --------------------------------------------------
+
+  def slide(%{slide: %Slide{id: :heatmap}} = assigns) do
     assigns = assign(assigns, weights: Model.attention(Model.probe()))
 
     ~H"""
     <section class="slide">
-      <h2 class="slide__title slide__title--small">Where each position looks</h2>
+      <h2 class="slide__title slide__title--small">Every position at once</h2>
       <.heatmap
         :if={@weights}
         values={@weights}
@@ -724,7 +723,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
     """
   end
 
-  def slide(%{slide: %Slide{id: :reading_the_heatmap}} = assigns) do
+  def slide(%{slide: %Slide{id: :read_it_honestly}} = assigns) do
     assigns = assign(assigns, weights: blank_row())
 
     ~H"""
@@ -746,6 +745,72 @@ defmodule TinyLlmTalkWeb.SlideComponents do
       <.step n={3} step={@step} class="slide__note">
         The point is not that it draws the bracket we imagined. The point is that it is
         visibly structured rather than flat, and it gets the answer.
+      </.step>
+    </section>
+    """
+  end
+
+  def slide(%{slide: %Slide{id: :attention_sink}} = assigns) do
+    assigns = assign(assigns, weights: row_for("chases"))
+
+    ~H"""
+    <section class="slide">
+      <h2 class="slide__title">It found the attention sink by itself</h2>
+      <.bars
+        :if={@weights}
+        values={@weights}
+        words={Model.probe()}
+        top={3}
+        highlight={["<start>"]}
+      />
+      <.untrained :if={is_nil(@weights)} what="This row" />
+      <p class="slide__lede">
+        The first verb has nothing useful behind it, so it dumps almost all of its
+        attention on the start token.
+      </p>
+      <p class="slide__note">
+        Production transformers do exactly this, and it has a name. Fifteen thousand
+        parameters reproduced it unprompted.
+      </p>
+    </section>
+    """
+  end
+
+  def slide(%{slide: %Slide{id: :half_a_route}} = assigns) do
+    assigns =
+      assign(assigns,
+        who: row_for("who"),
+        mirror: mirror_row_for("who")
+      )
+
+    ~H"""
+    <section class="slide">
+      <h2 class="slide__title">The model drew the argument for depth</h2>
+      <div class="two-up">
+        <.step n={1} step={@step}>
+          <p class="row-caption">the llama who chases the dogs</p>
+          <.bars :if={@who} values={@who} words={Model.probe()} top={3} highlight={~w(llama)} />
+        </.step>
+        <.step n={2} step={@step}>
+          <p class="row-caption">the dogs who chase the llama</p>
+          <.bars
+            :if={@mirror}
+            values={@mirror}
+            words={Model.mirror_probe()}
+            top={3}
+            highlight={~w(dogs)}
+          />
+        </.step>
+      </div>
+      <.untrained :if={is_nil(@who)} what="These rows" />
+      <.step n={3} step={@step} class="slide__lede">
+        The <span class="word">who</span> position has gathered the head noun into itself.
+        And the blank attends to <span class="word">who</span>.
+      </.step>
+      <.step n={4} step={@step} class="slide__note">
+        So half of a two-hop route exists, and one block cannot use the second hop, because
+        both hops happen at once. A second block would read <span class="word">who</span>
+        after it had already gathered the subject. That is what depth buys.
       </.step>
     </section>
     """
@@ -793,59 +858,9 @@ defmodule TinyLlmTalkWeb.SlideComponents do
     """
   end
 
-  def slide(%{slide: %Slide{id: :the_number}} = assigns) do
-    assigns =
-      assign(assigns,
-        bigram: Model.agreement(:bigram),
-        embedder: Model.agreement(:embedder),
-        transformer: Model.agreement(:transformer)
-      )
+  # 6. The rest of the block ------------------------------------------------
 
-    ~H"""
-    <section class="slide slide--centred">
-      <h2 class="slide__title">On the probes where the nearest noun lies</h2>
-      <div class="stat-row">
-        <.stat value={format_percent(@bigram)} label="count table" tone="bad" />
-        <.stat value={format_percent(@embedder)} label="neural bigram" tone="bad" />
-        <.stat value={format_percent(@transformer)} label="one attention head" tone="good" />
-      </div>
-      <p class="slide__lede">
-        The one-word models are not unlucky here. They are wrong every single time,
-        because the only word they see is the one pointing the wrong way.
-      </p>
-    </section>
-    """
-  end
-
-  def slide(%{slide: %Slide{id: :attention_sink}} = assigns) do
-    assigns = assign(assigns, weights: row_for("chases"))
-
-    ~H"""
-    <section class="slide">
-      <h2 class="slide__title">It found the attention sink by itself</h2>
-      <.bars
-        :if={@weights}
-        values={@weights}
-        words={Model.probe()}
-        top={3}
-        highlight={["<start>"]}
-      />
-      <.untrained :if={is_nil(@weights)} what="This row" />
-      <p class="slide__lede">
-        The first verb has nothing useful behind it, so it dumps almost all of its
-        attention on the start token.
-      </p>
-      <p class="slide__note">
-        Production transformers do exactly this, and it has a name. Fifteen thousand
-        parameters reproduced it unprompted.
-      </p>
-    </section>
-    """
-  end
-
-  # 5. The rest of the block ------------------------------------------------
-
-  def slide(%{slide: %Slide{id: :architecture}} = assigns) do
+  def slide(%{slide: %Slide{id: :lid_off}} = assigns) do
     ~H"""
     <section class="slide slide--tight">
       <h2 class="slide__title slide__title--small">The box, with its lid off</h2>
@@ -876,122 +891,62 @@ defmodule TinyLlmTalkWeb.SlideComponents do
     """
   end
 
-  def slide(%{slide: %Slide{id: :residuals}} = assigns) do
-    ~H"""
-    <section class="slide slide--centred">
-      <h2 class="slide__statement">Keep what you had. Add what you learned.</h2>
-      <p class="slide__lede">
-        Do not replace the position's vector with what attention returned. Add it.
-      </p>
-      <p class="slide__note">
-        Without this, information at the input has to survive every layer to reach the
-        output. With it, passing through unchanged is the default.
-      </p>
-    </section>
-    """
-  end
-
-  def slide(%{slide: %Slide{id: :mlp}} = assigns) do
+  def slide(%{slide: %Slide{id: :plumbing}} = assigns) do
     ~H"""
     <section class="slide">
-      <h2 class="slide__title">A place to think about what you gathered</h2>
-      <div class="widths">
-        <span class="widths__step">32</span>
-        <span class="widths__arrow">&rarr;</span>
-        <span class="widths__step widths__step--wide">128</span>
-        <span class="widths__arrow">&rarr;</span>
-        <span class="widths__step">32</span>
-      </div>
-      <p class="slide__lede">
-        Two weighted sums with a ReLU between, applied to each position on its own.
-      </p>
-      <p class="slide__note">
-        Attention gathers; it cannot compute much about what it gathered. Half the
-        parameters in the model are in here.
-      </p>
-    </section>
-    """
-  end
-
-  def slide(%{slide: %Slide{id: :rmsnorm}} = assigns) do
-    ~H"""
-    <section class="slide slide--centred">
-      <h2 class="slide__statement">
-        Rescale each position's vector to a fixed size, so nothing blows up.
-      </h2>
-      <p class="slide__note">
-        Before attention, before the MLP, with a learned gain. That is the whole slide.
-      </p>
-    </section>
-    """
-  end
-
-  def slide(%{slide: %Slide{id: :two_hop}} = assigns) do
-    assigns =
-      assign(assigns,
-        who: row_for("who"),
-        mirror: mirror_row_for("who")
-      )
-
-    ~H"""
-    <section class="slide">
-      <h2 class="slide__title">The model drew the argument for depth</h2>
-      <div class="two-up">
+      <h2 class="slide__title">Three pieces of plumbing</h2>
+      <dl class="definitions definitions--wide">
         <.step n={1} step={@step}>
-          <p class="row-caption">the llama who chases the dogs</p>
-          <.bars :if={@who} values={@who} words={Model.probe()} top={3} highlight={~w(llama)} />
+          <dt>residual</dt>
+          <dd>
+            Add what attention returned to what was there. Do not replace it.
+            <code>x + attention(x)</code>
+          </dd>
         </.step>
         <.step n={2} step={@step}>
-          <p class="row-caption">the dogs who chase the llama</p>
-          <.bars
-            :if={@mirror}
-            values={@mirror}
-            words={Model.mirror_probe()}
-            top={3}
-            highlight={~w(dogs)}
-          />
-        </.step>
-      </div>
-      <.untrained :if={is_nil(@who)} what="These rows" />
-      <.step n={3} step={@step} class="slide__lede">
-        The <span class="word">who</span> position has gathered the head noun into itself.
-        And the blank attends to <span class="word">who</span>.
-      </.step>
-      <.step n={4} step={@step} class="slide__note">
-        So half of a two-hop route exists, and one block cannot use the second hop, because
-        both hops happen at once. A second block would read <span class="word">who</span>
-        after it had already gathered the subject. That is what depth buys.
-      </.step>
-    </section>
-    """
-  end
-
-  def slide(%{slide: %Slide{id: :scale}} = assigns) do
-    ~H"""
-    <section class="slide">
-      <h2 class="slide__title">Same shape, bigger numbers</h2>
-      <ul class="claims claims--compact">
-        <.step n={1} step={@step}>
-          <li>One head becomes many.</li>
-        </.step>
-        <.step n={2} step={@step}>
-          <li>One block becomes dozens.</li>
+          <dt>RMSNorm</dt>
+          <dd>
+            Rescale each row to a fixed size, so nothing blows up. <code>x / rms(x) * gain</code>
+          </dd>
         </.step>
         <.step n={3} step={@step}>
-          <li>Thirty-two words become a hundred thousand, and a tokenizer.</li>
+          <dt>MLP</dt>
+          <dd>
+            Two weighted sums with a ReLU between, per position. Where it thinks about
+            what it gathered. <code>32 &rarr; 128 &rarr; 32</code>
+          </dd>
         </.step>
-        <.step n={4} step={@step}>
-          <li>Sixteen positions become a hundred thousand.</li>
-        </.step>
-        <.step n={5} step={@step} class="slide__punchline">
-          <li>Nothing on this list is a new idea.</li>
-        </.step>
-      </ul>
+      </dl>
+      <.step n={3} step={@step} class="slide__note">
+        Half the parameters are in the MLP. None of them are a new idea.
+      </.step>
     </section>
     """
   end
 
-  # 6. Generating -----------------------------------------------------------
+  # 7. Back to words --------------------------------------------------------
+
+  def slide(%{slide: %Slide{id: :back_to_words}} = assigns) do
+    assigns = assign(assigns, distribution: Model.distribution(Model.probe(), 1.0))
+
+    ~H"""
+    <section class="slide">
+      <h2 class="slide__title slide__title--small">
+        Thirty-two floats become thirty-two probabilities
+      </h2>
+      <.code path="lib/tiny_llm/transformer.ex" range={118..120} step={@step} focus={[3..3]} />
+      <p class="row-caption">after <span class="word">the llama who chases the dogs</span></p>
+      <.bars
+        :if={@distribution}
+        values={@distribution}
+        words={Vocab.words()}
+        top={5}
+        highlight={~w(flees)}
+      />
+      <.untrained :if={is_nil(@distribution)} what="This distribution" />
+    </section>
+    """
+  end
 
   def slide(%{slide: %Slide{id: :the_loop}} = assigns) do
     ~H"""
@@ -1011,33 +966,52 @@ defmodule TinyLlmTalkWeb.SlideComponents do
     """
   end
 
-  def slide(%{slide: %Slide{id: :temperature}} = assigns) do
+  def slide(%{slide: %Slide{id: :one_word_at_a_time}} = assigns) do
+    words = Controls.generated(assigns.controls)
+
+    assigns =
+      assign(assigns,
+        words: words,
+        finished: Controls.finished?(words),
+        distribution:
+          Model.distribution(["<start>" | words], Controls.temperature(assigns.controls))
+      )
+
     ~H"""
     <section class="slide">
-      <h2 class="slide__title">Divide the scores before the softmax</h2>
-      <div class="three-up">
-        <div :for={temperature <- [0.5, 1.0, 3.0]} class="three-up__panel">
-          <p class="row-caption">T = {temperature}</p>
-          <.spark
-            :if={Model.distribution(Model.probe(), temperature)}
-            values={Model.distribution(Model.probe(), temperature)}
-          />
-        </div>
-      </div>
-      <p class="slide__lede">
-        Below one sharpens toward the top choice. Above one flattens toward uniform.
-        Zero is argmax.
+      <h2 class="slide__title slide__title--small">One word at a time</h2>
+      <p class="written">
+        <span class="written__word written__word--start">&lt;start&gt;</span>
+        <span :for={word <- @words} class="written__word">{word}</span>
+        <span :if={not @finished} class="written__cursor">____</span>
       </p>
+      <div class="written__actions">
+        <button type="button" phx-click="next_word" class="button" disabled={@finished}>
+          next word
+        </button>
+        <button type="button" phx-click="restart" class="button button--quiet">start over</button>
+      </div>
+      <div :if={@distribution && not @finished}>
+        <p class="row-caption">what it thinks comes next</p>
+        <.bars
+          values={@distribution}
+          words={Vocab.words()}
+          top={5}
+          highlight={[Vocab.id_to_word(Tensor.argmax(@distribution))]}
+        />
+      </div>
+      <p :if={@finished} class="slide__lede">Full stop. It is done, and so are we.</p>
+      <.untrained :if={is_nil(@distribution)} what="This generator" />
     </section>
     """
   end
 
-  def slide(%{slide: %Slide{id: :demo_temperature}} = assigns) do
-    assigns = assign(assigns, temperature: temperature(assigns.controls))
+  def slide(%{slide: %Slide{id: :temperature_dial}} = assigns) do
+    assigns = assign(assigns, temperature: Controls.temperature(assigns.controls))
 
     ~H"""
     <section class="slide">
-      <h2 class="slide__title slide__title--small">Turn the dial</h2>
+      <h2 class="slide__title slide__title--small">Divide the scores before the softmax</h2>
       <form id="temperature-dial" phx-change="control" class="dial">
         <input type="hidden" name="name" value="temperature" />
         <input
@@ -1051,27 +1025,233 @@ defmodule TinyLlmTalkWeb.SlideComponents do
         />
         <output class="dial__value">T = {:erlang.float_to_binary(@temperature, decimals: 2)}</output>
       </form>
-      <ul :if={Model.trained?(:transformer)} class="examples examples--generated">
-        <li :for={sentence <- Model.sentences(@temperature, 6)}>{Enum.join(sentence, " ")}</li>
-      </ul>
+      <div :if={Model.trained?(:transformer)} class="two-up">
+        <div>
+          <p class="row-caption">after <span class="word">the llama who chases the dogs</span></p>
+          <.bars
+            values={Model.distribution(Model.probe(), @temperature)}
+            words={Vocab.words()}
+            top={5}
+            highlight={~w(flees)}
+          />
+        </div>
+        <ul class="examples examples--generated">
+          <li :for={sentence <- Model.sentences(@temperature, 6)}>{Enum.join(sentence, " ")}</li>
+        </ul>
+      </div>
       <.untrained :if={not Model.trained?(:transformer)} what="These generations" />
     </section>
     """
   end
 
-  def slide(%{slide: %Slide{id: :the_tradeoff}} = assigns) do
-    assigns = assign(assigns, curve: Model.temperature_curve())
+  def slide(%{slide: %Slide{id: :spot_the_human}} = assigns) do
+    assigns = assign(assigns, activity: Room.activity(:spot_the_human))
 
     ~H"""
     <section class="slide slide--tight">
-      <h2 class="slide__title slide__title--small">Correct and boring, or varied and wrong</h2>
-      <.tradeoff_chart :if={@curve} curve={@curve} />
-      <.untrained :if={is_nil(@curve)} what="This chart" />
+      <h2 class="slide__title slide__title--small">One of these was written by the grammar</h2>
+      <div class="ask ask--stacked">
+        <.qr size={110} />
+        <.tally
+          tally={Room.tally(@room, :spot_the_human)}
+          answer={@activity.answer}
+          reveal={@step >= 2}
+          wide
+        />
+      </div>
+      <.step n={2} step={@step} class="slide__note">
+        The other two are the model's, and neither appears anywhere in the two thousand
+        sentences it trained on. New sentences, not recalled ones.
+      </.step>
     </section>
     """
   end
 
-  # 7. Close ----------------------------------------------------------------
+  # 8. Training, in one slide -----------------------------------------------
+
+  def slide(%{slide: %Slide{id: :training}} = assigns) do
+    ~H"""
+    <section class="slide">
+      <h2 class="slide__title">Training, all of it</h2>
+      <ol class="beats beats--numbered">
+        <.step n={1} step={@step}>
+          <li>Guess the next word.</li>
+        </.step>
+        <.step n={2} step={@step}>
+          <li>Measure how surprised you were by the real one.</li>
+        </.step>
+        <.step n={3} step={@step}>
+          <li>Nudge every number in the direction that makes the surprise smaller.</li>
+        </.step>
+        <.step n={4} step={@step}>
+          <li>Repeat a few hundred times.</li>
+        </.step>
+      </ol>
+      <.step n={4} step={@step} class="slide__note">
+        The nudges are derived by hand in this repo. There is no autodiff to hide behind,
+        which is why the slide after next exists.
+      </.step>
+    </section>
+    """
+  end
+
+  def slide(%{slide: %Slide{id: :loss_falls}} = assigns) do
+    assigns = assign(assigns, losses: Model.losses(:transformer))
+
+    ~H"""
+    <section class="slide">
+      <h2 class="slide__title">Watch it fall</h2>
+      <.loss_chart
+        :if={@losses}
+        losses={@losses}
+        knowing_nothing={Model.knowing_nothing()}
+        floor={Model.bigram_floor()}
+        floor_label="the best any one-word model can do"
+        series_label="held-out loss, one block"
+        draw={@step >= 2}
+        width={1088}
+        height={400}
+      />
+      <.untrained :if={is_nil(@losses)} what="This loss curve" />
+    </section>
+    """
+  end
+
+  def slide(%{slide: %Slide{id: :tests_for_math}} = assigns) do
+    ~H"""
+    <section class="slide">
+      <h2 class="slide__title">Tests for math</h2>
+      <.code
+        path="lib/tiny_llm/grad_check.ex"
+        range={81..87}
+        step={@step}
+        focus={[:all, 2..4, 5..7]}
+      />
+      <.step n={2} step={@step} class="slide__note">
+        Nudge one number up, nudge it down, measure the loss both ways. That is a slope.
+      </.step>
+      <.step n={3} step={@step} class="slide__note">
+        Compare it to the slope the derivation claims, for every number in the model.
+        This is what caught the missing transpose.
+      </.step>
+    </section>
+    """
+  end
+
+  # 9. Did it learn it ------------------------------------------------------
+
+  def slide(%{slide: %Slide{id: :the_number}} = assigns) do
+    assigns =
+      assign(assigns,
+        bigram: Model.agreement(:bigram),
+        transformer: Model.agreement(:transformer),
+        probes: length(Model.distractor_probes())
+      )
+
+    ~H"""
+    <section class="slide slide--centred">
+      <h2 class="slide__title">On the sentences where the nearest noun lies</h2>
+      <div class="stat-row">
+        <.stat value={format_percent(@bigram)} label="count table" tone="bad" />
+        <.stat value={format_percent(@transformer)} label="one attention block" tone="good" />
+      </div>
+      <p class="slide__lede">
+        The count table is at chance. The only word it sees is the one pointing the wrong way.
+      </p>
+      <p class="slide__note">
+        {@probes} held-out sentences it never trained on, each with a distractor between the
+        subject and the blank.
+      </p>
+    </section>
+    """
+  end
+
+  def slide(%{slide: %Slide{id: :rematch}} = assigns) do
+    activity = Room.activity(:rematch)
+
+    assigns =
+      assign(assigns,
+        activity: activity,
+        model_pick: Model.pick(Model.rematch_probe(), activity.options),
+        model_confidence: probability_after(Model.rematch_probe(), activity.answer)
+      )
+
+    ~H"""
+    <section class="slide slide--tight">
+      <.probe
+        words={[
+          "the",
+          {"geese", :subject},
+          "who",
+          "see",
+          "a",
+          {"fox", :distractor},
+          {"____", :blank}
+        ]}
+        show_marks={@step >= 2}
+        class="probe--wide"
+      />
+      <div class="ask">
+        <.qr size={200} />
+        <.tally tally={Room.tally(@room, :rematch)} answer={@activity.answer} reveal={@step >= 2} />
+      </div>
+      <.step n={2} step={@step} class="slide__lede">
+        The model says
+        <span class="word word--lit">{@model_pick || "..."}</span><span :if={@model_confidence}>, with {format_percent(@model_confidence)} on {@activity.answer}</span>.
+        The room says <span class="word word--lit">{Room.majority(@room, :rematch) || "nothing yet"}</span>.
+      </.step>
+    </section>
+    """
+  end
+
+  def slide(%{slide: %Slide{id: :scoreboard}} = assigns) do
+    assigns =
+      assign(assigns,
+        results: Room.results(assigns.room),
+        score: Room.score(assigns.room),
+        model: model_record()
+      )
+
+    ~H"""
+    <section class="slide">
+      <h2 class="slide__title">How the room did</h2>
+      <table :if={@results != []} class="scoreboard">
+        <thead>
+          <tr>
+            <th>question</th>
+            <th>the room said</th>
+            <th>answer</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr :for={{name, result} <- @results}>
+            <td>{question_label(name)}</td>
+            <td class="scoreboard__choice">{result.choice}</td>
+            <td class="scoreboard__answer">{result.answer}</td>
+            <td class={["scoreboard__mark", result.correct? && "scoreboard__mark--right"]}>
+              {if result.correct?, do: "yes", else: "no"}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <p :if={@results == []} class="slide__lede">Nobody voted. The room is undefeated.</p>
+      <div class="stat-row">
+        <.stat
+          value={"#{@score.right} of #{@score.asked}"}
+          label="the room, on the questions it answered"
+          tone="good"
+        />
+        <.stat
+          :if={@model}
+          value={"#{@model.right} of #{@model.asked}"}
+          label="the model, on the two verb questions"
+          tone="cool"
+        />
+      </div>
+    </section>
+    """
+  end
 
   def slide(%{slide: %Slide{id: :what_is_not_here}} = assigns) do
     ~H"""
@@ -1104,14 +1284,15 @@ defmodule TinyLlmTalkWeb.SlideComponents do
         </.step>
       </div>
       <.step n={2} step={@step} class="slide__note">
-        Every one of these is the same thing a frontier model does.
+        Every one of these is the same thing a frontier model does. The difference is
+        thirteen orders of magnitude and a tokenizer.
       </.step>
     </section>
     """
   end
 
   def slide(%{slide: %Slide{id: :the_sentence_again}} = assigns) do
-    assigns = assign(assigns, flees: probability_of("flees"))
+    assigns = assign(assigns, flees: probability_after(Model.probe(), "flees"))
 
     ~H"""
     <section class="slide slide--centred">
@@ -1195,23 +1376,23 @@ defmodule TinyLlmTalkWeb.SlideComponents do
     ]
   end
 
-  # Which cells the bigram heatmap rings, one window per step. The rows are
-  # read out loud in this order, so the picture keeps up with the sentence.
-  defp bigram_highlight(1), do: []
-  defp bigram_highlight(2), do: cells_in_row("chases")
-  defp bigram_highlight(3), do: cells_in_row(".")
-  defp bigram_highlight(_step), do: cells_in_row("llama") ++ cells_in_row("llamas")
+  # The rows attention sees for the probe, as magnitudes on a 0 to 1 scale so
+  # the heatmap can colour them. The sign is lost, which is fine for a picture
+  # whose only job is "these are numbers now, not words".
+  defp input_rows do
+    case Model.trace(Model.probe()) do
+      nil ->
+        nil
 
-  defp cells_in_row(word) do
-    row = Vocab.word_to_id(word)
+      trace ->
+        peak = trace.input |> List.flatten() |> Enum.map(&abs/1) |> Enum.max()
 
-    Enum.map(0..(Vocab.size() - 1)//1, fn column -> {row, column} end)
+        Enum.map(trace.input, fn row -> Enum.map(row, &(abs(&1) / peak)) end)
+    end
   end
 
-  defp causal_mask(size) do
-    Enum.map(0..(size - 1)//1, fn row ->
-      Enum.map(0..(size - 1)//1, fn column -> if column > row, do: 0.0, else: 0.8 end)
-    end)
+  defp entry_vector(key) do
+    FuzzyMap.entries() |> Enum.find(&(&1.key == key)) |> Map.fetch!(:vector)
   end
 
   defp blank_row, do: row_for(List.last(Model.probe()))
@@ -1230,12 +1411,38 @@ defmodule TinyLlmTalkWeb.SlideComponents do
     end
   end
 
-  defp probability_of(word) do
-    case Model.distribution(Model.probe(), 1.0) do
+  defp probability_after(words, word) do
+    case Model.distribution(words, 1.0) do
       nil -> nil
       distribution -> Enum.at(distribution, Vocab.word_to_id(word))
     end
   end
+
+  # How the model does on the two questions that have a grammatical answer,
+  # for the scoreboard's second line. Nil without a checkpoint.
+  defp model_record do
+    questions = [
+      {Model.probe(), Room.activity(:verb_vote)},
+      {Model.rematch_probe(), Room.activity(:rematch)}
+    ]
+
+    picks =
+      Enum.map(questions, fn {probe, activity} ->
+        {Model.pick(probe, activity.options), activity.answer}
+      end)
+
+    if Enum.any?(picks, fn {pick, _answer} -> is_nil(pick) end) do
+      nil
+    else
+      %{right: Enum.count(picks, fn {pick, answer} -> pick == answer end), asked: length(picks)}
+    end
+  end
+
+  defp question_label(:verb_vote), do: "flees, or flee?"
+  defp question_label(:bigram_next), do: "what follows chases"
+  defp question_label(:attention_bet), do: "where the blank looks"
+  defp question_label(:spot_the_human), do: "spot the human"
+  defp question_label(:rematch), do: "the geese who see a fox"
 
   # The audience can only send words from the vocabulary, so any submission
   # encodes; the context length is the only thing that can bite.
@@ -1253,14 +1460,26 @@ defmodule TinyLlmTalkWeb.SlideComponents do
     end
   end
 
-  defp temperature(controls) do
-    case Map.get(controls, "temperature") do
-      nil -> 1.0
-      value -> value |> to_string() |> Float.parse() |> elem(0)
-    end
-  end
+  defp format_vector(vector), do: "[" <> Enum.map_join(vector, ", ", &format_signed/1) <> "]"
 
-  defp format_loss(value), do: :erlang.float_to_binary(value, decimals: 3)
+  defp format_signed(value) when value >= 0,
+    do: "+" <> :erlang.float_to_binary(value * 1.0, decimals: 2)
+
+  defp format_signed(value), do: :erlang.float_to_binary(value * 1.0, decimals: 2)
+
+  defp format_weight(value), do: :erlang.float_to_binary(value * 1.0, decimals: 2)
+
+  defp format_count(nil), do: "About fifteen thousand"
+
+  defp format_count(count) do
+    count
+    |> Integer.to_charlist()
+    |> Enum.reverse()
+    |> Enum.chunk_every(3)
+    |> Enum.map(&Enum.reverse/1)
+    |> Enum.reverse()
+    |> Enum.join(",")
+  end
 
   defp format_percent(nil), do: "--"
   defp format_percent(value), do: "#{:erlang.float_to_binary(value * 100, decimals: 1)}%"

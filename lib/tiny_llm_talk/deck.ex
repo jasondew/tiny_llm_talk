@@ -1,6 +1,6 @@
 defmodule TinyLlmTalk.Deck do
   @moduledoc """
-  The deck as data: the eight sections of `docs/talk-outline.md`, in order,
+  The deck as data: the ten sections of `docs/talk-outline.md`, in order,
   with every slide the outline names.
 
   Nothing here draws anything. A slide is a title, a note, and a count of
@@ -8,6 +8,10 @@ defmodule TinyLlmTalk.Deck do
   Keeping the arc as a list means the running order is one readable file that
   can be diffed against the outline, rather than something recovered by
   reading templates.
+
+  The arc is one sentence going through one forward pass, in the order
+  `TinyLlm.Transformer.forward/2` runs it. Every section moves one of three
+  things: the sentence, the picture of where attention looks, or the score.
   """
 
   alias TinyLlmTalk.{Section, Slide}
@@ -23,8 +27,8 @@ defmodule TinyLlmTalk.Deck do
           id: :the_sentence,
           title: "the llama who chases the dogs ____",
           notes: """
-          Ask the room: flees or flee? Everyone knows. Nobody can say how they
-          know in fewer than a paragraph. Wait for an answer before advancing.
+          Say nothing for a beat. Then: fill in the blank. Wait for the room to
+          say it. Do not advance until someone does.
           """
         },
         %Slide{
@@ -33,9 +37,10 @@ defmodule TinyLlmTalk.Deck do
           activity: :verb_vote,
           steps: 2,
           notes: """
-          Put the code up and wait. Do not fill the silence; let the bars move.
-          Everyone in the room knows the answer and nobody can say how they know
-          it in fewer than a paragraph. That gap is the talk.
+          Paste the join link in the chat and let the bars move. Do not fill
+          the silence. On reveal every phone learns whether it was right, and
+          the room's record starts here. Everyone knew, and nobody can say how
+          in fewer than a paragraph. That gap is the talk.
           """
         },
         %Slide{
@@ -44,9 +49,9 @@ defmodule TinyLlmTalk.Deck do
           steps: 3,
           notes: """
           A plural noun sits right next to the blank pointing the wrong way.
-          Say the line out loud rather than putting it on the slide: that
-          bracket is the talk, and we are going to build, from nothing, a
-          program that draws it.
+          Humans fail this too: the key to the cabinets were rusty. Say the
+          line rather than putting it on the slide: we are going to build,
+          from nothing, a program that draws this bracket.
           """
         },
         %Slide{
@@ -54,10 +59,9 @@ defmodule TinyLlmTalk.Deck do
           title: "You will leave able to explain how a transformer works",
           steps: 3,
           notes: """
-          The promise, before the constraints. Attention is the part they will
-          be able to describe out loud: each position looks back at the ones
-          before it, scores them, and pulls in what it needs. Everything else in
-          the talk is in service of those three verbs.
+          The promise, before the constraints. To the person next to you, in
+          three verbs: each position looks back, scores what it sees, and pulls
+          in what it needs. Everything else today is in service of those.
           """
         },
         %Slide{
@@ -65,19 +69,19 @@ defmodule TinyLlmTalk.Deck do
           title: "What from nothing means",
           steps: 5,
           notes: """
-          Pure Elixir standard library. No Nx, no Axon, no hex packages, mix.exs
-          deps are empty. 15,104 parameters. Trains in under 30 seconds on a
-          laptop. Every gradient written out by hand and checked. The repo link
-          goes in the footer now and stays there.
+          Pure Elixir standard library. No Nx, no Axon, deps are empty. About
+          fifteen thousand parameters. Trains in about a minute on this laptop.
+          Every gradient written out and checked. The repo link is in the footer
+          now and stays there.
           """
         }
       ]
     },
     %Section{
       number: 1,
-      title: "The setup",
-      minutes: 4,
-      lands: "32 words, a grammar we own, the one function frame",
+      title: "Words become numbers",
+      minutes: 3,
+      lands: "32 words, a grammar we own, and the room was a language model for a moment",
       slides: [
         %Slide{
           id: :vocabulary,
@@ -85,18 +89,16 @@ defmodule TinyLlmTalk.Deck do
           notes: """
           One word is one token is one integer; there is no tokenizer. Point at
           start and at the period: sequences begin with one and end with the
-          other.
+          other. Every word is lowercase, including the title.
           """
         },
         %Slide{
           id: :grammar,
           title: "A grammar we own",
           notes: """
-          Three or four example sentences with the structure visible, and the
-          two rules that matter: subjects agree with verbs, and a relative
-          clause's verb agrees with the head noun. We own the training data
-          because then we know the right answer to every question we ask the
-          model, which no one does with a real corpus.
+          Four sentences with the structures visible, and the two rules that
+          matter. We wrote the grammar, so "did it learn agreement" is a
+          measurement, not a vibe. Nobody knows that about a real corpus.
           """
         },
         %Slide{
@@ -104,178 +106,38 @@ defmodule TinyLlmTalk.Deck do
           title: "A language model is one function",
           notes: """
           Input: the words so far. Output: 32 probabilities. State the frame
-          here and never let go of it. This slide comes back three more times
-          with a different box each time.
+          here and never let go of it. Everything we build today goes inside
+          the box.
           """
         },
         %Slide{
-          id: :how_we_score_it,
-          title: "How surprised is it?",
-          steps: 3,
+          id: :be_the_bigram,
+          title: "You are a count table",
+          activity: :bigram_next,
+          steps: 2,
           notes: """
-          Held-out loss is how surprised the model is by sentences it has not
-          seen; lower is better. Two lines appear on every loss chart from here:
-          ln(32) = 3.466 is knowing nothing, 1.9021 is the best possible score
-          for anything that sees only the previous word. Do not explain entropy.
-          Say surprise and move on.
+          Ask: you have read two thousand sentences and just saw chases. What
+          comes next? Let them vote, then show the real row. Counting adjacent
+          pairs is the dumbest model that works, and the room just ran it in
+          their heads. CUT THIS FIRST if running long.
           """
         }
       ]
     },
     %Section{
       number: 2,
-      title: "Bigram",
-      minutes: 6,
-      lands: "counting works, until the answer is more than one word back",
+      title: "All the math there is",
+      minutes: 2,
+      lands: "a dot product is a similarity score, a softmax is a budget",
       slides: [
         %Slide{
-          id: :counting_pairs,
-          title: "Count every adjacent pair",
+          id: :all_the_math,
+          title: "The entire math library",
+          steps: 2,
           notes: """
-          Primer beat: a matrix is a table. Rows are things, columns are things,
-          cells are numbers about the pair. Show the counts for one row, chases,
-          as a plain list first.
-          """
-        },
-        %Slide{
-          id: :bigram_heatmap,
-          title: "Thirty-two by thirty-two",
-          steps: 4,
-          notes: """
-          Read three cells out loud: chases is followed by the or a, nothing
-          else. The period is followed by nothing. llama is followed by a
-          singular verb, llamas by a plural one.
-          """
-        },
-        %Slide{
-          id: :bigram_box,
-          title: "The box, with a count table in it",
-          notes: """
-          To predict, look up the row for the last word and pick from it.
-          """
-        },
-        %Slide{
-          id: :bigram_wins,
-          title: "Where it wins",
-          notes: """
-          It gets determiners, it gets the period, it gets agreement when the
-          noun is right there. Ten generated sentences, most of them fine.
-          """
-        },
-        %Slide{
-          id: :bigram_fails,
-          title: "Where it cannot",
-          steps: 3,
-          notes: """
-          The probe. The bigram's context is dogs and nothing else. Its row for
-          dogs says flee. On the distractor case it scores 55.3%, the base rate
-          of the plural forms, so it is guessing. Show the row.
-          """
-        },
-        %Slide{
-          id: :the_floor,
-          title: "1.904",
-          notes: """
-          Computed from the grammar itself: the best score anything can reach
-          seeing only the previous word. A count table with enough data sits on
-          it. Nothing that sees one word can beat this. That sentence is the
-          setup for the next section's punchline.
-          """
-        }
-      ]
-    },
-    %Section{
-      number: 3,
-      title: "Neural bigram",
-      minutes: 7,
-      lands: "learning does not help if the context is the problem",
-      slides: [
-        %Slide{
-          id: :what_does_learning_buy,
-          title: "If counting is optimal, what does learning buy?",
-          notes: """
-          Answer up front: for this model, nothing. We build it anyway because
-          it introduces every part that survives into the transformer.
-          """
-        },
-        %Slide{
-          id: :embeddings,
-          title: "A word becomes a point",
-          notes: """
-          Replace the word's integer with a row of 32 floats, looked up from a
-          table. The table starts random. A vector is a point; words that behave
-          the same should end up near each other, and the model will move them
-          there on its own.
-          """
-        },
-        %Slide{
-          id: :linear_and_softmax,
-          title: "Weighted sums, then softmax",
-          steps: 4,
-          notes: """
-          Every output is a weighted sum of the inputs, and the weights are what
-          gets learned. Say that once, here, and then stop saying it. Softmax
-          turns 32 scores into 32 probabilities that sum to one.
-          """
-        },
-        %Slide{
-          id: :training,
-          title: "Training, all of it",
-          steps: 4,
-          notes: """
-          Loss is surprise at the right answer. Every parameter has a slope:
-          nudge it and the loss goes up or down. Move every parameter a small
-          step downhill. Repeat a few hundred times. The slope is computed by
-          hand here, the derivation is in docs/backprop.md, and a
-          finite-difference test checks every one of them. No chain rule on
-          screen.
-          """
-        },
-        %Slide{
-          id: :demo_training_loss,
-          title: "Demo: watch the loss fall",
-          notes: """
-          DEMO 1. Train the Embedder live, about ten seconds. It starts at 3.466
-          and falls to about 1.944, just above the 1.9021 line. It does not
-          cross the line. It cannot. Static fallback slide is one keypress away.
-          """
-        },
-        %Slide{
-          id: :pca_scatter,
-          title: "What the embeddings learned",
-          notes: """
-          Nouns cluster tightly; the first axis is a noun detector. Adjectives
-          and determiners cluster. Verbs do not cluster at all, and that is
-          honest: verb number lives in the output table, not the input one,
-          because nothing after a verb depends on its number. CUT THIS SLIDE
-          FIRST if the talk is running long.
-          """
-        },
-        %Slide{
-          id: :learning_was_not_the_problem,
-          title: "Zero, again",
-          notes: """
-          Identical to the count table, to the decimal, because it sees the same
-          one word and gives the same answer. Learning was never the problem.
-          Context is the problem.
-          """
-        }
-      ]
-    },
-    %Section{
-      number: 4,
-      title: "Attention",
-      minutes: 12,
-      lands: "each position looks back and pulls in what it needs",
-      slides: [
-        %Slide{
-          id: :what_we_want,
-          title: "Reach back past the distractor",
-          notes: """
-          The blank needs to reach back to llama, past dogs, past the, past
-          chases. A fixed window would not do it; the subject can be anywhere.
-          We want the blank to look at every earlier word and decide for itself
-          which ones matter.
+          The whole file, then dim everything but two functions. Dot product
+          and softmax are the only two ideas you need for the next twenty
+          minutes. Everything else is bookkeeping.
           """
         },
         %Slide{
@@ -283,100 +145,191 @@ defmodule TinyLlmTalk.Deck do
           title: "A dot product is a similarity score",
           steps: 3,
           notes: """
-          Two vectors, multiply pairwise, add. Big when they point the same way,
-          near zero when unrelated. And we can learn what similar should mean.
+          Two lists, multiply pairwise, add. Big when they point the same way,
+          near zero when unrelated, negative when opposed. That is the only
+          arithmetic in attention.
           """
         },
         %Slide{
-          id: :query_key_value,
-          title: "Query, key, value",
+          id: :softmax_playground,
+          title: "A softmax turns scores into a budget",
+          notes: """
+          Drag the slider. Four scores in, four shares out, always summing to
+          one. Sharp means commit to the top score; soft means spread the
+          budget. Say "budget" and "commit"; never say exponential.
+          """
+        }
+      ]
+    },
+    %Section{
+      number: 3,
+      title: "Embedding and position",
+      minutes: 3,
+      lands: "a word is a row of floats, and position is added, not appended",
+      slides: [
+        %Slide{
+          id: :a_word_is_a_row,
+          title: "A word becomes a row of floats",
+          steps: 2,
+          notes: """
+          Look the word's integer up in a 32 by 32 table and take the row. The
+          table starts random and the model moves the rows itself. This is the
+          real llama row from the checkpoint, not a sketch.
+          """
+        },
+        %Slide{
+          id: :positions_added,
+          title: "Position is another row, added on",
+          steps: 2,
+          notes: """
+          Attention on its own is a bag of words. So each position has a
+          learned vector of its own, added to the word's row, not appended to
+          it. Sixteen positions, sixteen rows. Same width, which is why nothing
+          downstream has to know.
+          """
+        },
+        %Slide{
+          id: :forgets_the_words,
+          title: "From here on the model has forgotten it saw words",
+          notes: """
+          Seven positions in, seven rows of thirty-two floats out. This grid is
+          what attention actually sees. Nothing after this slide mentions a
+          word until the very end, when we turn rows back into a distribution.
+          """
+        }
+      ]
+    },
+    %Section{
+      number: 4,
+      title: "Attention, from Map",
+      minutes: 11,
+      lands: "a fuzzy lookup: score every key, budget the scores, blend the values",
+      slides: [
+        %Slide{
+          id: :map_get,
+          title: "Start with a lookup you already trust",
+          steps: 2,
+          notes: """
+          Map.get finds the one key equal to the query and hands back its
+          value. Ask for a key that is not there and you get nil. That
+          brittleness is the problem attention solves.
+          """
+        },
+        %Slide{
+          id: :fuzzy_map,
+          title: "Now make it fuzzy",
+          steps: 3,
+          notes: """
+          Pick a query word. Step one: score every key with a dot product.
+          Step two: softmax the scores into a budget. Step three: blend the
+          values by that budget. Query with goose, which is not in the map, and
+          it still answers sensibly. That is the whole trick.
+          """
+        },
+        %Slide{
+          id: :learn_the_lookup,
+          title: "Then let it learn what to ask, offer, and hand over",
           steps: 4,
           notes: """
-          In words before symbols. A query is what this position is looking for.
-          A key is what this position is advertising. A value is what this
-          position hands over if chosen. Three weighted sums, three learned
-          weight tables: Wq, Wk, Wv.
-          """
-        },
-        %Slide{
-          id: :scores,
-          title: "Score every earlier word",
-          steps: 4,
-          notes: """
-          Take the blank's query, dot it against every earlier key. One number
-          per earlier word. Divide by the square root of the width so the
-          numbers stay tame. Softmax across them: now it is a probability of
-          where to look.
-          """
-        },
-        %Slide{
-          id: :pulling_in,
-          title: "Pull in what you chose",
-          notes: """
-          Multiply each earlier position's value by its weight and add them up.
-          The blank now holds a blend of the words it chose to look at. One more
-          weighted sum, Wo, and out to the same softmax as before.
-          """
-        },
-        %Slide{
-          id: :causal_mask,
-          title: "The causal mask",
-          notes: """
-          Every position predicts the next word at once, so each must only see
-          what came before it. Future positions get a score of minus a billion
-          before the softmax, which rounds to zero attention. Show the triangle.
-          """
-        },
-        %Slide{
-          id: :positions,
-          title: "Attention is a bag until you tell it otherwise",
-          notes: """
-          As described it does not know that llama came before dogs. So each
-          position also has a learned vector added to its word embedding. 16
-          positions, 16 vectors. Now the model can tell the noun near the start
-          from the noun near the end.
+          Query is what this position is looking for. Key is what it
+          advertises. Value is what it hands over if chosen. Each is the
+          position's row times a learned table. Three matrices, and the fuzzy
+          map is now an attention head.
           """
         },
         %Slide{
           id: :attention_code,
-          title: "The six lines that matter",
+          title: "The whole head, sixteen lines",
           steps: 7,
           notes: """
-          This is where the nothing is hidden claim is cashed. Step through it a
-          line at a time. Do not read it out; let them read it while you say
-          what each block is for.
+          Quoted from the repo, not simplified. Step through: the three
+          projections, the dot products all at once, the scale, the mask, the
+          softmax, the blend. Let them read; say only what each block is for.
+          """
+        },
+        %Slide{
+          id: :three_details,
+          title: "Three details do all the work",
+          steps: 3,
+          notes: """
+          Divide by the square root of the width so the softmax does not
+          saturate as vectors grow. Mask the future before the softmax so the
+          rows still sum to one; flip the toggle to show what leaks without it.
+          And every position runs at once in one matrix multiply, no loop over
+          time, which is why this scales and a recurrent network did not.
           """
         },
         %Slide{
           id: :attention_bet,
-          title: "Where will it look?",
+          title: "Where will the blank look?",
           activity: :attention_bet,
           steps: 2,
           notes: """
-          Ask before revealing. Most rooms say llama, because that is the answer
+          Ask before showing. Most rooms say llama, because that is the answer
           to the grammar question. The model says who. Being wrong together is
-          what makes the next slide land.
+          what makes the walkthrough land.
           """
         },
         %Slide{
-          id: :demo_attention_heatmap,
-          title: "Demo: where the blank looks",
+          id: :walkthrough,
+          title: "One position, all the way through",
+          steps: 4,
           notes: """
-          DEMO 2. Rendered from the shipped checkpoint, not trained live. Rows
-          are positions predicting, columns are positions looked at. The lower
-          triangle is filled, the upper is empty.
+          Starts on who, so the mask has something to hide. Step through: its
+          query dots every key, the future gets struck out, the softmax turns
+          scores into a budget. Real numbers from the checkpoint. Then click
+          dogs, the position predicting the blank: most of its budget goes to
+          who.
+          """
+        }
+      ]
+    },
+    %Section{
+      number: 5,
+      title: "Look at what it did",
+      minutes: 5,
+      lands: "the sink, who gathers the subject, and half a route it cannot finish",
+      slides: [
+        %Slide{
+          id: :heatmap,
+          title: "Every position at once",
+          notes: """
+          Rows predict, columns are looked at. The upper triangle is empty,
+          exactly as the mask says it must be. Let them find the bright cells
+          before you name them.
           """
         },
         %Slide{
-          id: :reading_the_heatmap,
+          id: :read_it_honestly,
           title: "Read it honestly",
           steps: 3,
           notes: """
-          The blank attends 0.55 to who, 0.17 to dogs, 0.13 to llama. It is not
-          looking at llama, and it does not need to: it read the subject's
-          number off chases, which already agrees with the head noun. The point
-          is not that it draws the bracket we imagined. The point is that it is
-          visibly structured, not flat, and it gets the answer.
+          The blank attends most to who, then dogs, then llama. It is not
+          looking at llama and it does not need to: chases already agrees with
+          the head noun. The point is that the pattern is structured rather
+          than flat, and it gets the answer.
+          """
+        },
+        %Slide{
+          id: :attention_sink,
+          title: "It found the attention sink by itself",
+          notes: """
+          The first verb has nothing useful behind it, so it dumps its
+          attention on start. Production transformers do exactly this and it
+          has a name. Fifteen thousand parameters reproduced it unprompted.
+          One slide, one laugh, move on.
+          """
+        },
+        %Slide{
+          id: :half_a_route,
+          title: "The model drew the argument for depth",
+          steps: 4,
+          notes: """
+          The who row gathers llama; on the mirror sentence it gathers dogs.
+          The blank attends to who. So half of a two-hop route exists, and one
+          block cannot use the second hop, because both hops happen at once. A
+          second block would read who after it had gathered the subject. That
+          is what depth buys, drawn by the model.
           """
         },
         %Slide{
@@ -384,155 +337,182 @@ defmodule TinyLlmTalk.Deck do
           title: "Your sentence",
           activity: :sentence,
           notes: """
-          Let a few land, then tap one to put it on the screen. Any prefix works;
-          the vocabulary is the only thing they can say. If nobody sends
-          anything, type one yourself and carry on.
-          """
-        },
-        %Slide{
-          id: :the_number,
-          title: "Zero, zero, and sixty-nine",
-          notes: """
-          Against 55.3% for both bigrams. The one-word models could not do
-          better than chance when a noun intervened; this one can. Do not quote
-          the 91.4% aggregate; a third of the probes are free for every model.
-          """
-        },
-        %Slide{
-          id: :attention_sink,
-          title: "It found the attention sink by itself",
-          notes: """
-          The first verb position, with nothing useful behind it, puts 0.96 of
-          its attention on start. Production transformers do exactly this and it
-          has a name. 15,104 parameters reproduced it unprompted. One slide, one
-          laugh, move on.
-          """
-        }
-      ]
-    },
-    %Section{
-      number: 5,
-      title: "The rest of the block",
-      minutes: 6,
-      lands: "residual, MLP, and why depth would help",
-      slides: [
-        %Slide{
-          id: :architecture,
-          title: "The box with its lid off",
-          steps: 6,
-          notes: """
-          Embedding plus position, then attention, then MLP, then the output.
-          Two arrows that go around: the residuals. Two small boxes: the norms.
-          """
-        },
-        %Slide{
-          id: :residuals,
-          title: "Add, do not replace",
-          notes: """
-          Keep what you had, add what you learned. Without this, information at
-          the input has to survive every layer to reach the output; with it, the
-          default is to pass through.
-          """
-        },
-        %Slide{
-          id: :mlp,
-          title: "A place to think about what you gathered",
-          notes: """
-          Attention gathers; it cannot compute much about what it gathered. Two
-          weighted sums with a ReLU between, applied to each position on its
-          own. 32 in, 128 in the middle, 32 out. Half the parameters are here.
-          Do not go further than that sentence.
-          """
-        },
-        %Slide{
-          id: :rmsnorm,
-          title: "RMSNorm, one line",
-          notes: """
-          Rescale each position's vector to a fixed size before attention and
-          before the MLP so nothing blows up. Learned gain. Skip the formula.
-          """
-        },
-        %Slide{
-          id: :two_hop,
-          title: "The model drew the argument for depth",
-          steps: 4,
-          notes: """
-          The who row of the same heatmap. who attends 0.57 to llama; on the
-          mirror probe, the dogs who chase the llama, it attends 0.65 to dogs.
-          The who position has gathered the head noun into itself, and the blank
-          attends to who. So half of a two-hop route exists, and with one block
-          it cannot use the second hop, because both hops happen at once. A
-          second block would read who after it had already gathered the subject.
-          That is what depth buys.
-          """
-        },
-        %Slide{
-          id: :scale,
-          title: "Same shape, bigger numbers",
-          steps: 5,
-          notes: """
-          One head becomes many, one block becomes dozens, 32 words becomes a
-          hundred thousand tokens and a tokenizer, 16 positions becomes a
-          hundred thousand. Nothing on this list is a new idea. Do not put a
-          frontier parameter count on the slide; say the ratio out loud.
+          Let a few land, then tap one to put it on the screen with its
+          attention map. Any prefix works; the vocabulary is the only thing
+          they can say. If nobody sends anything, type one yourself.
           """
         }
       ]
     },
     %Section{
       number: 6,
-      title: "Generating",
-      minutes: 5,
-      lands: "the loop, and temperature",
+      title: "The rest of the block",
+      minutes: 3,
+      lands: "residual, RMSNorm, MLP: the plumbing that makes a layer stackable",
       slides: [
         %Slide{
-          id: :the_loop,
-          title: "Ask, pick, append, ask again",
-          steps: 4,
+          id: :lid_off,
+          title: "The box, with its lid off",
+          steps: 6,
           notes: """
-          Start with start. Ask the function. Pick a word. Append it. Stop at
-          the period. Say the uncomfortable part: no state carries between
-          steps, the whole prefix is re-read every time, and that is why a model
-          cannot take back something it has already said.
+          Embedding plus position, then attention, then the MLP, then out.
+          Two arrows go around the middle: the residuals. Two small boxes: the
+          norms. Everything on this slide except three words you have already
+          seen.
           """
         },
         %Slide{
-          id: :temperature,
-          title: "Temperature",
+          id: :plumbing,
+          title: "Three pieces of plumbing",
+          steps: 3,
           notes: """
-          Divide the scores by a number before the softmax. Below 1 sharpens
-          toward the top choice, above 1 flattens toward uniform, zero is
-          argmax.
-          """
-        },
-        %Slide{
-          id: :demo_temperature,
-          title: "Demo: the slider",
-          notes: """
-          DEMO 3. Range 0 to 3. At 0 it says one sentence forever, the fast dogs
-          and the llamas are fast, which is not in the training set. At 1 it is
-          89.5% grammatical and 90.5% distinct. At 3 it is word salad. Show the
-          failure modes coming apart in order: a llama is dog loses meaning
-          first, sleepy fast goose dogs flee loses the determiner last.
-          Structure goes before content.
-          """
-        },
-        %Slide{
-          id: :the_tradeoff,
-          title: "Correct and boring, or varied and wrong",
-          notes: """
-          Grammaticality against distinctness as temperature rises. This is the
-          slide people photograph. Pause on it.
+          Residual: add what attention returned to what was there, do not
+          replace it. RMSNorm: rescale each row to a fixed size so nothing
+          blows up. MLP: two weighted sums with a ReLU between, per position,
+          32 to 128 to 32, where the model thinks about what it gathered. One
+          sentence each and stop.
           """
         }
       ]
     },
     %Section{
       number: 7,
-      title: "Close",
-      minutes: 3,
-      lands: "what is not here, and what is",
+      title: "Back to words",
+      minutes: 5,
+      lands: "rows become a distribution, the loop, and the knob",
       slides: [
+        %Slide{
+          id: :back_to_words,
+          title: "Thirty-two floats become thirty-two probabilities",
+          notes: """
+          One more weighted sum takes the last row from 32 wide to 32 scores,
+          one per word, and the same softmax turns them into a budget. Bars for
+          the probe: flees is the top of all thirty-two.
+          """
+        },
+        %Slide{
+          id: :the_loop,
+          title: "Ask, pick, append, ask again",
+          steps: 4,
+          notes: """
+          Start with start. Ask the function. Pick a word. Append it. Stop at
+          the period. No state carries between steps; the whole prefix is
+          re-read every time, which is why a model cannot take back what it
+          has already said.
+          """
+        },
+        %Slide{
+          id: :one_word_at_a_time,
+          title: "One word at a time",
+          notes: """
+          Press next and the room watches the bars, then the pick, then the
+          append. Every press is a fresh draw, so it will surprise you too.
+          Press restart if it wanders. Three or four words are enough.
+          """
+        },
+        %Slide{
+          id: :temperature_dial,
+          title: "The knob",
+          notes: """
+          Divide the scores by a number before the softmax. Below one commits,
+          above one wanders, zero is argmax. Turn it to zero: one sentence
+          forever, and it is not in the corpus. Turn it past two: structure
+          goes before content.
+          """
+        },
+        %Slide{
+          id: :spot_the_human,
+          title: "One of these is human",
+          activity: :spot_the_human,
+          steps: 2,
+          notes: """
+          One sentence from the grammar, two from the model that never appeared
+          in training. Vote. The point is not that the model wins; it is that
+          the room cannot tell, and that the model's are new sentences, not
+          recalled ones. CUT THIS SECOND if running long.
+          """
+        }
+      ]
+    },
+    %Section{
+      number: 8,
+      title: "Training, in one slide",
+      minutes: 3,
+      lands: "guess, measure, nudge, repeat; and tests for the math",
+      slides: [
+        %Slide{
+          id: :training,
+          title: "Training, all of it",
+          steps: 4,
+          notes: """
+          Guess the next word. Measure how surprised you were by the real one.
+          Nudge every number in the direction that makes the surprise smaller.
+          Repeat a few hundred times. No chain rule on screen.
+          """
+        },
+        %Slide{
+          id: :loss_falls,
+          title: "Watch it fall",
+          steps: 2,
+          notes: """
+          The line draws itself on the second step. It starts at knowing
+          nothing, ln 32, and ends well under the dashed line, which is the
+          best anything can do seeing only the previous word. Going under it is
+          the proof: it is using information the previous word does not carry.
+          """
+        },
+        %Slide{
+          id: :tests_for_math,
+          title: "Tests for math",
+          steps: 3,
+          notes: """
+          Every gradient is derived by hand. So how do you know it is right?
+          Nudge each parameter up and down, measure the loss both ways, and
+          compare the slope to what the derivation says. A plausible-looking
+          wrong gradient still trains, slowly. This test is what caught the
+          missing transpose.
+          """
+        }
+      ]
+    },
+    %Section{
+      number: 9,
+      title: "Did it learn it",
+      minutes: 3,
+      lands: "only the model beats chance when a distractor gets in the way",
+      slides: [
+        %Slide{
+          id: :the_number,
+          title: "On the sentences where the nearest noun lies",
+          notes: """
+          Held-out probes, filtered to the ones with a distractor. The count
+          table is at chance, because the only word it sees is the one pointing
+          the wrong way. The model is not perfect and is not at chance. Do not
+          quote the aggregate; a third of the probes are free for every model.
+          """
+        },
+        %Slide{
+          id: :rematch,
+          title: "Rematch",
+          activity: :rematch,
+          steps: 2,
+          notes: """
+          A fresh sentence the model has never seen, plural subject this time.
+          The room votes, then the model answers. Either way it is a good
+          moment: the room beating the model is a laugh, the model beating the
+          room is a better one.
+          """
+        },
+        %Slide{
+          id: :scoreboard,
+          title: "How the room did",
+          notes: """
+          Every question the room answered, and whether it agreed with the
+          answer. Read it out. Then the model's line on the same two verb
+          questions. Whoever won, the humans needed a paragraph and the model
+          needed fifteen thousand floats.
+          """
+        },
         %Slide{
           id: :what_is_not_here,
           title: "What is not here, and what is",
@@ -540,7 +520,7 @@ defmodule TinyLlmTalk.Deck do
           notes: """
           Not here: autodiff, a tokenizer, a GPU, multi-head, depth,
           dependencies. Here: embeddings, learned positions, scaled dot-product
-          attention, causal mask, residuals, RMSNorm, an MLP, cross-entropy,
+          attention, a causal mask, residuals, RMSNorm, an MLP, cross-entropy,
           hand-written backprop with a finite-difference check, temperature
           sampling. Every one of these is the same thing a frontier model does.
           """

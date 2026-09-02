@@ -1,15 +1,15 @@
 defmodule TinyLlmTalk.DeckTest do
   use ExUnit.Case, async: true
 
-  alias TinyLlmTalk.Deck
+  alias TinyLlmTalk.{Deck, Room}
 
   describe "the arc" do
-    test "covers the eight sections of the outline, in order" do
-      assert Enum.map(Deck.sections(), & &1.number) == Enum.to_list(0..7)
+    test "covers the ten sections of the outline, in order" do
+      assert Enum.map(Deck.sections(), & &1.number) == Enum.to_list(0..9)
     end
 
-    test "budgets the 46 minutes the outline budgets" do
-      assert Deck.sections() |> Enum.map(& &1.minutes) |> Enum.sum() == 46
+    test "budgets the 41 minutes the outline budgets, leaving four for questions" do
+      assert Deck.sections() |> Enum.map(& &1.minutes) |> Enum.sum() == 41
     end
 
     test "gives every slide a unique id" do
@@ -25,6 +25,24 @@ defmodule TinyLlmTalk.DeckTest do
       for section <- Deck.sections(), slide <- section.slides do
         assert Deck.section(slide).number == section.number
       end
+    end
+
+    test "only names activities the room knows how to run" do
+      for slide <- Deck.slides(), slide.activity do
+        assert Room.activity(slide.activity), "#{slide.id} asks for #{slide.activity}"
+      end
+    end
+
+    test "gives every question a second step to reveal its answer on" do
+      for slide <- Deck.slides(), slide.activity, Room.activity(slide.activity).answer do
+        assert slide.steps >= 2, "#{slide.id} has nowhere to reveal the answer"
+      end
+    end
+
+    test "asks every scored question exactly once" do
+      asked = Deck.slides() |> Enum.map(& &1.activity) |> Enum.reject(&is_nil/1)
+
+      assert length(asked) == length(Enum.uniq(asked))
     end
   end
 

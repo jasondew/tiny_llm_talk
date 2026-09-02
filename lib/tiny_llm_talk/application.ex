@@ -33,11 +33,12 @@ defmodule TinyLlmTalk.Application do
     Task.start(fn ->
       TinyLlmTalk.Model.bigram()
       TinyLlmTalk.Model.bigram_floor()
-      TinyLlmTalk.Model.bigram_held_out()
-      TinyLlmTalk.Model.attention(TinyLlmTalk.Model.probe())
-      Enum.each([:bigram, :embedder, :transformer], &TinyLlmTalk.Model.agreement/1)
-      TinyLlmTalk.Model.embedding_scatter()
-      TinyLlmTalk.Model.temperature_curve()
+      TinyLlmTalk.Model.trace(TinyLlmTalk.Model.probe())
+      TinyLlmTalk.Model.trace(TinyLlmTalk.Model.mirror_probe())
+      TinyLlmTalk.Model.trace(TinyLlmTalk.Model.rematch_probe())
+      Enum.each([:bigram, :transformer], &TinyLlmTalk.Model.agreement/1)
+      TinyLlmTalk.Model.lineup()
+      TinyLlmTalk.Room.activities()
     end)
   end
 

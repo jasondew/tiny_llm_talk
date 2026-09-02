@@ -13,14 +13,13 @@ defmodule TinyLlmTalk.Model do
 
   use Agent
 
-  alias TinyLlm.{Bigram, Eval, Grammar, PCA, Sampler, Transformer, Vocab}
+  alias TinyLlm.{Bigram, Eval, Grammar, Sampler, Tensor, Transformer, Vocab}
   alias TinyLlmTalk.Checkpoint
 
   @seed 1234
   @corpus_size 2_000
   @probe_corpus_size 20_000
   @floor_corpus_size 50_000
-  @held_out_corpus_size 5_000
 
   @doc "The probe the talk turns on, and its mirror."
   @spec probe() :: [Vocab.word()]
@@ -28,6 +27,13 @@ defmodule TinyLlmTalk.Model do
 
   @spec mirror_probe() :: [Vocab.word()]
   def mirror_probe, do: ~w(<start> the dogs who chase the llama)
+
+  @doc """
+  A second probe for the rematch at the end: plural subject, singular
+  distractor, so the nearest noun lies the other way round.
+  """
+  @spec rematch_probe() :: [Vocab.word()]
+  def rematch_probe, do: ~w(<start> the geese who see a fox)
 
   def start_link(_options), do: Agent.start_link(fn -> %{} end, name: __MODULE__)
 
@@ -51,6 +57,14 @@ defmodule TinyLlmTalk.Model do
   @doc "The row the bigram would predict from, for one word."
   @spec bigram_row(Vocab.word()) :: [float()]
   def bigram_row(word), do: Enum.at(bigram(), Vocab.word_to_id(word))
+
+  @doc "The most likely next word in the count table, among some options."
+  @spec bigram_pick(Vocab.word(), [Vocab.word()]) :: Vocab.word()
+  def bigram_pick(word, options) do
+    row = bigram_row(word)
+
+    Enum.max_by(options, fn option -> Enum.at(row, Vocab.word_to_id(option)) end)
+  end
 
   @doc "Held-out probes where a noun of the wrong number sits next to the blank."
   @spec probes() :: [Eval.probe()]
@@ -85,7 +99,7 @@ defmodule TinyLlmTalk.Model do
   How often a model picks a verb of the right number, over the distractor
   probes by default, or over every probe.
   """
-  @spec agreement(:bigram | :embedder | :transformer, :distractor | :all) :: float() | nil
+  @spec agreement(:bigram | :transformer, :distractor | :all) :: float() | nil
   def agreement(model, over \\ :distractor) do
     memoize({:agreement, model, over}, fn ->
       probes = if over == :all, do: probes(), else: distractor_probes()
@@ -116,18 +130,84 @@ defmodule TinyLlmTalk.Model do
   @spec trained?(Checkpoint.name()) :: boolean()
   def trained?(name), do: not is_nil(checkpoint(name))
 
+  @doc "How many numbers the transformer is made of."
+  @spec parameter_count() :: non_neg_integer() | nil
+  def parameter_count do
+    case params(:transformer) do
+      nil -> nil
+      params -> params |> Map.values() |> Enum.map(&(length(&1) * length(hd(&1)))) |> Enum.sum()
+    end
+  end
+
   @doc """
   The attention a prefix pays to itself: one row per position, one column per
   position looked at. The upper triangle is empty because of the causal mask.
   """
   @spec attention([Vocab.word()]) :: [[float()]] | nil
   def attention(words) do
-    memoize({:attention, words}, fn ->
+    case trace(words) do
+      nil -> nil
+      trace -> trace.weights
+    end
+  end
+
+  @doc """
+  One forward pass through the head, with every intermediate a slide can show:
+  the rows that went in, the queries and keys they became, the raw scores,
+  the scores with the future masked, and the weights after the softmax.
+
+  The model's own cache keeps the weights but not the scores, so those are
+  recomputed here from the queries and keys, with the same `Tensor` the model
+  used. `masked` holds `nil` where the mask applies, because the number the
+  model uses there is minus a billion and nobody wants to read that.
+  """
+  @spec trace([Vocab.word()]) :: map() | nil
+  def trace(words) do
+    memoize({:trace, words}, fn ->
       case params(:transformer) do
-        nil -> nil
-        params -> Transformer.weights(params, Vocab.encode(words))
+        nil ->
+          nil
+
+        params ->
+          cache = Transformer.forward(params, Vocab.encode(words))
+          head = cache.block.attention
+          width = length(hd(head.input))
+
+          scores =
+            head.queries
+            |> Tensor.matmul(Tensor.transpose(head.keys))
+            |> Tensor.scale(1.0 / :math.sqrt(width))
+
+          masked =
+            Enum.with_index(scores, fn row, query ->
+              Enum.with_index(row, fn score, key -> if key > query, do: nil, else: score end)
+            end)
+
+          %{
+            words: words,
+            input: cache.input,
+            queries: head.queries,
+            keys: head.keys,
+            values: head.values,
+            scores: scores,
+            masked: masked,
+            weights: head.weights,
+            context: head.context
+          }
       end
     end)
+  end
+
+  @doc """
+  What the weights would be with no causal mask: the softmax over the raw
+  scores, future included. The wrong answer, shown once so the mask makes sense.
+  """
+  @spec unmasked_attention([Vocab.word()]) :: [[float()]] | nil
+  def unmasked_attention(words) do
+    case trace(words) do
+      nil -> nil
+      trace -> Tensor.softmax(trace.scores)
+    end
   end
 
   @doc "What the trained transformer thinks comes next, at a temperature."
@@ -136,6 +216,27 @@ defmodule TinyLlmTalk.Model do
     case params(:transformer) do
       nil -> nil
       params -> Sampler.distribution(params, words, temperature)
+    end
+  end
+
+  @doc "One word, drawn from what the model thinks comes next. Random on purpose."
+  @spec next([Vocab.word()], float()) :: Vocab.word() | nil
+  def next(words, temperature) do
+    case params(:transformer) do
+      nil -> nil
+      params -> Sampler.next_word(params, words, temperature)
+    end
+  end
+
+  @doc """
+  Which of some options the model likes best after a prefix. The model's
+  answer to a question the room has just been asked.
+  """
+  @spec pick([Vocab.word()], [Vocab.word()]) :: Vocab.word() | nil
+  def pick(words, options) do
+    case distribution(words, 1.0) do
+      nil -> nil
+      distribution -> Enum.max_by(options, &Enum.at(distribution, Vocab.word_to_id(&1)))
     end
   end
 
@@ -157,6 +258,40 @@ defmodule TinyLlmTalk.Model do
     end)
   end
 
+  @doc """
+  Three sentences for the room to judge: one written by the grammar, two
+  written by the model and never seen in training. Shuffled from a seed, so
+  the human one is in the same place every time the talk is given.
+
+  Without a checkpoint the model has written nothing, so all three come from
+  the grammar and the question is unanswerable, which the slide says.
+  """
+  @spec lineup() :: %{options: [String.t()], answer: String.t()}
+  def lineup do
+    memoize(:lineup, fn ->
+      seen = MapSet.new(corpus())
+      readable = Enum.filter(corpus(), &(length(&1) in 5..8))
+      human = Enum.at(readable, 3)
+
+      machine =
+        case sentences(1.0, 40) do
+          nil ->
+            Enum.slice(readable, 4, 2)
+
+          generated ->
+            generated
+            |> Enum.reject(&MapSet.member?(seen, &1))
+            |> Enum.filter(&(length(&1) in 5..8 and Eval.grammatical?(&1)))
+            |> Enum.take(2)
+        end
+
+      :rand.seed(:exsss, @seed)
+      options = [human | machine] |> Enum.map(&Enum.join(&1, " ")) |> Enum.shuffle()
+
+      %{options: options, answer: Enum.join(human, " ")}
+    end)
+  end
+
   @doc "The loss history of a training run, as `{step, loss}` pairs."
   @spec losses(Checkpoint.name()) :: [{non_neg_integer(), float()}] | nil
   def losses(name) do
@@ -174,13 +309,13 @@ defmodule TinyLlmTalk.Model do
 
   @doc """
   H(next | previous): the best score anything can reach seeing only the
-  previous word. Nothing that sees one word beats this, which is the whole
-  setup for section three.
+  previous word. A line on the loss chart, so the room can see the model go
+  under it.
 
   Measured on a much larger corpus than the one the slides count, because the
   estimate is biased downward on a small sample: 2,000 sentences say 1.894 and
   50,000 say 1.904, and the smaller number would make the floor look lower than
-  it is. Same reason `Train.run/1` measures loss on held-out data.
+  it is.
   """
   @spec bigram_floor() :: float()
   def bigram_floor do
@@ -191,87 +326,6 @@ defmodule TinyLlmTalk.Model do
       |> Grammar.corpus()
       |> Bigram.counts()
       |> conditional_entropy()
-    end)
-  end
-
-  @doc """
-  What a count table built from 2,000 sentences actually scores on sentences it
-  has not seen.
-
-  Above the floor, because finite counts are not the true distribution. Worth
-  having on the same chart as the floor: the gap between them is the price of
-  counting rather than knowing.
-  """
-  @spec bigram_held_out() :: float()
-  def bigram_held_out do
-    memoize(:bigram_held_out, fn ->
-      matrix = bigram()
-      Grammar.seed(@seed + 2)
-
-      {total, predictions} =
-        @held_out_corpus_size
-        |> Grammar.corpus()
-        |> Enum.reduce({0.0, 0}, fn sentence, accumulator ->
-          ids = Vocab.encode([Vocab.start_token() | sentence])
-
-          ids
-          |> Enum.zip(tl(ids))
-          |> Enum.reduce(accumulator, fn {from, to}, {total, predictions} ->
-            probability = matrix |> Enum.at(from) |> Enum.at(to)
-
-            {total - :math.log(max(probability, 1.0e-12)), predictions + 1}
-          end)
-        end)
-
-      total / predictions
-    end)
-  end
-
-  @doc """
-  The learned embeddings, flattened onto their two strongest directions, with
-  each word's part of speech so the scatter can colour by it.
-  """
-  @spec embedding_scatter() :: [%{word: Vocab.word(), x: float(), y: float(), kind: atom()}] | nil
-  def embedding_scatter do
-    memoize(:embedding_scatter, fn ->
-      case params(:embedder) do
-        nil ->
-          nil
-
-        %{embeddings: embeddings} ->
-          PCA.seed(@seed)
-
-          embeddings
-          |> PCA.project()
-          |> Enum.with_index()
-          |> Enum.map(fn {{x, y}, id} ->
-            word = Vocab.id_to_word(id)
-
-            %{word: word, x: x, y: y, kind: kind(word)}
-          end)
-      end
-    end)
-  end
-
-  @doc """
-  What temperature costs and buys, measured rather than asserted: how many
-  generated sentences are grammatical, and how many are distinct, as it rises.
-  """
-  @spec temperature_curve() ::
-          [%{temperature: float(), grammatical: float(), distinct: float()}] | nil
-  def temperature_curve do
-    memoize(:temperature_curve, fn ->
-      if trained?(:transformer) do
-        Enum.map([0.0, 0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 2.0, 2.5, 3.0], fn temperature ->
-          sentences = sentences(temperature, 100)
-
-          %{
-            temperature: temperature,
-            grammatical: Eval.grammaticality(sentences),
-            distinct: length(Enum.uniq(sentences)) / length(sentences)
-          }
-        end)
-      end
     end)
   end
 
@@ -294,23 +348,21 @@ defmodule TinyLlmTalk.Model do
     end)
   end
 
-  @doc "Sentences the count table generates, from a fixed seed."
-  @spec bigram_sentences(pos_integer()) :: [Grammar.sentence()]
-  def bigram_sentences(count) do
-    memoize({:bigram_sentences, count}, fn ->
-      Bigram.seed(@seed)
-      matrix = bigram()
-
-      Enum.map(1..count//1, fn _index -> Bigram.sentence(matrix) end)
-    end)
-  end
-
   @doc "One word's learned embedding, as the row of floats it actually is."
   @spec embedding(Vocab.word()) :: [float()] | nil
   def embedding(word) do
-    case params(:embedder) do
+    case params(:transformer) do
       nil -> nil
       %{embeddings: embeddings} -> Enum.at(embeddings, Vocab.word_to_id(word))
+    end
+  end
+
+  @doc "The learned vector for one position, as the row of floats it actually is."
+  @spec position(non_neg_integer()) :: [float()] | nil
+  def position(index) do
+    case params(:transformer) do
+      nil -> nil
+      %{positions: positions} -> Enum.at(positions, index)
     end
   end
 
@@ -330,13 +382,6 @@ defmodule TinyLlmTalk.Model do
   ## PRIVATE FUNCTIONS
 
   defp predictor(:bigram), do: Eval.bigram_predictor(bigram())
-
-  defp predictor(:embedder) do
-    case params(:embedder) do
-      nil -> nil
-      params -> Eval.embedder_predictor(params)
-    end
-  end
 
   defp predictor(:transformer) do
     case params(:transformer) do

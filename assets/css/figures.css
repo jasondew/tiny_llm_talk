@@ -1,21 +1,12 @@
 /* Figures.
  *
- * Colour has one job per figure. Magnitude (heatmaps, bars) gets a single hue
- * from the surface up to the accent, so it reads as more and less. Identity
- * (the scatter, the two-series chart) gets a fixed categorical order, assigned
- * in order and never cycled; the six hues below pass the lightness band, chroma
- * floor, colour-vision separation, and contrast checks against this surface.
- * Text always wears text colours, never the series colour. */
+ * Colour has one job per figure. Magnitude (heatmaps, bars, the loss curve)
+ * gets a single hue from the surface up to the accent, so it reads as more and
+ * less. Text always wears text colours, never the figure's colour. */
 
 :root {
   --heat-hue: #f0b429;
 
-  --series-1: #3987e5;
-  --series-2: #d95926;
-  --series-3: #199e70;
-  --series-4: #c98500;
-  --series-5: #d55181;
-  --series-6: #9085e9;
 }
 
 /* The recurring box ------------------------------------------------------ */
@@ -235,14 +226,6 @@
   stroke-linecap: round;
 }
 
-.chart__line--series-1 {
-  stroke: var(--series-1);
-}
-
-.chart__line--series-2 {
-  stroke: var(--series-2);
-}
-
 .chart__caption,
 .chart__legend {
   display: flex;
@@ -270,40 +253,6 @@
   background: currentColor;
 }
 
-.chart__legend-item--series-1 .chart__swatch {
-  background: var(--series-1);
-}
-
-.chart__legend-item--series-2 .chart__swatch {
-  background: var(--series-2);
-}
-
-/* Scatter: identity, so a fixed categorical order --------------------------- */
-
-.scatter circle {
-  stroke: var(--paper);
-  stroke-width: 2;
-}
-
-.scatter text {
-  fill: var(--ink-dim);
-  font-family: var(--mono);
-  font-size: 14px;
-}
-
-.scatter--noun circle,
-.scatter--noun .chart__swatch { fill: var(--series-1); background: var(--series-1); }
-.scatter--verb circle,
-.scatter--verb .chart__swatch { fill: var(--series-2); background: var(--series-2); }
-.scatter--adjective circle,
-.scatter--adjective .chart__swatch { fill: var(--series-3); background: var(--series-3); }
-.scatter--determiner circle,
-.scatter--determiner .chart__swatch { fill: var(--series-4); background: var(--series-4); }
-.scatter--connective circle,
-.scatter--connective .chart__swatch { fill: var(--series-5); background: var(--series-5); }
-.scatter--boundary circle,
-.scatter--boundary .chart__swatch { fill: var(--series-6); background: var(--series-6); }
-
 /* Before mix talk.train -------------------------------------------------- */
 
 .untrained {
@@ -330,4 +279,18 @@
 .untrained code {
   font-family: var(--mono);
   color: var(--accent-cool);
+}
+
+/* A loss curve that draws itself ----------------------------------------- */
+
+.chart__line--draw {
+  stroke-dasharray: 4000;
+  stroke-dashoffset: 4000;
+  animation: chart-draw 6s ease-out forwards;
+}
+
+@keyframes chart-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
 }

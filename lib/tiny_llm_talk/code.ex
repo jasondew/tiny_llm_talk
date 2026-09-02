@@ -22,6 +22,11 @@ defmodule TinyLlmTalk.Code do
   @largest 24.0
   @smallest 8.0
 
+  # The stage is 1280 wide, a slide pads 96 a side, and the listing pads 24
+  # plus a gutter for the line numbers. A monospace glyph is about 0.6em wide.
+  @available_width 1000
+  @glyph_width 0.6
+
   @doc "The CSS for the highlighter, inlined once in the layout."
   @spec stylesheet(atom()) :: String.t()
   def stylesheet(style \\ :one_dark_style), do: HTMLFormatter.stylesheet(style, @css_class)
@@ -37,12 +42,22 @@ defmodule TinyLlmTalk.Code do
   overflows visibly rather than shrinking into an unreadable grey block: quote a
   narrower range instead.
   """
-  @spec font_size(pos_integer()) :: float()
-  def font_size(line_count) do
-    (@available_height / (line_count * @line_height))
+  @spec font_size(pos_integer(), pos_integer()) :: float()
+  def font_size(line_count, longest_line \\ 1) do
+    by_height = @available_height / (line_count * @line_height)
+    by_width = @available_width / (max(longest_line, 1) * @glyph_width)
+
+    by_height
+    |> min(by_width)
     |> min(@largest)
     |> max(@smallest)
     |> Float.round(1)
+  end
+
+  @doc "The longest line in a snippet, in characters, for `font_size/2`."
+  @spec longest_line(String.t()) :: pos_integer()
+  def longest_line(source) do
+    source |> String.split("\n") |> Enum.map(&String.length/1) |> Enum.max(fn -> 1 end)
   end
 
   @doc "One safe HTML fragment per line of `source`."

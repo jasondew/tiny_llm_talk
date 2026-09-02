@@ -843,3 +843,405 @@
   font-size: 20px;
   color: var(--accent-cool);
 }
+
+/* Buttons the speaker clicks on either window --------------------------- */
+
+.button {
+  padding: 12px 22px;
+  border: 1px solid var(--accent);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--accent);
+  font-family: var(--sans);
+  font-size: 22px;
+  cursor: pointer;
+}
+
+.button:hover {
+  background: var(--paper-raised);
+}
+
+.button[disabled] {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.button--quiet {
+  border-color: var(--rule);
+  color: var(--ink-dim);
+}
+
+.picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.picker__option {
+  padding: 10px 20px;
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  background: var(--paper-raised);
+  color: var(--ink-dim);
+  font-family: var(--serif);
+  font-size: 26px;
+  cursor: pointer;
+  transition: color 120ms linear, border-color 120ms linear;
+}
+
+.picker__option:hover {
+  border-color: var(--accent);
+}
+
+.picker__option--chosen {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.picker--small .picker__option {
+  padding: 6px 16px;
+  font-family: var(--mono);
+  font-size: 18px;
+}
+
+/* The math library, as chips --------------------------------------------- */
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 12px;
+}
+
+.chip {
+  padding: 8px 16px;
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  background: var(--paper-raised);
+  font-family: var(--mono);
+  font-size: 22px;
+  transition: opacity 200ms linear, color 200ms linear, border-color 200ms linear;
+}
+
+.chip--dim {
+  opacity: 0.22;
+}
+
+.chip--lit {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.floats {
+  font-family: var(--mono);
+  font-size: 24px;
+  color: var(--ink-dim);
+  white-space: pre;
+}
+
+/* The fuzzy map ---------------------------------------------------------- */
+
+.fuzzy-head {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.fuzzy-head code {
+  font-family: var(--mono);
+  color: var(--accent-cool);
+}
+
+.fuzzy {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 22px;
+}
+
+.fuzzy th {
+  padding: 6px 12px;
+  text-align: left;
+  font-size: 15px;
+  font-weight: 400;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+  border-bottom: 1px solid var(--rule);
+  transition: opacity 200ms linear;
+}
+
+.fuzzy td {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--rule);
+  transition: opacity 200ms linear;
+}
+
+.fuzzy__key {
+  font-family: var(--serif);
+  font-size: 26px;
+}
+
+.fuzzy__vector,
+.fuzzy__number {
+  font-family: var(--mono);
+  color: var(--ink-dim);
+}
+
+.fuzzy__budget {
+  font-family: var(--mono);
+  color: var(--accent);
+}
+
+.fuzzy__track {
+  display: inline-block;
+  width: 160px;
+  height: 16px;
+  margin-right: 12px;
+  vertical-align: middle;
+  border-radius: 4px;
+  background: var(--paper-raised);
+}
+
+.fuzzy__fill {
+  display: block;
+  height: 100%;
+  border-radius: 4px;
+  background: var(--accent);
+  transition: width 220ms ease-out;
+}
+
+.fuzzy--hidden {
+  opacity: 0;
+}
+
+.fuzzy-answer {
+  font-family: var(--serif);
+  font-size: 34px;
+}
+
+.fuzzy-answer__value {
+  margin-left: 18px;
+  font-family: var(--mono);
+  color: var(--accent);
+}
+
+/* The walkthrough: one position, all the way through --------------------- */
+
+.walk {
+  display: grid;
+  grid-template-columns: 190px repeat(var(--walk-columns), 1fr);
+  gap: 8px 10px;
+  align-items: center;
+  width: 100%;
+}
+
+.walk__row {
+  display: contents;
+}
+
+.walk__label {
+  font-size: 18px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+  text-align: right;
+  padding-right: 10px;
+}
+
+.walk__word {
+  padding: 12px 6px;
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  background: var(--paper-raised);
+  color: var(--ink);
+  font-family: var(--serif);
+  font-size: 24px;
+  cursor: pointer;
+  transition: border-color 120ms linear, color 120ms linear;
+}
+
+.walk__word:hover {
+  border-color: var(--accent);
+}
+
+.walk__word--chosen {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.walk__cell {
+  display: grid;
+  place-items: center;
+  min-height: 44px;
+  border-radius: 6px;
+  font-family: var(--mono);
+  font-size: 20px;
+  color: var(--ink-dim);
+}
+
+.walk__cell--query {
+  background: var(--paper-raised);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.walk__cell--key {
+  color: var(--accent-cool);
+}
+
+.walk__cell--number {
+  background: var(--paper-raised);
+  color: var(--ink);
+}
+
+.walk__cell--masked {
+  color: var(--ink-dim);
+  opacity: 0.4;
+  text-decoration: line-through;
+}
+
+.walk__cell--weight {
+  position: relative;
+  min-height: 84px;
+  align-items: start;
+  overflow: hidden;
+  background: var(--paper-raised);
+}
+
+.walk__fill {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--accent);
+  opacity: 0.85;
+  transition: height 220ms ease-out;
+}
+
+.walk__percent {
+  position: relative;
+  padding-top: 6px;
+  font-size: 17px;
+  color: var(--ink);
+}
+
+.walk__fill {
+  max-height: 60%;
+}
+
+/* Generating one word at a time ------------------------------------------ */
+
+.written {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 0.4em;
+  min-height: 1.4em;
+  font-family: var(--serif);
+  font-size: 44px;
+}
+
+.written__word--start {
+  color: var(--ink-dim);
+  opacity: 0.5;
+  font-size: 0.7em;
+  align-self: center;
+}
+
+.written__cursor {
+  color: var(--ink-dim);
+  letter-spacing: 0.05em;
+}
+
+.written__actions {
+  display: flex;
+  gap: 14px;
+}
+
+/* The scoreboard --------------------------------------------------------- */
+
+.scoreboard {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 24px;
+}
+
+.scoreboard th {
+  padding: 6px 14px;
+  text-align: left;
+  font-size: 15px;
+  font-weight: 400;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+  border-bottom: 1px solid var(--rule);
+}
+
+.scoreboard td {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--rule);
+}
+
+.scoreboard__choice,
+.scoreboard__answer {
+  font-family: var(--serif);
+  max-width: 380px;
+}
+
+.scoreboard__answer {
+  color: var(--accent);
+}
+
+.scoreboard__mark {
+  font-family: var(--mono);
+  color: var(--ink-dim);
+}
+
+.scoreboard__mark--right {
+  color: var(--accent);
+}
+
+/* Wide definitions, for the plumbing ------------------------------------- */
+
+.definitions--wide {
+  grid-template-columns: 200px 1fr;
+  font-size: 26px;
+}
+
+.definitions--wide dd code {
+  display: block;
+  margin-top: 6px;
+  font-family: var(--mono);
+  font-size: 0.8em;
+  color: var(--accent-cool);
+}
+
+/* Votes with sentences for labels ---------------------------------------- */
+
+.tally--wide .tally__row {
+  grid-template-columns: 1fr 240px 70px;
+  font-size: 26px;
+}
+
+.tally--wide .tally__label {
+  text-align: left;
+}
+
+.presenter__budget {
+  font-size: 24px;
+  color: var(--ink-dim);
+}
+
+/* A question whose options are sentences: the card above, the vote below */
+
+.ask--stacked {
+  grid-template-columns: 1fr;
+  gap: 18px;
+}
+
+.ask--stacked .join-card {
+  justify-self: start;
+  padding: 10px 18px;
+}
+
+.ask--stacked .join-card__url {
+  font-size: 26px;
+}
