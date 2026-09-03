@@ -17,6 +17,10 @@ defmodule TinyLlmTalk.Model do
   alias TinyLlmTalk.Checkpoint
 
   @seed 1234
+  # Bump when the shape of a trace changes. The Agent outlives a code reload
+  # in development, and a memoized trace of the old shape would otherwise be
+  # handed to a slide expecting the new one.
+  @trace_shape 2
   @corpus_size 2_000
   @probe_corpus_size 20_000
   @floor_corpus_size 50_000
@@ -167,7 +171,7 @@ defmodule TinyLlmTalk.Model do
   """
   @spec trace([Vocab.word()]) :: map() | nil
   def trace(words) do
-    memoize({:trace, words}, fn ->
+    memoize({:trace, @trace_shape, words}, fn ->
       case params(:transformer) do
         nil ->
           nil
