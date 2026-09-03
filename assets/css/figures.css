@@ -308,4 +308,5 @@
 
 .heatmap--compact .heatmap__row-label {
   font-size: 11px;
+  white-space: nowrap;
 }

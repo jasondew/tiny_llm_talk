@@ -1498,10 +1498,10 @@ defmodule TinyLlmTalkWeb.SlideComponents do
         <.untrained :if={is_nil(@frame)} what="The writer" />
         <p :if={@frame} class="writer__paragraph">
           <span :for={sentence <- @frame.written} class="writer__sentence">
-            {Enum.join(sentence, " ")}
+            {prose(sentence)}
           </span>
           <span class="writer__sentence writer__sentence--current">
-            {Enum.join(@frame.current, " ")}<span
+            {prose(@frame.current)}<span
               :if={not @frame.finished}
               class="writer__cursor"
             >&#9646;</span>
@@ -1553,7 +1553,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
             <p :if={is_nil(@rows)} class="writer__pending">&hellip;</p>
           </div>
           <div class={["writer__stage", stage_class(@frame.phase, :query_keys)]}>
-            <p class="writer__label">3. the last row asks (q). every row answers (k)</p>
+            <p class="writer__label">3. q from the last row, k from every row</p>
             <.heatmap
               :if={@qk}
               values={[List.last(@qk.scaled.queries) | @qk.scaled.keys]}
@@ -1587,7 +1587,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
         </div>
         <div class={["writer__stage", stage_class(@frame.phase, :values)]}>
           <p class="writer__label">
-            5. every row hands over a value (v). blend them by those shares: what the last row now carries
+            5. every row offers a value (v). blend them by those shares: the last row's new contents
           </p>
           <.heatmap
             :if={@values}
@@ -1694,6 +1694,9 @@ defmodule TinyLlmTalkWeb.SlideComponents do
   # The softmax row is the last of the eight; the drawn word's cell is ringed.
   defp plumbing_highlight(%{phase: :pick, chosen: chosen}), do: [{7, Vocab.word_to_id(chosen)}]
   defp plumbing_highlight(_frame), do: [{7, -1}]
+
+  # Words as a sentence reads: the full stop hugs the word before it.
+  defp prose(words), do: words |> Enum.join(" ") |> String.replace(" .", ".")
 
   # One row as magnitudes on its own 0 to 1 scale, for a picture of its shape.
   defp unit(row) do
