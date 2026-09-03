@@ -1475,10 +1475,19 @@ defmodule TinyLlmTalkWeb.SlideComponents do
       assign(assigns,
         frame: frame,
         pace: Controls.choice(assigns.controls, "pace", "normal"),
-        trace: frame && Model.trace(frame.prefix),
-        distribution: frame && Model.distribution(frame.prefix, 1.0),
         parameters: format_count(Model.parameter_count()),
         size: frame && length(frame.prefix)
+      )
+
+    # A stage shows the word being written only once the wave has reached it.
+    # Before that it holds what it showed for the previous word, or nothing at
+    # the start of a sentence, so the room sees the new row flow through.
+    assigns =
+      assign(assigns,
+        rows: frame && stage_data(frame, :rows),
+        qk: frame && stage_data(frame, :query_keys),
+        attention: frame && stage_data(frame, :attention),
+        next: frame && stage_data(frame, :next)
       )
 
     ~H"""
@@ -1532,39 +1541,66 @@ defmodule TinyLlmTalkWeb.SlideComponents do
         <div class={["writer__stage", stage_class(@frame.phase, :rows)]}>
           <p class="writer__label">2. rows: embedding + position, thirty-two floats each</p>
           <.heatmap
-            values={normalized(@trace.input)}
-            row_labels={@frame.prefix}
+            :if={@rows}
+            values={normalized(@rows.trace.input)}
+            row_labels={@rows.prefix}
             column_labels={List.duplicate("", 32)}
-            cell={rows_cell(@size)}
+            cell={rows_cell(@rows.size)}
             class="heatmap--compact"
           />
+          <p :if={is_nil(@rows)} class="writer__pending">&hellip;</p>
         </div>
         <div class={["writer__stage", stage_class(@frame.phase, :query_keys)]}>
-          <p class="writer__label">3. a query from the last row, a key from every row</p>
-          <div class="writer__qk" style={"--walk-columns: #{@size}"}>
-            <span :for={_word <- @frame.prefix} class="walk__cell walk__cell--key">k</span>
-            <span class="walk__cell walk__cell--query">q</span>
+          <p class="writer__label">
+            3. the last row asks (q). every row, itself included, answers (k)
+          </p>
+          <div :if={@qk} class="writer__qk">
+            <.heatmap
+              values={[List.last(@qk.scaled.queries)]}
+              row_labels={["q · " <> List.last(@qk.prefix)]}
+              column_labels={List.duplicate("", 32)}
+              cell={rows_cell(@qk.size)}
+              class="heatmap--compact heatmap--query"
+            />
+            <.heatmap
+              values={@qk.scaled.keys}
+              row_labels={Enum.map(@qk.prefix, &("k · " <> &1))}
+              column_labels={List.duplicate("", 32)}
+              cell={rows_cell(@qk.size)}
+              class="heatmap--compact"
+            />
           </div>
+          <p :if={is_nil(@qk)} class="writer__pending">&hellip;</p>
         </div>
         <div class={["writer__stage", stage_class(@frame.phase, :attention)]}>
-          <p class="writer__label">4. attention: score, mask, softmax</p>
-          <.heatmap
-            values={@trace.weights}
-            row_labels={@frame.prefix}
-            column_labels={List.duplicate("", @size)}
-            highlight={last_row(@trace.weights)}
-            cell={attention_cell(@size)}
-            class="heatmap--compact"
-          />
+          <p class="writer__label">
+            4. attention: q &middot; k per row, softmaxed. the share it pulls from each
+          </p>
+          <div :if={@attention} class="writer__attention" style={"--walk-columns: #{@attention.size}"}>
+            <div
+              :for={cell <- @attention.row}
+              class={["writer__attention-cell", cell.top? && "writer__attention-cell--top"]}
+            >
+              <span class="writer__attention-word">{cell.word}</span>
+              <span class="writer__attention-score">{format_signed(cell.score)}</span>
+              <span class="writer__attention-track">
+                <span class="writer__attention-fill" style={"width: #{round(cell.weight * 100)}%"} />
+              </span>
+              <span class="writer__attention-weight">{format_percent(cell.weight)}</span>
+            </div>
+          </div>
+          <p :if={is_nil(@attention)} class="writer__pending">&hellip;</p>
         </div>
         <div class={["writer__stage", stage_class(@frame.phase, :next)]}>
           <p class="writer__label">5. what comes next &middot; 6. pick</p>
           <.bars
-            values={@distribution}
+            :if={@next}
+            values={@next.distribution}
             words={Vocab.words()}
             top={4}
             highlight={if @frame.phase == :pick, do: [@frame.chosen], else: []}
           />
+          <p :if={is_nil(@next)} class="writer__pending">&hellip;</p>
         </div>
       </div>
     </section>
@@ -1594,20 +1630,64 @@ defmodule TinyLlmTalkWeb.SlideComponents do
   defp rows_cell(size) when size <= 8, do: 9
   defp rows_cell(_size), do: 7
 
-  defp attention_cell(size) when size <= 5, do: 22
-  defp attention_cell(size) when size <= 8, do: 17
-  defp attention_cell(_size), do: 13
+  # What a stage of the writer draws: the word being written once the wave has
+  # reached the stage, the previous word until then, nothing at the start of a
+  # sentence. Each stage only needs a little of the trace, so it gets that.
+  defp stage_data(frame, stage) do
+    reached? =
+      case {stage, frame.phase} do
+        {:next, phase} -> phase in [:next, :pick]
+        {stage, phase} -> phase_index(phase) >= phase_index(stage)
+      end
+
+    case if(reached?, do: frame.prefix, else: Enum.drop(frame.prefix, -1)) do
+      [] -> nil
+      prefix -> stage_data_for(prefix, Model.trace(prefix))
+    end
+  end
+
+  defp stage_data_for(_prefix, nil), do: nil
+
+  defp stage_data_for(prefix, trace) do
+    %{
+      prefix: prefix,
+      size: length(prefix),
+      trace: trace,
+      scaled: query_and_keys(trace),
+      row: attention_row(trace, prefix),
+      distribution: Model.distribution(prefix, 1.0)
+    }
+  end
+
+  defp phase_index(phase), do: Enum.find_index(Writer.phases(), &(&1 == phase))
+
+  # The query and keys as magnitudes on one shared scale, so the room can see
+  # they are the same kind of thing as the rows they came from.
+  defp query_and_keys(trace) do
+    peak = (trace.queries ++ trace.keys) |> List.flatten() |> Enum.map(&abs/1) |> Enum.max()
+    scale = fn rows -> Enum.map(rows, fn row -> Enum.map(row, &(abs(&1) / peak)) end) end
+
+    %{queries: scale.(trace.queries), keys: scale.(trace.keys)}
+  end
+
+  # What the last position pulls in from each position: the raw score its
+  # query gave that key, and the share the softmax turned it into.
+  defp attention_row(trace, prefix) do
+    scores = List.last(trace.scores)
+    weights = List.last(trace.weights)
+    top = Enum.max(weights)
+
+    [prefix, scores, weights]
+    |> Enum.zip()
+    |> Enum.map(fn {word, score, weight} ->
+      %{word: word, score: score, weight: weight, top?: weight == top}
+    end)
+  end
 
   defp normalized(rows) do
     peak = rows |> List.flatten() |> Enum.map(&abs/1) |> Enum.max()
 
     Enum.map(rows, fn row -> Enum.map(row, &(abs(&1) / peak)) end)
-  end
-
-  defp last_row(weights) do
-    row = length(weights) - 1
-
-    Enum.map(0..row//1, fn column -> {row, column} end)
   end
 
   defp elapsed(%Trainer{status: :running, started_at: started}) do
