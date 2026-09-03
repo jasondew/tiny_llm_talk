@@ -22,7 +22,9 @@ defmodule TinyLlmTalkWeb.Controls do
 
   # Milliseconds a frame of an animated slide lasts, by pace. Six frames a word,
   # so normal is about four seconds a word: slow enough to read the picture.
-  @paces %{"slow" => 1_100, "normal" => 700, "fast" => 350}
+  # Realtime is no delay at all: the next frame goes out as soon as this one
+  # has rendered, so the room sees how fast the model actually is.
+  @paces %{"slow" => 1_100, "normal" => 700, "realtime" => 0}
   @default_pace "normal"
 
   @doc "The events a slide may send, so both LiveViews can match on them."
@@ -105,7 +107,7 @@ defmodule TinyLlmTalkWeb.Controls do
   end
 
   @spec paces() :: [String.t()]
-  def paces, do: ~w(slow normal fast)
+  def paces, do: ~w(slow normal realtime)
 
   @doc "A numeric control, with a default for before anyone has touched it."
   @spec number(map(), String.t(), float()) :: float()
