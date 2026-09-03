@@ -1554,22 +1554,15 @@ defmodule TinyLlmTalkWeb.SlideComponents do
           <p class="writer__label">
             3. the last row asks (q). every row, itself included, answers (k)
           </p>
-          <div :if={@qk} class="writer__qk">
-            <.heatmap
-              values={[List.last(@qk.scaled.queries)]}
-              row_labels={["q · " <> List.last(@qk.prefix)]}
-              column_labels={List.duplicate("", 32)}
-              cell={rows_cell(@qk.size)}
-              class="heatmap--compact heatmap--query"
-            />
-            <.heatmap
-              values={@qk.scaled.keys}
-              row_labels={Enum.map(@qk.prefix, &("k · " <> &1))}
-              column_labels={List.duplicate("", 32)}
-              cell={rows_cell(@qk.size)}
-              class="heatmap--compact"
-            />
-          </div>
+          <.heatmap
+            :if={@qk}
+            values={[List.last(@qk.scaled.queries) | @qk.scaled.keys]}
+            row_labels={["q · " <> List.last(@qk.prefix) | Enum.map(@qk.prefix, &("k · " <> &1))]}
+            column_labels={List.duplicate("", 32)}
+            highlight={[{0, -1}]}
+            cell={rows_cell(@qk.size)}
+            class="heatmap--compact heatmap--query"
+          />
           <p :if={is_nil(@qk)} class="writer__pending">&hellip;</p>
         </div>
         <div class={["writer__stage", stage_class(@frame.phase, :attention)]}>
@@ -1592,7 +1585,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
           <p :if={is_nil(@attention)} class="writer__pending">&hellip;</p>
         </div>
         <div class={["writer__stage", stage_class(@frame.phase, :next)]}>
-          <p class="writer__label">5. what comes next &middot; 6. pick</p>
+          <p class="writer__label">5. one more weighted sum, then softmax: what comes next</p>
           <.bars
             :if={@next}
             values={@next.distribution}
@@ -1602,6 +1595,11 @@ defmodule TinyLlmTalkWeb.SlideComponents do
           />
           <p :if={is_nil(@next)} class="writer__pending">&hellip;</p>
         </div>
+        <div class={["writer__stage", stage_class(@frame.phase, :pick)]}>
+          <p class="writer__label">6. pick: one draw from that distribution</p>
+          <p :if={@frame.phase == :pick} class="writer__picked">{@frame.chosen}</p>
+          <p :if={@frame.phase != :pick} class="writer__pending">&hellip;</p>
+        </div>
       </div>
     </section>
     """
@@ -1610,14 +1608,12 @@ defmodule TinyLlmTalkWeb.SlideComponents do
   ## PRIVATE FUNCTIONS
 
   # A stage of the writer is lit while its phase is on, done once it has passed
-  # for this word, and waiting before then. The next/pick stage counts both.
+  # for this word, and waiting before then.
   defp stage_class(phase, stage) do
-    order = Writer.phases()
-    current = Enum.find_index(order, &(&1 == phase))
-    own = Enum.find_index(order, &(&1 == stage))
+    current = phase_index(phase)
+    own = phase_index(stage)
 
     cond do
-      stage == :next and phase in [:next, :pick] -> "writer__stage--live"
       current == own -> "writer__stage--live"
       current > own -> "writer__stage--done"
       true -> "writer__stage--waiting"
@@ -1634,11 +1630,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
   # reached the stage, the previous word until then, nothing at the start of a
   # sentence. Each stage only needs a little of the trace, so it gets that.
   defp stage_data(frame, stage) do
-    reached? =
-      case {stage, frame.phase} do
-        {:next, phase} -> phase in [:next, :pick]
-        {stage, phase} -> phase_index(phase) >= phase_index(stage)
-      end
+    reached? = phase_index(frame.phase) >= phase_index(stage)
 
     case if(reached?, do: frame.prefix, else: Enum.drop(frame.prefix, -1)) do
       [] -> nil

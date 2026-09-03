@@ -1357,15 +1357,15 @@
 .writer__pipe {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
   min-height: 0;
 }
 
 .writer__stage {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  padding: 6px 12px;
+  gap: 3px;
+  padding: 5px 12px;
   border: 1px solid var(--rule);
   border-radius: 8px;
   transition: border-color 160ms linear, opacity 160ms linear;
@@ -1427,13 +1427,13 @@
   color: var(--accent);
 }
 
-.writer__qk {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+.heatmap--query .heatmap__row-label--lit {
+  color: var(--accent);
 }
 
-.heatmap--query .heatmap__row-label {
+.writer__picked {
+  font-family: var(--serif);
+  font-size: 26px;
   color: var(--accent);
 }
 
