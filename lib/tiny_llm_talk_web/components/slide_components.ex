@@ -90,7 +90,8 @@ defmodule TinyLlmTalkWeb.SlideComponents do
         <.tally tally={Room.tally(@room, :verb_vote)} answer={@activity.answer} reveal={@step >= 2} />
       </div>
       <p :if={@step >= 2} class="slide__note">
-        Everybody knew. Nobody can say how, in fewer than a paragraph.
+        Everybody knew. The rule is easy to name. The hard part is knowing which noun to
+        agree with, when the nearest one is the wrong one.
       </p>
     </section>
     """

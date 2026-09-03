@@ -39,8 +39,10 @@ defmodule TinyLlmTalk.Deck do
           notes: """
           Paste the join link in the chat and let the bars move. Do not fill
           the silence. On reveal every phone learns whether it was right, and
-          the room's record starts here. Everyone knew, and nobody can say how
-          in fewer than a paragraph. That gap is the talk.
+          the room's record starts here. Everyone knew. Someone will say
+          "subject-verb agreement", and they are right: the rule is easy to
+          name. The hard part is knowing which noun is the subject when a
+          plural one sits right next to the blank. That is the talk.
           """
         },
         %Slide{
@@ -509,8 +511,8 @@ defmodule TinyLlmTalk.Deck do
           notes: """
           Every question the room answered, and whether it agreed with the
           answer. Read it out. Then the model's line on the same two verb
-          questions. Whoever won, the humans needed a paragraph and the model
-          needed fifteen thousand floats.
+          questions. Whoever won, the humans had a grammar lesson and the model
+          had fifteen thousand floats.
           """
         },
         %Slide{
