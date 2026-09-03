@@ -1431,12 +1431,6 @@
   color: var(--accent);
 }
 
-.writer__picked {
-  font-family: var(--serif);
-  font-size: 26px;
-  color: var(--accent);
-}
-
 .writer__pending {
   font-family: var(--mono);
   font-size: 14px;

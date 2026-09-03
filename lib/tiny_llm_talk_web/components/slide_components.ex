@@ -1602,7 +1602,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
         </div>
         <div class={["writer__stage", stage_class(@frame.phase, :next)]}>
           <p class="writer__label">
-            6. residual, MLP, norm, then one more weighted sum and softmax: what comes next
+            6. residual, MLP, norm, one more weighted sum, softmax: what comes next. then one draw
           </p>
           <.bars
             :if={@next}
@@ -1613,11 +1613,6 @@ defmodule TinyLlmTalkWeb.SlideComponents do
           />
           <p :if={is_nil(@next)} class="writer__pending">&hellip;</p>
         </div>
-        <div class={["writer__stage", stage_class(@frame.phase, :pick)]}>
-          <p class="writer__label">7. pick: one draw from that distribution</p>
-          <p :if={@frame.phase == :pick} class="writer__picked">{@frame.chosen}</p>
-          <p :if={@frame.phase != :pick} class="writer__pending">&hellip;</p>
-        </div>
       </div>
     </section>
     """
@@ -1626,12 +1621,14 @@ defmodule TinyLlmTalkWeb.SlideComponents do
   ## PRIVATE FUNCTIONS
 
   # A stage of the writer is lit while its phase is on, done once it has passed
-  # for this word, and waiting before then.
+  # for this word, and waiting before then. The pick has no box of its own: it
+  # is the last stage's bars with the drawn word lit.
   defp stage_class(phase, stage) do
     current = phase_index(phase)
     own = phase_index(stage)
 
     cond do
+      stage == :next and phase == :pick -> "writer__stage--live"
       current == own -> "writer__stage--live"
       current > own -> "writer__stage--done"
       true -> "writer__stage--waiting"
