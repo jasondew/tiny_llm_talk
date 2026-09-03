@@ -4,9 +4,10 @@ defmodule TinyLlmTalk.Writer do
 
   A frame number is the whole state. Frame zero is the first phase of the
   first word of the first sentence; each word takes six frames, one per
-  phase of the forward pass, and the paragraph loops when it ends. Because
-  the paragraph is drawn from a seed, the same frame shows the same thing in
-  the room's window and the speaker's, and in rehearsal.
+  phase of the forward pass, and the last frame is the paragraph finished,
+  where it stays. Because the paragraph is drawn from a seed, the same frame
+  shows the same thing in the room's window and the speaker's, and in
+  rehearsal.
 
   The phases follow `TinyLlm.Transformer.forward/2` in order: the word
   becomes an integer, the rows attention will read, the queries and keys,
@@ -30,7 +31,8 @@ defmodule TinyLlmTalk.Writer do
           written: [[String.t()]],
           current: [String.t()],
           sentence: non_neg_integer(),
-          total: pos_integer()
+          total: pos_integer(),
+          finished: boolean()
         }
 
   @spec phases() :: [phase()]
@@ -44,7 +46,7 @@ defmodule TinyLlmTalk.Writer do
   @spec paragraph(integer()) :: [[String.t()]] | nil
   def paragraph(seed), do: Model.paragraph(seed, @sentences_per_paragraph)
 
-  @doc "How many frames the paragraph takes before it loops."
+  @doc "How many frames the paragraph takes to finish."
   @spec length(integer()) :: pos_integer()
   def length(seed) do
     case paragraph(seed) do
@@ -53,16 +55,28 @@ defmodule TinyLlmTalk.Writer do
     end
   end
 
+  @doc "Whether the paragraph is finished by this frame."
+  @spec finished?(integer(), non_neg_integer()) :: boolean()
+  def finished?(seed, number), do: number >= __MODULE__.length(seed) - 1
+
   @doc """
   What is on screen at a frame: which phase, the prefix being read, the word
   about to be chosen, the sentences already written and the words of the
-  current one so far. Nil until there is a checkpoint to write with.
+  current one so far. Frames past the end show the end. Nil until there is a
+  checkpoint to write with.
   """
   @spec frame(integer(), non_neg_integer()) :: frame() | nil
   def frame(seed, number) do
     case paragraph(seed) do
-      nil -> nil
-      sentences -> locate(sentences, rem(number, __MODULE__.length(seed)))
+      nil ->
+        nil
+
+      sentences ->
+        last = __MODULE__.length(seed) - 1
+
+        sentences
+        |> locate(min(number, last))
+        |> Map.put(:finished, number >= last)
     end
   end
 

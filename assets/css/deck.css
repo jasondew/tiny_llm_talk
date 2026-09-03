@@ -1271,10 +1271,10 @@
 
 .writer {
   display: grid;
-  grid-template-columns: 440px 1fr;
+  grid-template-columns: 400px 1fr;
   grid-template-rows: 1fr;
   gap: 40px;
-  padding-top: 44px;
+  padding-top: 40px;
 }
 
 .writer__left {
@@ -1288,8 +1288,8 @@
   flex: 1;
   min-height: 150px;
   font-family: var(--serif);
-  font-size: 30px;
-  line-height: 1.35;
+  font-size: 32px;
+  line-height: 1.4;
 }
 
 .writer__sentence {
@@ -1341,22 +1341,23 @@
 
 .writer__count {
   font-family: var(--mono);
-  font-size: 16px;
+  font-size: 14px;
+  white-space: nowrap;
   color: var(--ink-dim);
 }
 
 .writer__pipe {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 8px;
   min-height: 0;
 }
 
 .writer__stage {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  padding: 10px 14px;
+  gap: 4px;
+  padding: 6px 12px;
   border: 1px solid var(--rule);
   border-radius: 8px;
   transition: border-color 160ms linear, opacity 160ms linear;
@@ -1376,7 +1377,7 @@
 }
 
 .writer__label {
-  font-size: 15px;
+  font-size: 13px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--ink-dim);
@@ -1388,15 +1389,15 @@
 
 .writer__chips {
   display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
+  flex-wrap: nowrap;
+  gap: 6px;
 }
 
 .writer__chip {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 4px 10px;
+  padding: 2px 8px;
   border-radius: 6px;
   background: var(--paper-raised);
   color: var(--ink-dim);
@@ -1409,24 +1410,24 @@
 
 .writer__chip-word {
   font-family: var(--serif);
-  font-size: 20px;
+  font-size: 17px;
 }
 
 .writer__chip-id {
   font-family: var(--mono);
-  font-size: 14px;
+  font-size: 12px;
   color: var(--accent);
 }
 
 .writer__qk {
   display: grid;
-  grid-template-columns: repeat(var(--walk-columns), 44px);
-  gap: 6px;
+  grid-template-columns: repeat(var(--walk-columns), 40px);
+  gap: 4px;
 }
 
 .writer__qk .walk__cell {
-  min-height: 32px;
-  font-size: 18px;
+  min-height: 24px;
+  font-size: 16px;
 }
 
 .writer__qk .walk__cell--key {
@@ -1439,17 +1440,22 @@
   outline: 1px solid var(--accent);
 }
 
+.writer .bars {
+  gap: 4px;
+}
+
 .writer .bars__row {
-  grid-template-columns: 110px 1fr 70px;
-  font-size: 20px;
+  grid-template-columns: 90px 1fr 60px;
+  gap: 10px;
+  font-size: 17px;
 }
 
 .writer .bars__track {
-  height: 14px;
+  height: 11px;
 }
 
 .writer .bars__value {
-  font-size: 15px;
+  font-size: 13px;
 }
 
 .beats--small {

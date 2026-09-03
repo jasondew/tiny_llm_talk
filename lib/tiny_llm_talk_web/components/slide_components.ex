@@ -715,7 +715,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
           type="button"
           phx-click="control"
           phx-value-name="position"
-          phx-value-value={index}
+          phx-value-choice={index}
           class={["walk__word", index == @position && "walk__word--chosen"]}
         >{word}</button>
 
@@ -1477,7 +1477,8 @@ defmodule TinyLlmTalkWeb.SlideComponents do
         pace: Controls.choice(assigns.controls, "pace", "normal"),
         trace: frame && Model.trace(frame.prefix),
         distribution: frame && Model.distribution(frame.prefix, 1.0),
-        parameters: format_count(Model.parameter_count())
+        parameters: format_count(Model.parameter_count()),
+        size: frame && length(frame.prefix)
       )
 
     ~H"""
@@ -1490,21 +1491,17 @@ defmodule TinyLlmTalkWeb.SlideComponents do
             {Enum.join(sentence, " ")}
           </span>
           <span class="writer__sentence writer__sentence--current">
-            {Enum.join(@frame.current, " ")}<span class="writer__cursor">&#9646;</span>
+            {Enum.join(@frame.current, " ")}<span
+              :if={not @frame.finished}
+              class="writer__cursor"
+            >&#9646;</span>
           </span>
         </p>
-        <div :if={@frame} class={["writer__stage", stage_class(@frame.phase, :next)]}>
-          <p class="writer__label">5. what comes next &middot; 6. pick</p>
-          <.bars
-            values={@distribution}
-            words={Vocab.words()}
-            top={5}
-            highlight={if @frame.phase == :pick, do: [@frame.chosen], else: []}
-          />
-        </div>
         <div class="writer__controls">
           <.picker name="pace" options={Controls.paces()} chosen={@pace} class="picker--small" />
-          <button type="button" phx-click="shuffle" class="button button--quiet">new paragraph</button>
+          <button type="button" phx-click="shuffle" class="button button--quiet">
+            {if @frame && @frame.finished, do: "again", else: "new paragraph"}
+          </button>
         </div>
         <p class="writer__count">{@parameters} parameters &middot; pure Elixir &middot; no library</p>
       </div>
@@ -1514,7 +1511,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
           <div class="writer__chips">
             <span
               :for={{word, index} <- Enum.with_index(@frame.prefix)}
-              class={["writer__chip", index == length(@frame.prefix) - 1 && "writer__chip--lit"]}
+              class={["writer__chip", index == @size - 1 && "writer__chip--lit"]}
             >
               <span class="writer__chip-word">{word}</span>
               <span class="writer__chip-id">{Vocab.word_to_id(word)}</span>
@@ -1527,13 +1524,13 @@ defmodule TinyLlmTalkWeb.SlideComponents do
             values={normalized(@trace.input)}
             row_labels={@frame.prefix}
             column_labels={List.duplicate("", 32)}
-            cell={11}
+            cell={rows_cell(@size)}
             class="heatmap--compact"
           />
         </div>
         <div class={["writer__stage", stage_class(@frame.phase, :query_keys)]}>
           <p class="writer__label">3. a query from the last row, a key from every row</p>
-          <div class="writer__qk" style={"--walk-columns: #{length(@frame.prefix)}"}>
+          <div class="writer__qk" style={"--walk-columns: #{@size}"}>
             <span :for={_word <- @frame.prefix} class="walk__cell walk__cell--key">k</span>
             <span class="walk__cell walk__cell--query">q</span>
           </div>
@@ -1543,10 +1540,19 @@ defmodule TinyLlmTalkWeb.SlideComponents do
           <.heatmap
             values={@trace.weights}
             row_labels={@frame.prefix}
-            column_labels={List.duplicate("", length(@frame.prefix))}
+            column_labels={List.duplicate("", @size)}
             highlight={last_row(@trace.weights)}
-            cell={18}
+            cell={attention_cell(@size)}
             class="heatmap--compact"
+          />
+        </div>
+        <div class={["writer__stage", stage_class(@frame.phase, :next)]}>
+          <p class="writer__label">5. what comes next &middot; 6. pick</p>
+          <.bars
+            values={@distribution}
+            words={Vocab.words()}
+            top={4}
+            highlight={if @frame.phase == :pick, do: [@frame.chosen], else: []}
           />
         </div>
       </div>
@@ -1570,6 +1576,16 @@ defmodule TinyLlmTalkWeb.SlideComponents do
       true -> "writer__stage--waiting"
     end
   end
+
+  # The writer's pictures shrink as the prefix grows, so a ten-word sentence
+  # still fits above the footer.
+  defp rows_cell(size) when size <= 5, do: 11
+  defp rows_cell(size) when size <= 8, do: 9
+  defp rows_cell(_size), do: 7
+
+  defp attention_cell(size) when size <= 5, do: 22
+  defp attention_cell(size) when size <= 8, do: 17
+  defp attention_cell(_size), do: 13
 
   defp normalized(rows) do
     peak = rows |> List.flatten() |> Enum.map(&abs/1) |> Enum.max()

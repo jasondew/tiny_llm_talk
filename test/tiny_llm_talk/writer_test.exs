@@ -49,7 +49,14 @@ defmodule TinyLlmTalk.WriterTest do
     assert frame.prefix == ["<start>"]
   end
 
-  test "loops when the paragraph ends" do
-    assert Writer.frame(@seed, Writer.length(@seed)) == Writer.frame(@seed, 0)
+  test "stops on the finished paragraph instead of looping" do
+    last = Writer.length(@seed) - 1
+
+    refute Writer.finished?(@seed, last - 1)
+    assert Writer.finished?(@seed, last)
+    assert Writer.frame(@seed, last).finished
+    assert Writer.frame(@seed, last + 50) == Writer.frame(@seed, last)
+    assert Writer.frame(@seed, last).written == Enum.drop(Writer.paragraph(@seed), -1)
+    assert Writer.frame(@seed, last).current == List.last(Writer.paragraph(@seed))
   end
 end

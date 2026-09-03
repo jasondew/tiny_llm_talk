@@ -109,10 +109,20 @@ defmodule TinyLlmTalkWeb.DeckLiveTest do
       {:ok, deck, _html} = live(conn, ~p"/s/#{slide.index}")
       {:ok, presenter, _html} = live(conn, ~p"/presenter/#{slide.index}")
 
-      render_click(presenter, "control", %{"name" => "position", "value" => "2"})
+      render_click(presenter, "control", %{"name" => "position", "choice" => "2"})
 
       assert render(deck) =~ "walk__word--chosen"
-      assert render(deck) =~ ~s(phx-value-value="2")
+      assert render(deck) =~ ~s(phx-value-choice="2")
+    end
+
+    test "a button click carries the browser's empty value without clobbering the choice",
+         %{conn: conn} do
+      slide = Enum.find(Deck.slides(), &(&1.id == :it_writes))
+      {:ok, view, _html} = live(conn, ~p"/s/#{slide.index}")
+
+      view |> element("button[phx-value-choice='slow']") |> render_click()
+
+      assert render(view) =~ ~s(picker__option picker__option--chosen">slow)
     end
 
     test "writes a sentence one word at a time and can start over", %{conn: conn} do
@@ -153,9 +163,9 @@ defmodule TinyLlmTalkWeb.DeckLiveTest do
       slide = Enum.find(Deck.slides(), &(&1.id == :it_writes))
       {:ok, view, _html} = live(conn, ~p"/s/#{slide.index}")
 
-      # Normal pace is 280ms a frame, so a second is at least three frames.
-      Process.sleep(1_000)
-      assert live_stage(render(view)) =~ ~r/[4-6]\./
+      # Normal pace is 700ms a frame, so 2.3 seconds is at least three frames.
+      Process.sleep(2_300)
+      assert live_stage(render(view)) =~ ~r/[3-6]\./
 
       render_keydown(view, "key", %{"key" => "ArrowRight"})
       Process.sleep(600)

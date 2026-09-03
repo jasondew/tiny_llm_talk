@@ -214,7 +214,7 @@ defmodule TinyLlmTalkWeb.DeckComponents do
         type="button"
         phx-click="control"
         phx-value-name={@name}
-        phx-value-value={option}
+        phx-value-choice={option}
         class={["picker__option", option == @chosen && "picker__option--chosen"]}
       >{option}</button>
     </div>
