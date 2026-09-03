@@ -1604,47 +1604,16 @@ defmodule TinyLlmTalkWeb.SlideComponents do
           <p class="writer__label">
             6. the rest of the block, for the last row: residual, MLP, residual, norm, project, softmax
           </p>
-          <div :if={@next} class="writer__plumbing">
-            <.heatmap
-              values={[unit(@next.trace.block.residual)]}
-              row_labels={["blend + row"]}
-              column_labels={List.duplicate("", 32)}
-              cell={8}
-              class="heatmap--compact"
-            />
-            <.heatmap
-              values={[unit(@next.trace.block.hidden)]}
-              row_labels={["MLP hidden, 128, after ReLU"]}
-              column_labels={List.duplicate("", 128)}
-              cell={5}
-              class="heatmap--compact"
-            />
-            <.heatmap
-              values={[unit(@next.trace.block.output)]}
-              row_labels={["MLP out + row"]}
-              column_labels={List.duplicate("", 32)}
-              cell={8}
-              class="heatmap--compact"
-            />
-            <.heatmap
-              values={[unit(@next.trace.block.logits)]}
-              row_labels={["norm, project: 32 logits"]}
-              column_labels={List.duplicate("", 32)}
-              cell={8}
-              class="heatmap--compact"
-            />
-            <.heatmap
-              values={[@next.distribution]}
-              row_labels={[softmax_label(@frame)]}
-              column_labels={List.duplicate("", 32)}
-              highlight={
-                if @frame.phase == :pick, do: [{0, Vocab.word_to_id(@frame.chosen)}], else: []
-              }
-              scale={:sqrt}
-              cell={8}
-              class="heatmap--compact heatmap--query"
-            />
-          </div>
+          <.heatmap
+            :if={@next}
+            values={plumbing_rows(@next)}
+            row_labels={plumbing_labels(@frame)}
+            column_labels={List.duplicate("", 32)}
+            highlight={plumbing_highlight(@frame)}
+            scale={:sqrt}
+            cell={8}
+            class="heatmap--compact heatmap--query"
+          />
           <p :if={is_nil(@next)} class="writer__pending">&hellip;</p>
         </div>
       </div>
@@ -1701,6 +1670,30 @@ defmodule TinyLlmTalkWeb.SlideComponents do
   end
 
   defp phase_index(phase), do: Enum.find_index(Writer.phases(), &(&1 == phase))
+
+  # The last row's trip through the rest of the block, as rows of 32 so they
+  # line up: the 128 hidden units fold into four rows. Each row is on its own
+  # 0 to 1 scale, a picture of its shape rather than a comparison of sizes.
+  defp plumbing_rows(%{trace: %{block: block}, distribution: distribution}) do
+    hidden = block.hidden |> unit() |> Enum.chunk_every(32)
+
+    [unit(block.residual)] ++ hidden ++ [unit(block.output), unit(block.logits), distribution]
+  end
+
+  defp plumbing_labels(frame) do
+    [
+      "blend + row",
+      "MLP hidden 1 of 4, after ReLU",
+      "hidden 2 of 4",
+      "hidden 3 of 4",
+      "hidden 4 of 4"
+    ] ++
+      ["MLP out + row", "norm, project: 32 logits", softmax_label(frame)]
+  end
+
+  # The softmax row is the last of the eight; the drawn word's cell is ringed.
+  defp plumbing_highlight(%{phase: :pick, chosen: chosen}), do: [{7, Vocab.word_to_id(chosen)}]
+  defp plumbing_highlight(_frame), do: [{7, -1}]
 
   # One row as magnitudes on its own 0 to 1 scale, for a picture of its shape.
   defp unit(row) do
