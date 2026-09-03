@@ -121,7 +121,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
 
   def slide(%{slide: %Slide{id: :it_writes}} = assigns) do
     ~H"""
-    <.writer controls={@controls} frame={@frame} eyebrow="it writes" />
+    <.writer controls={@controls} frame={@frame} />
     """
   end
 
@@ -1465,7 +1465,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
   # written drawn beside it. Opens the talk and closes it.
   attr :controls, :map, required: true
   attr :frame, :integer, required: true
-  attr :eyebrow, :string, required: true
+  attr :eyebrow, :string, default: nil
 
   defp writer(assigns) do
     seed = Writer.seed(Controls.shuffles(assigns.controls))
@@ -1493,42 +1493,13 @@ defmodule TinyLlmTalkWeb.SlideComponents do
 
     ~H"""
     <section class="slide slide--tight writer">
-      <div class="writer__left">
-        <p class="slide__eyebrow">{@eyebrow}</p>
-        <.untrained :if={is_nil(@frame)} what="The writer" />
-        <p :if={@frame} class="writer__paragraph">
-          <span :for={sentence <- @frame.written} class="writer__sentence">
-            {prose(sentence)}
-          </span>
-          <span class="writer__sentence writer__sentence--current">
-            {prose(@frame.current)}<span
-              :if={not @frame.finished}
-              class="writer__cursor"
-            >&#9646;</span>
-          </span>
-        </p>
-        <div class="writer__controls">
-          <.picker name="pace" options={Controls.paces()} chosen={@pace} class="picker--small" />
-        </div>
-        <div class="writer__controls">
-          <button
-            :if={@pace == "step"}
-            type="button"
-            phx-click="step_frame"
-            class="button"
-            disabled={@frame && @frame.finished}
-          >
-            step
-          </button>
-          <button type="button" phx-click="shuffle" class="button button--quiet">
-            {if @frame && @frame.finished, do: "again", else: "new paragraph"}
-          </button>
-        </div>
-        <p class="writer__count">{@parameters} parameters &middot; pure Elixir &middot; no library</p>
-      </div>
+      <p :if={@eyebrow} class="slide__eyebrow writer__eyebrow">{@eyebrow}</p>
+      <.untrained :if={is_nil(@frame)} what="The writer" />
       <div :if={@frame} class="writer__pipe">
         <div class={["writer__stage", stage_class(@frame.phase, :word)]}>
-          <p class="writer__label">1. words become integers</p>
+          <p class="writer__label">
+            1. words become integers{if @frame.finished, do: " · the paragraph is finished", else: ""}
+          </p>
           <div class="writer__chips">
             <span
               :for={{word, index} <- Enum.with_index(@frame.prefix)}
@@ -1585,36 +1556,52 @@ defmodule TinyLlmTalkWeb.SlideComponents do
           </div>
           <p :if={is_nil(@attention)} class="writer__pending">&hellip;</p>
         </div>
-        <div class={["writer__stage", stage_class(@frame.phase, :values)]}>
-          <p class="writer__label">
-            5. every row offers a value (v). blend them by those shares: the last row's new contents
-          </p>
-          <.heatmap
-            :if={@values}
-            values={@values.scaled.values ++ [@values.scaled.blend]}
-            row_labels={Enum.map(@values.prefix, &("v · " <> &1)) ++ ["= blend"]}
-            column_labels={List.duplicate("", 32)}
-            highlight={[{@values.size, -1}]}
-            cell={rows_cell(@values.size)}
-            class="heatmap--compact heatmap--query"
-          />
-          <p :if={is_nil(@values)} class="writer__pending">&hellip;</p>
+        <div class="writer__pair">
+          <div class={["writer__stage", stage_class(@frame.phase, :values)]}>
+            <p class="writer__label">5. every row offers a value (v). blend by those shares</p>
+            <.heatmap
+              :if={@values}
+              values={@values.scaled.values ++ [@values.scaled.blend]}
+              row_labels={Enum.map(@values.prefix, &("v · " <> &1)) ++ ["= blend"]}
+              column_labels={List.duplicate("", 32)}
+              highlight={[{@values.size, -1}]}
+              cell={rows_cell(@values.size)}
+              class="heatmap--compact heatmap--query"
+            />
+            <p :if={is_nil(@values)} class="writer__pending">&hellip;</p>
+          </div>
+          <div class={["writer__stage", stage_class(@frame.phase, :next)]}>
+            <p class="writer__label">6. the rest of the block, then softmax and one draw</p>
+            <.heatmap
+              :if={@next}
+              values={plumbing_rows(@next)}
+              row_labels={plumbing_labels(@frame)}
+              column_labels={List.duplicate("", 32)}
+              highlight={plumbing_highlight(@frame)}
+              scale={:sqrt}
+              cell={7}
+              class="heatmap--compact heatmap--query"
+            />
+            <p :if={is_nil(@next)} class="writer__pending">&hellip;</p>
+          </div>
         </div>
-        <div class={["writer__stage", stage_class(@frame.phase, :next)]}>
-          <p class="writer__label">
-            6. the rest of the block, for the last row: residual, MLP, residual, norm, project, softmax
-          </p>
-          <.heatmap
-            :if={@next}
-            values={plumbing_rows(@next)}
-            row_labels={plumbing_labels(@frame)}
-            column_labels={List.duplicate("", 32)}
-            highlight={plumbing_highlight(@frame)}
-            scale={:sqrt}
-            cell={8}
-            class="heatmap--compact heatmap--query"
-          />
-          <p :if={is_nil(@next)} class="writer__pending">&hellip;</p>
+      </div>
+      <div class="writer__bar">
+        <p class="writer__count">{@parameters} parameters &middot; pure Elixir &middot; no library</p>
+        <div class="writer__controls">
+          <.picker name="pace" options={Controls.paces()} chosen={@pace} class="picker--small" />
+          <button
+            :if={@pace == "pause"}
+            type="button"
+            phx-click="step_frame"
+            class="button"
+            disabled={@frame && @frame.finished}
+          >
+            step
+          </button>
+          <button type="button" phx-click="shuffle" class="button button--quiet">
+            reset
+          </button>
         </div>
       </div>
     </section>
@@ -1640,7 +1627,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
 
   # The writer's pictures shrink as the prefix grows, so a ten-word sentence
   # still fits above the footer.
-  defp rows_cell(size) when size <= 5, do: 10
+  defp rows_cell(size) when size <= 5, do: 9
   defp rows_cell(size) when size <= 8, do: 8
   defp rows_cell(_size), do: 6
 
@@ -1681,22 +1668,13 @@ defmodule TinyLlmTalkWeb.SlideComponents do
   end
 
   defp plumbing_labels(frame) do
-    [
-      "blend + row",
-      "MLP hidden 1 of 4, after ReLU",
-      "hidden 2 of 4",
-      "hidden 3 of 4",
-      "hidden 4 of 4"
-    ] ++
-      ["MLP out + row", "norm, project: 32 logits", softmax_label(frame)]
+    ["blend + row", "MLP hidden 1/4 · ReLU", "hidden 2/4", "hidden 3/4", "hidden 4/4"] ++
+      ["MLP out + row", "norm · project", softmax_label(frame)]
   end
 
   # The softmax row is the last of the eight; the drawn word's cell is ringed.
   defp plumbing_highlight(%{phase: :pick, chosen: chosen}), do: [{7, Vocab.word_to_id(chosen)}]
   defp plumbing_highlight(_frame), do: [{7, -1}]
-
-  # Words as a sentence reads: the full stop hugs the word before it.
-  defp prose(words), do: words |> Enum.join(" ") |> String.replace(" .", ".")
 
   # One row as magnitudes on its own 0 to 1 scale, for a picture of its shape.
   defp unit(row) do
@@ -1705,8 +1683,8 @@ defmodule TinyLlmTalkWeb.SlideComponents do
     Enum.map(row, &(abs(&1) / max(peak, 1.0e-9)))
   end
 
-  defp softmax_label(%{phase: :pick, chosen: chosen}), do: "softmax, one draw: " <> chosen
-  defp softmax_label(_frame), do: "softmax over 32 words"
+  defp softmax_label(%{phase: :pick, chosen: chosen}), do: "softmax · draw: " <> chosen
+  defp softmax_label(_frame), do: "softmax, 32 words"
 
   # The query, keys and values as magnitudes on one shared scale, so the room
   # can see they are the same kind of thing as the rows they came from. The

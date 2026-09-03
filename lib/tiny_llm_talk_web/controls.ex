@@ -24,9 +24,9 @@ defmodule TinyLlmTalkWeb.Controls do
   # word, so normal is about five seconds a word: slow enough to read the
   # picture. Realtime shows the model's own speed, a whole word per tick at a
   # rate a browser can paint; a zero-delay loop of full re-renders was enough
-  # to take a browser down. Step has no clock; the speaker advances a frame at
-  # a time with the step button.
-  @paces %{"slow" => 1_100, "normal" => 700, "realtime" => 80, "step" => nil}
+  # to take a browser down. Pause has no clock; the speaker advances a frame
+  # at a time with the step button.
+  @paces %{"slow" => 1_100, "normal" => 700, "realtime" => 80, "pause" => nil}
   @default_pace "normal"
 
   @doc "The events a slide may send, so both LiveViews can match on them."
@@ -119,7 +119,7 @@ defmodule TinyLlmTalkWeb.Controls do
   end
 
   @spec paces() :: [String.t()]
-  def paces, do: ~w(slow normal realtime step)
+  def paces, do: ~w(slow normal realtime pause)
 
   @doc "Frames per tick: one, or a whole word at a time in realtime."
   @spec stride(map()) :: pos_integer()

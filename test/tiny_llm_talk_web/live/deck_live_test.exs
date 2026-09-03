@@ -174,11 +174,11 @@ defmodule TinyLlmTalkWeb.DeckLiveTest do
       assert render(view) =~ "This is all of it"
     end
 
-    test "steps a frame at a time by hand when the pace is step", %{conn: conn} do
+    test "steps a frame at a time by hand while paused", %{conn: conn} do
       slide = Enum.find(Deck.slides(), &(&1.id == :it_writes))
       {:ok, view, _html} = live(conn, ~p"/s/#{slide.index}")
 
-      view |> element("button[phx-value-choice='step']") |> render_click()
+      view |> element("button[phx-value-choice='pause']") |> render_click()
       # Whatever frame the clock reached, from here on only clicks move it.
       Process.sleep(800)
       before = live_stage(render(view))

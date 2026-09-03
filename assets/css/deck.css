@@ -64,7 +64,7 @@
 .slide {
   position: absolute;
   inset: 0;
-  padding: 72px 96px 104px;
+  padding: 72px 96px 72px;
   display: flex;
   flex-direction: column;
   gap: 32px;
@@ -249,13 +249,13 @@
 
 .deck-footer {
   position: absolute;
-  left: 96px;
-  right: 96px;
-  bottom: 40px;
+  left: 64px;
+  right: 64px;
+  bottom: 16px;
   display: flex;
   justify-content: space-between;
   font-family: var(--mono);
-  font-size: 18px;
+  font-size: 14px;
   color: var(--ink-dim);
 }
 
@@ -356,7 +356,7 @@
 /* Slide furniture -------------------------------------------------------- */
 
 .slide--tight {
-  padding: 40px 64px 88px;
+  padding: 40px 64px 56px;
   gap: 18px;
 }
 
@@ -1269,59 +1269,46 @@
 
 /* The writer: a paragraph on the left, the forward pass on the right ------ */
 
+/* The pipeline takes the whole stage: the sentence so far is readable off
+ * stage one. The controls and the parameter count share one row along the
+ * bottom. */
 .writer {
-  display: grid;
-  grid-template-columns: 1fr 400px;
-  grid-template-rows: 1fr;
-  gap: 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
   padding-top: 28px;
 }
 
-/* The forward pass reads left to right into the paragraph it produces, so
- * the pipeline sits on the left and the output on the right. */
-.writer__left {
-  grid-column: 2;
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-  min-height: 0;
+.writer__eyebrow {
+  flex: 0 0 auto;
 }
 
 .writer__pipe {
-  grid-column: 1;
-  grid-row: 1;
-}
-
-.writer__paragraph {
   flex: 1;
-  min-height: 150px;
-  font-family: var(--serif);
-  font-size: 32px;
-  line-height: 1.4;
+  min-height: 0;
+  overflow: hidden;
 }
 
-.writer__sentence {
-  color: var(--ink-dim);
+.writer__bar {
+  flex: 0 0 auto;
 }
 
-.writer__sentence::after {
-  content: " ";
+.writer__pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 5px;
 }
 
-.writer__sentence--current {
-  color: var(--ink);
+.writer__pair .writer__stage {
+  min-width: 0;
+  overflow: hidden;
 }
 
-.writer__cursor {
-  margin-left: 0.15em;
-  color: var(--accent);
-  animation: writer-blink 1s steps(2, start) infinite;
-}
-
-@keyframes writer-blink {
-  to {
-    visibility: hidden;
-  }
+.writer__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
 }
 
 .writer__controls {
@@ -1418,23 +1405,17 @@
 
 .writer__chip-word {
   font-family: var(--serif);
-  font-size: 17px;
+  font-size: 22px;
 }
 
 .writer__chip-id {
   font-family: var(--mono);
-  font-size: 12px;
+  font-size: 13px;
   color: var(--accent);
 }
 
 .heatmap--query .heatmap__row-label--lit {
   color: var(--accent);
-}
-
-.writer__pair {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 5px;
 }
 
 .writer__pending {
