@@ -1602,13 +1602,14 @@ defmodule TinyLlmTalkWeb.SlideComponents do
         </div>
         <div class={["writer__stage", stage_class(@frame.phase, :next)]}>
           <p class="writer__label">
-            6. residual, MLP, norm, one more weighted sum, softmax: what comes next. then one draw
+            6. residual, MLP, norm, project, softmax: what comes next. then one draw from it
           </p>
           <.bars
             :if={@next}
             values={@next.distribution}
             words={Vocab.words()}
             top={3}
+            include={if @frame.phase == :pick, do: [@frame.chosen], else: []}
             highlight={if @frame.phase == :pick, do: [@frame.chosen], else: []}
           />
           <p :if={is_nil(@next)} class="writer__pending">&hellip;</p>

@@ -67,10 +67,14 @@ defmodule TinyLlmTalkWeb.FigureComponents do
   attr :words, :list, required: true
   attr :top, :integer, default: 6
   attr :highlight, :list, default: []
+  attr :include, :list, default: [], doc: "words shown even when they are not in the top few"
   attr :class, :string, default: nil
 
   def bars(assigns) do
-    assigns = assign(assigns, rows: top_rows(assigns.values, assigns.words, assigns.top))
+    assigns =
+      assign(assigns,
+        rows: top_rows(assigns.values, assigns.words, assigns.top, assigns.include)
+      )
 
     ~H"""
     <div class={["bars", @class]}>
@@ -248,13 +252,20 @@ defmodule TinyLlmTalkWeb.FigureComponents do
   defp bar_height(_value, peak) when peak <= 0.0, do: 0
   defp bar_height(value, peak), do: Float.round(value / peak * 100, 1)
 
-  defp top_rows(values, words, count) do
+  # The top few, plus any word that must be shown regardless: a draw from the
+  # tail of a distribution is still the draw, and a bar chart that hides it
+  # looks like it is about some other word.
+  defp top_rows(values, words, count, include) do
     peak = Enum.max(values)
 
-    values
-    |> Enum.zip(words)
-    |> Enum.sort_by(fn {probability, _word} -> -probability end)
-    |> Enum.take(count)
+    ranked =
+      values |> Enum.zip(words) |> Enum.sort_by(fn {probability, _word} -> -probability end)
+
+    top = Enum.take(ranked, count)
+    forced = Enum.filter(ranked, fn {_probability, word} -> word in include end)
+
+    (top ++ forced)
+    |> Enum.uniq_by(&elem(&1, 1))
     |> Enum.map(fn {probability, word} ->
       %{word: word, probability: probability, percent: bar_height(probability, peak)}
     end)
