@@ -160,6 +160,10 @@ defmodule TinyLlmTalk.Model do
   recomputed here from the queries and keys, with the same `Tensor` the model
   used. `masked` holds `nil` where the mask applies, because the number the
   model uses there is minus a billion and nobody wants to read that.
+
+  `block` is what happens to the last position after the head: the residual
+  add, the MLP's hidden layer after the ReLU, the MLP's output added back,
+  and the logits after the final norm and projection.
   """
   @spec trace([Vocab.word()]) :: map() | nil
   def trace(words) do
@@ -192,7 +196,13 @@ defmodule TinyLlmTalk.Model do
             scores: scores,
             masked: masked,
             weights: head.weights,
-            context: head.context
+            context: head.context,
+            block: %{
+              residual: List.last(cache.block.residual),
+              hidden: List.last(cache.block.hidden),
+              output: List.last(cache.block.output),
+              logits: List.last(cache.logits)
+            }
           }
       end
     end)

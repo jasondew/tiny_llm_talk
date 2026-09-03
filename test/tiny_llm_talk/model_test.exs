@@ -33,6 +33,16 @@ defmodule TinyLlmTalk.ModelTest do
       end
     end
 
+    test "carries the block's plumbing for the last position" do
+      block = Model.trace(@probe).block
+
+      assert length(block.residual) == 32
+      assert length(block.hidden) == 128
+      assert Enum.all?(block.hidden, &(&1 >= 0.0))
+      assert length(block.output) == 32
+      assert length(block.logits) == 32
+    end
+
     test "agrees with the attention the model reports" do
       assert Model.trace(@probe).weights == Model.attention(@probe)
     end

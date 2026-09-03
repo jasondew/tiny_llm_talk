@@ -1431,6 +1431,22 @@
   color: var(--accent);
 }
 
+.writer__pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 5px;
+}
+
+.writer__plumbing {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.writer__plumbing .heatmap__row-label {
+  white-space: nowrap;
+}
+
 .writer__pending {
   font-family: var(--mono);
   font-size: 14px;

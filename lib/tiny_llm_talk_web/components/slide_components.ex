@@ -1539,32 +1539,32 @@ defmodule TinyLlmTalkWeb.SlideComponents do
             </span>
           </div>
         </div>
-        <div class={["writer__stage", stage_class(@frame.phase, :rows)]}>
-          <p class="writer__label">2. rows: embedding + position, thirty-two floats each</p>
-          <.heatmap
-            :if={@rows}
-            values={normalized(@rows.trace.input)}
-            row_labels={@rows.prefix}
-            column_labels={List.duplicate("", 32)}
-            cell={rows_cell(@rows.size)}
-            class="heatmap--compact"
-          />
-          <p :if={is_nil(@rows)} class="writer__pending">&hellip;</p>
-        </div>
-        <div class={["writer__stage", stage_class(@frame.phase, :query_keys)]}>
-          <p class="writer__label">
-            3. the last row asks (q). every row, itself included, answers (k)
-          </p>
-          <.heatmap
-            :if={@qk}
-            values={[List.last(@qk.scaled.queries) | @qk.scaled.keys]}
-            row_labels={["q · " <> List.last(@qk.prefix) | Enum.map(@qk.prefix, &("k · " <> &1))]}
-            column_labels={List.duplicate("", 32)}
-            highlight={[{0, -1}]}
-            cell={rows_cell(@qk.size)}
-            class="heatmap--compact heatmap--query"
-          />
-          <p :if={is_nil(@qk)} class="writer__pending">&hellip;</p>
+        <div class="writer__pair">
+          <div class={["writer__stage", stage_class(@frame.phase, :rows)]}>
+            <p class="writer__label">2. rows: embedding + position, 32 floats each</p>
+            <.heatmap
+              :if={@rows}
+              values={normalized(@rows.trace.input)}
+              row_labels={@rows.prefix}
+              column_labels={List.duplicate("", 32)}
+              cell={rows_cell(@rows.size)}
+              class="heatmap--compact"
+            />
+            <p :if={is_nil(@rows)} class="writer__pending">&hellip;</p>
+          </div>
+          <div class={["writer__stage", stage_class(@frame.phase, :query_keys)]}>
+            <p class="writer__label">3. the last row asks (q). every row answers (k)</p>
+            <.heatmap
+              :if={@qk}
+              values={[List.last(@qk.scaled.queries) | @qk.scaled.keys]}
+              row_labels={["q · " <> List.last(@qk.prefix) | Enum.map(@qk.prefix, &("k · " <> &1))]}
+              column_labels={List.duplicate("", 32)}
+              highlight={[{0, -1}]}
+              cell={rows_cell(@qk.size)}
+              class="heatmap--compact heatmap--query"
+            />
+            <p :if={is_nil(@qk)} class="writer__pending">&hellip;</p>
+          </div>
         </div>
         <div class={["writer__stage", stage_class(@frame.phase, :attention)]}>
           <p class="writer__label">
@@ -1602,16 +1602,49 @@ defmodule TinyLlmTalkWeb.SlideComponents do
         </div>
         <div class={["writer__stage", stage_class(@frame.phase, :next)]}>
           <p class="writer__label">
-            6. residual, MLP, norm, project, softmax: what comes next. then one draw from it
+            6. the rest of the block, for the last row: residual, MLP, residual, norm, project, softmax
           </p>
-          <.bars
-            :if={@next}
-            values={@next.distribution}
-            words={Vocab.words()}
-            top={3}
-            include={if @frame.phase == :pick, do: [@frame.chosen], else: []}
-            highlight={if @frame.phase == :pick, do: [@frame.chosen], else: []}
-          />
+          <div :if={@next} class="writer__plumbing">
+            <.heatmap
+              values={[unit(@next.trace.block.residual)]}
+              row_labels={["blend + row"]}
+              column_labels={List.duplicate("", 32)}
+              cell={8}
+              class="heatmap--compact"
+            />
+            <.heatmap
+              values={[unit(@next.trace.block.hidden)]}
+              row_labels={["MLP hidden, 128, after ReLU"]}
+              column_labels={List.duplicate("", 128)}
+              cell={5}
+              class="heatmap--compact"
+            />
+            <.heatmap
+              values={[unit(@next.trace.block.output)]}
+              row_labels={["MLP out + row"]}
+              column_labels={List.duplicate("", 32)}
+              cell={8}
+              class="heatmap--compact"
+            />
+            <.heatmap
+              values={[unit(@next.trace.block.logits)]}
+              row_labels={["norm, project: 32 logits"]}
+              column_labels={List.duplicate("", 32)}
+              cell={8}
+              class="heatmap--compact"
+            />
+            <.heatmap
+              values={[@next.distribution]}
+              row_labels={[softmax_label(@frame)]}
+              column_labels={List.duplicate("", 32)}
+              highlight={
+                if @frame.phase == :pick, do: [{0, Vocab.word_to_id(@frame.chosen)}], else: []
+              }
+              scale={:sqrt}
+              cell={8}
+              class="heatmap--compact heatmap--query"
+            />
+          </div>
           <p :if={is_nil(@next)} class="writer__pending">&hellip;</p>
         </div>
       </div>
@@ -1668,6 +1701,16 @@ defmodule TinyLlmTalkWeb.SlideComponents do
   end
 
   defp phase_index(phase), do: Enum.find_index(Writer.phases(), &(&1 == phase))
+
+  # One row as magnitudes on its own 0 to 1 scale, for a picture of its shape.
+  defp unit(row) do
+    peak = row |> Enum.map(&abs/1) |> Enum.max()
+
+    Enum.map(row, &(abs(&1) / max(peak, 1.0e-9)))
+  end
+
+  defp softmax_label(%{phase: :pick, chosen: chosen}), do: "softmax, one draw: " <> chosen
+  defp softmax_label(_frame), do: "softmax over 32 words"
 
   # The query, keys and values as magnitudes on one shared scale, so the room
   # can see they are the same kind of thing as the rows they came from. The
