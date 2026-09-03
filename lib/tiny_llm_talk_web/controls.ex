@@ -20,12 +20,13 @@ defmodule TinyLlmTalkWeb.Controls do
   # A sentence the room watches being written should not run off the slide.
   @longest_generation 12
 
-  # Milliseconds a frame of an animated slide lasts, by pace. Six frames a word,
-  # so normal is about four seconds a word: slow enough to read the picture.
-  # Realtime is no delay at all: the next frame goes out as soon as this one
-  # has rendered, so the room sees how fast the model actually is. Step has no
-  # clock; the speaker advances a frame at a time with the step button.
-  @paces %{"slow" => 1_100, "normal" => 700, "realtime" => 0, "step" => nil}
+  # Milliseconds a frame of an animated slide lasts, by pace. Seven frames a
+  # word, so normal is about five seconds a word: slow enough to read the
+  # picture. Realtime shows the model's own speed, a whole word per tick at a
+  # rate a browser can paint; a zero-delay loop of full re-renders was enough
+  # to take a browser down. Step has no clock; the speaker advances a frame at
+  # a time with the step button.
+  @paces %{"slow" => 1_100, "normal" => 700, "realtime" => 80, "step" => nil}
   @default_pace "normal"
 
   @doc "The events a slide may send, so both LiveViews can match on them."
@@ -119,6 +120,14 @@ defmodule TinyLlmTalkWeb.Controls do
 
   @spec paces() :: [String.t()]
   def paces, do: ~w(slow normal realtime step)
+
+  @doc "Frames per tick: one, or a whole word at a time in realtime."
+  @spec stride(map()) :: pos_integer()
+  def stride(controls) do
+    if choice(controls, "pace", @default_pace) == "realtime",
+      do: length(TinyLlmTalk.Writer.phases()),
+      else: 1
+  end
 
   @doc "A numeric control, with a default for before anyone has touched it."
   @spec number(map(), String.t(), float()) :: float()

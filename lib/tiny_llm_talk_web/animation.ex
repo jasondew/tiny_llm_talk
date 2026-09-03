@@ -38,7 +38,8 @@ defmodule TinyLlmTalkWeb.Animation do
     if manual?(socket) do
       assign(socket, ticking: false)
     else
-      socket = assign(socket, frame: socket.assigns.frame + 1)
+      stride = Controls.stride(socket.assigns.controls)
+      socket = assign(socket, frame: socket.assigns.frame + stride)
 
       if socket.assigns.slide.ticks and not finished?(socket) do
         schedule(socket)
