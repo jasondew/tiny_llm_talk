@@ -1271,17 +1271,25 @@
 
 .writer {
   display: grid;
-  grid-template-columns: 400px 1fr;
+  grid-template-columns: 1fr 400px;
   grid-template-rows: 1fr;
   gap: 40px;
   padding-top: 40px;
 }
 
+/* The forward pass reads left to right into the paragraph it produces, so
+ * the pipeline sits on the left and the output on the right. */
 .writer__left {
+  grid-column: 2;
   display: flex;
   flex-direction: column;
   gap: 18px;
   min-height: 0;
+}
+
+.writer__pipe {
+  grid-column: 1;
+  grid-row: 1;
 }
 
 .writer__paragraph {
