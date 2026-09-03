@@ -14,23 +14,37 @@ defmodule TinyLlmTalkWeb.PresenterLive do
   use TinyLlmTalkWeb, :live_view
 
   alias TinyLlmTalk.Deck
-  alias TinyLlmTalk.{Room, Slide}
-  alias TinyLlmTalkWeb.{Controls, Position}
+  alias TinyLlmTalk.{Room, Slide, Trainer}
+  alias TinyLlmTalkWeb.{Animation, Controls, Position}
   alias TinyLlmTalkWeb.SlideComponents
 
   @impl true
   def mount(_params, _session, socket) do
-    if connected?(socket), do: :timer.send_interval(1_000, :tick)
     Position.subscribe(socket)
-    if connected?(socket), do: Room.subscribe()
 
-    {:ok, assign(socket, elapsed: 0, running?: true, controls: %{}, room: Room.state()),
-     layout: false}
+    if connected?(socket) do
+      :timer.send_interval(1_000, :tick)
+      Room.subscribe()
+      Trainer.subscribe()
+    end
+
+    {:ok,
+     assign(socket,
+       elapsed: 0,
+       running?: true,
+       controls: %{},
+       room: Room.state(),
+       trainer: Trainer.state(),
+       frame: 0,
+       ticking: false
+     ), layout: false}
   end
 
   @impl true
   def handle_params(params, _uri, socket) do
-    {:noreply, socket |> Position.apply(params) |> assign_upcoming()}
+    previous = socket.assigns[:slide] && socket.assigns.slide.index
+
+    {:noreply, socket |> Position.apply(params) |> assign_upcoming() |> Animation.sync(previous)}
   end
 
   @impl true
@@ -65,6 +79,10 @@ defmodule TinyLlmTalkWeb.PresenterLive do
 
   def handle_info({:room, room}, socket), do: {:noreply, assign(socket, room: room)}
 
+  def handle_info({:trainer, trainer}, socket), do: {:noreply, assign(socket, trainer: trainer)}
+
+  def handle_info(:frame, socket), do: {:noreply, Animation.tick(socket)}
+
   def handle_info(:tick, %{assigns: %{running?: false}} = socket), do: {:noreply, socket}
   def handle_info(:tick, socket), do: {:noreply, update(socket, :elapsed, &(&1 + 1))}
 
@@ -75,7 +93,14 @@ defmodule TinyLlmTalkWeb.PresenterLive do
       <div class="presenter__now">
         <div class="stage-preview">
           <div class="stage stage--preview">
-            <SlideComponents.slide slide={@slide} step={@step} controls={@controls} room={@room} />
+            <SlideComponents.slide
+              slide={@slide}
+              step={@step}
+              controls={@controls}
+              room={@room}
+              trainer={@trainer}
+              frame={@frame}
+            />
           </div>
         </div>
         <div class="presenter__next">
@@ -95,7 +120,7 @@ defmodule TinyLlmTalkWeb.PresenterLive do
         <p class="presenter__phones">
           {Room.participant_count(@room)} phones in the room &middot; room is {@room
           |> Room.score()
-          |> format_score()}
+          |> format_score()} &middot; training {@trainer.status}
         </p>
         <p class="presenter__keys">
           space/arrows move &middot; t pauses the clock &middot; r resets it &middot; click the preview to run a demo

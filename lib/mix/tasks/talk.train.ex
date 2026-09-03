@@ -4,9 +4,9 @@ defmodule Mix.Tasks.Talk.Train do
 
       mix talk.train
 
-  The transformer takes about half a minute. That is a fine beat once, in
-  section 3, where the point is watching a loss fall; it is dead air the second
-  time, so section 4 onwards reads the numbers off disk instead.
+  The transformer takes about a minute. The deck trains it again live, on the
+  opening slide, with this same config and seed, and checks that the loss it
+  lands on is the one on disk. Every later slide reads the checkpoint.
 
   Both runs are seeded, so re-running this reproduces the same weights, and
   therefore the same attention numbers the slides quote.
@@ -16,8 +16,8 @@ defmodule Mix.Tasks.Talk.Train do
 
   use Mix.Task
 
-  alias TinyLlm.{Embedder, Train, Transformer}
-  alias TinyLlmTalk.Checkpoint
+  alias TinyLlm.{Embedder, Train}
+  alias TinyLlmTalk.{Checkpoint, Trainer}
 
   @embedder %Train.Config{
     model: Embedder,
@@ -28,23 +28,12 @@ defmodule Mix.Tasks.Talk.Train do
     learning_rate_schedule: :constant
   }
 
-  # Batch 8 with cosine decay from 0.5 over 500 steps, which is what the talk
-  # quotes its transformer numbers from.
-  @transformer %Train.Config{
-    model: Transformer,
-    batch_size: 8,
-    steps: 500,
-    log_every: 10,
-    learning_rate: 0.5,
-    learning_rate_schedule: :cosine
-  }
-
   @impl Mix.Task
   def run(_args) do
     Mix.Task.run("app.start")
 
     train(:embedder, @embedder)
-    train(:transformer, @transformer)
+    train(:transformer, Trainer.default_config())
   end
 
   ## PRIVATE FUNCTIONS

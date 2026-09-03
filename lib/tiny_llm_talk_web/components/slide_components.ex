@@ -21,7 +21,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
   import TinyLlmTalkWeb.FigureComponents
 
   alias TinyLlm.{Tensor, Vocab}
-  alias TinyLlmTalk.{Deck, FuzzyMap, Model, Room, Slide}
+  alias TinyLlmTalk.{Deck, FuzzyMap, Model, Room, Slide, Trainer, Writer}
   alias TinyLlmTalkWeb.Controls
 
   # Every slide in the arc is drawn. The test suite renders each one and fails
@@ -68,8 +68,75 @@ defmodule TinyLlmTalkWeb.SlideComponents do
   attr :step, :integer, required: true
   attr :controls, :map, default: %{}
   attr :room, Room, default: %Room{}
+  attr :trainer, :any, default: nil, doc: "the training run, or nil to ask the trainer"
+  attr :frame, :integer, default: 0, doc: "the frame an animated slide is on"
 
   # 0. Cold open ------------------------------------------------------------
+
+  def slide(%{slide: %Slide{id: :live_training}} = assigns) do
+    trainer = assigns.trainer || Trainer.state()
+    config = trainer.config || Trainer.checkpoint_config()
+
+    assigns =
+      assign(assigns,
+        trainer: trainer,
+        losses: Trainer.losses(trainer),
+        steps: config.steps,
+        elapsed: elapsed(trainer),
+        final: final_loss(trainer)
+      )
+
+    ~H"""
+    <section class="slide slide--tight">
+      <div class="training">
+        <h2 class="slide__title slide__title--small">Training, live</h2>
+        <div class="training__controls">
+          <button :if={@trainer.status == :idle} type="button" phx-click="train" class="button">
+            start
+          </button>
+          <button
+            :if={@trainer.status != :idle}
+            type="button"
+            phx-click="retrain"
+            class="button button--quiet"
+          >
+            start over
+          </button>
+          <p class="training__status">{status_line(@trainer, @elapsed, @final)}</p>
+        </div>
+      </div>
+      <.loss_chart
+        losses={@losses}
+        knowing_nothing={Model.knowing_nothing()}
+        floor={Model.bigram_floor()}
+        floor_label="the best any one-word model can do"
+        series_label={"held-out loss, one block, seed #{config_seed(@trainer)}"}
+        steps={@steps}
+        width={1088}
+        height={400}
+      />
+    </section>
+    """
+  end
+
+  def slide(%{slide: %Slide{id: :it_writes}} = assigns) do
+    ~H"""
+    <.writer controls={@controls} frame={@frame} eyebrow="it writes" />
+    """
+  end
+
+  def slide(%{slide: %Slide{id: :all_of_it}} = assigns) do
+    ~H"""
+    <section class="slide">
+      <h2 class="slide__title">This is all of it</h2>
+      <.code path="lib/tiny_llm/transformer.ex" range={114..120} step={@step} focus={[:all, 5..5]} />
+      <.step n={2} step={@step} class="slide__lede">
+        Seven lines. Line five opens into eight more, and one of those into sixteen.
+        Forty minutes from now, you read all of them.
+      </.step>
+    </section>
+    """
+  end
 
   def slide(%{slide: %Slide{id: :the_sentence}} = assigns) do
     ~H"""
@@ -1109,7 +1176,8 @@ defmodule TinyLlmTalkWeb.SlideComponents do
         floor={Model.bigram_floor()}
         floor_label="the best any one-word model can do"
         series_label="held-out loss, one block"
-        draw={@step >= 2}
+        line={@step >= 2}
+        draw
         width={1088}
         height={400}
       />
@@ -1254,6 +1322,36 @@ defmodule TinyLlmTalkWeb.SlideComponents do
     """
   end
 
+  def slide(%{slide: %Slide{id: :all_of_it_again}} = assigns) do
+    ~H"""
+    <section class="slide">
+      <h2 class="slide__title">This was all of it</h2>
+      <.code
+        path="lib/tiny_llm/transformer.ex"
+        range={114..120}
+        step={@step}
+        focus={[:all, 1..3, 5..5, 6..6, 7..7]}
+      />
+      <div class="beats-row">
+        <ol class="beats beats--numbered beats--small">
+          <.step n={2} step={@step}>
+            <li>A word becomes a row. Position is added.</li>
+          </.step>
+          <.step n={3} step={@step}>
+            <li>The block: attention gathers, the residual keeps, the MLP thinks.</li>
+          </.step>
+          <.step n={4} step={@step}>
+            <li>One more norm.</li>
+          </.step>
+          <.step n={5} step={@step}>
+            <li>Thirty-two floats become thirty-two probabilities.</li>
+          </.step>
+        </ol>
+      </div>
+    </section>
+    """
+  end
+
   def slide(%{slide: %Slide{id: :what_is_not_here}} = assigns) do
     ~H"""
     <section class="slide">
@@ -1321,6 +1419,12 @@ defmodule TinyLlmTalkWeb.SlideComponents do
     """
   end
 
+  def slide(%{slide: %Slide{id: :it_writes_again}} = assigns) do
+    ~H"""
+    <.writer controls={@controls} frame={@frame} eyebrow="github.com/jasondew/tiny_llm" />
+    """
+  end
+
   # The stub every unwritten slide falls through to -------------------------
 
   def slide(assigns) do
@@ -1357,7 +1461,160 @@ defmodule TinyLlmTalkWeb.SlideComponents do
     """
   end
 
+  # The model writing a paragraph, with the forward pass for the word being
+  # written drawn beside it. Opens the talk and closes it.
+  attr :controls, :map, required: true
+  attr :frame, :integer, required: true
+  attr :eyebrow, :string, required: true
+
+  defp writer(assigns) do
+    seed = Writer.seed(Controls.shuffles(assigns.controls))
+    frame = Writer.frame(seed, assigns.frame)
+
+    assigns =
+      assign(assigns,
+        frame: frame,
+        pace: Controls.choice(assigns.controls, "pace", "normal"),
+        trace: frame && Model.trace(frame.prefix),
+        distribution: frame && Model.distribution(frame.prefix, 1.0),
+        parameters: format_count(Model.parameter_count())
+      )
+
+    ~H"""
+    <section class="slide slide--tight writer">
+      <div class="writer__left">
+        <p class="slide__eyebrow">{@eyebrow}</p>
+        <.untrained :if={is_nil(@frame)} what="The writer" />
+        <p :if={@frame} class="writer__paragraph">
+          <span :for={sentence <- @frame.written} class="writer__sentence">
+            {Enum.join(sentence, " ")}
+          </span>
+          <span class="writer__sentence writer__sentence--current">
+            {Enum.join(@frame.current, " ")}<span class="writer__cursor">&#9646;</span>
+          </span>
+        </p>
+        <div :if={@frame} class={["writer__stage", stage_class(@frame.phase, :next)]}>
+          <p class="writer__label">5. what comes next &middot; 6. pick</p>
+          <.bars
+            values={@distribution}
+            words={Vocab.words()}
+            top={5}
+            highlight={if @frame.phase == :pick, do: [@frame.chosen], else: []}
+          />
+        </div>
+        <div class="writer__controls">
+          <.picker name="pace" options={Controls.paces()} chosen={@pace} class="picker--small" />
+          <button type="button" phx-click="shuffle" class="button button--quiet">new paragraph</button>
+        </div>
+        <p class="writer__count">{@parameters} parameters &middot; pure Elixir &middot; no library</p>
+      </div>
+      <div :if={@frame} class="writer__pipe">
+        <div class={["writer__stage", stage_class(@frame.phase, :word)]}>
+          <p class="writer__label">1. words become integers</p>
+          <div class="writer__chips">
+            <span
+              :for={{word, index} <- Enum.with_index(@frame.prefix)}
+              class={["writer__chip", index == length(@frame.prefix) - 1 && "writer__chip--lit"]}
+            >
+              <span class="writer__chip-word">{word}</span>
+              <span class="writer__chip-id">{Vocab.word_to_id(word)}</span>
+            </span>
+          </div>
+        </div>
+        <div class={["writer__stage", stage_class(@frame.phase, :rows)]}>
+          <p class="writer__label">2. rows: embedding + position, thirty-two floats each</p>
+          <.heatmap
+            values={normalized(@trace.input)}
+            row_labels={@frame.prefix}
+            column_labels={List.duplicate("", 32)}
+            cell={11}
+            class="heatmap--compact"
+          />
+        </div>
+        <div class={["writer__stage", stage_class(@frame.phase, :query_keys)]}>
+          <p class="writer__label">3. a query from the last row, a key from every row</p>
+          <div class="writer__qk" style={"--walk-columns: #{length(@frame.prefix)}"}>
+            <span :for={_word <- @frame.prefix} class="walk__cell walk__cell--key">k</span>
+            <span class="walk__cell walk__cell--query">q</span>
+          </div>
+        </div>
+        <div class={["writer__stage", stage_class(@frame.phase, :attention)]}>
+          <p class="writer__label">4. attention: score, mask, softmax</p>
+          <.heatmap
+            values={@trace.weights}
+            row_labels={@frame.prefix}
+            column_labels={List.duplicate("", length(@frame.prefix))}
+            highlight={last_row(@trace.weights)}
+            cell={18}
+            class="heatmap--compact"
+          />
+        </div>
+      </div>
+    </section>
+    """
+  end
+
   ## PRIVATE FUNCTIONS
+
+  # A stage of the writer is lit while its phase is on, done once it has passed
+  # for this word, and waiting before then. The next/pick stage counts both.
+  defp stage_class(phase, stage) do
+    order = Writer.phases()
+    current = Enum.find_index(order, &(&1 == phase))
+    own = Enum.find_index(order, &(&1 == stage))
+
+    cond do
+      stage == :next and phase in [:next, :pick] -> "writer__stage--live"
+      current == own -> "writer__stage--live"
+      current > own -> "writer__stage--done"
+      true -> "writer__stage--waiting"
+    end
+  end
+
+  defp normalized(rows) do
+    peak = rows |> List.flatten() |> Enum.map(&abs/1) |> Enum.max()
+
+    Enum.map(rows, fn row -> Enum.map(row, &(abs(&1) / peak)) end)
+  end
+
+  defp last_row(weights) do
+    row = length(weights) - 1
+
+    Enum.map(0..row//1, fn column -> {row, column} end)
+  end
+
+  defp elapsed(%Trainer{status: :running, started_at: started}) do
+    Float.round((System.monotonic_time(:millisecond) - started) / 1_000, 0)
+  end
+
+  defp elapsed(_trainer), do: nil
+
+  defp final_loss(%Trainer{losses: [{_step, loss} | _rest]}), do: loss
+  defp final_loss(_trainer), do: nil
+
+  defp status_line(%Trainer{status: :idle}, _elapsed, _final) do
+    "same config and seed as the checkpoint. press start."
+  end
+
+  defp status_line(%Trainer{status: :running} = trainer, elapsed, final) do
+    "step #{trainer.step} of #{trainer.config.steps} · #{round(elapsed)}s" <>
+      if(final, do: " · loss #{format_loss(final)}", else: "")
+  end
+
+  defp status_line(%Trainer{status: :done} = trainer, _elapsed, final) do
+    "loss #{format_loss(final)} in #{trainer.seconds}s · " <>
+      case trainer.matches do
+        true -> "matches the checkpoint"
+        false -> "does not match the checkpoint"
+        nil -> "nothing to compare it to"
+      end
+  end
+
+  defp config_seed(%Trainer{config: %{seed: seed}}), do: seed
+  defp config_seed(_trainer), do: Trainer.checkpoint_config().seed
+
+  defp format_loss(nil), do: "--"
+  defp format_loss(value), do: :erlang.float_to_binary(value, decimals: 4)
 
   # The probe, marked up: the subject that decides the answer, and the noun that
   # sits next to the blank pointing the wrong way.

@@ -132,11 +132,74 @@ defmodule TinyLlmTalkWeb.DeckLiveTest do
     end
   end
 
+  describe "an animated slide" do
+    test "advances a frame on its own clock and shows a different phase", %{conn: conn} do
+      slide = Enum.find(Deck.slides(), &(&1.id == :it_writes))
+      {:ok, view, _html} = live(conn, ~p"/s/#{slide.index}")
+      before = render(view)
+
+      send(view.pid, :frame)
+
+      assert render(view) != before
+      assert live_stage(render(view)) =~ "2. rows"
+
+      send(view.pid, :frame)
+      send(view.pid, :frame)
+
+      assert live_stage(render(view)) =~ "4. attention"
+    end
+
+    test "keeps ticking on its own clock, and stops when the slide changes", %{conn: conn} do
+      slide = Enum.find(Deck.slides(), &(&1.id == :it_writes))
+      {:ok, view, _html} = live(conn, ~p"/s/#{slide.index}")
+
+      # Normal pace is 280ms a frame, so a second is at least three frames.
+      Process.sleep(1_000)
+      assert live_stage(render(view)) =~ ~r/[4-6]\./
+
+      render_keydown(view, "key", %{"key" => "ArrowRight"})
+      Process.sleep(600)
+
+      refute render(view) =~ "writer__stage--live"
+      assert render(view) =~ "This is all of it"
+    end
+
+    test "starts over with a new paragraph on shuffle", %{conn: conn} do
+      slide = Enum.find(Deck.slides(), &(&1.id == :it_writes))
+      {:ok, view, _html} = live(conn, ~p"/s/#{slide.index}")
+      send(view.pid, :frame)
+      send(view.pid, :frame)
+
+      render_click(view, "shuffle", %{})
+
+      assert render(view) =~ "1. words become integers"
+    end
+
+    # The trainer is shared, and another test may have run it, so this checks
+    # the slide reads whatever state it is in rather than that it is idle.
+    test "draws the training slide from the trainer's state", %{conn: conn} do
+      slide = Enum.find(Deck.slides(), &(&1.id == :live_training))
+      {:ok, _view, html} = live(conn, ~p"/s/#{slide.index}")
+
+      assert html =~ "Training, live"
+      assert html =~ "seed"
+      assert html =~ ~r/phx-click="(train|retrain)"/
+    end
+  end
+
   test "shows the speaker's notes and clock in the presenter view", %{conn: conn} do
     {:ok, _view, html} = live(conn, ~p"/presenter/1/1")
 
     assert html =~ "presenter__clock"
     assert html =~ "Cold open"
+  end
+
+  # The label of the writer's stage that is lit right now.
+  defp live_stage(html) do
+    case Regex.run(~r/writer__stage--live[^>]*>\s*<p class="writer__label">([^<]+)</, html) do
+      [_match, label] -> label
+      nil -> ""
+    end
   end
 
   defp written_words(html) do

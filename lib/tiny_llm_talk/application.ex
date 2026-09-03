@@ -11,8 +11,10 @@ defmodule TinyLlmTalk.Application do
       TinyLlmTalkWeb.Telemetry,
       {DNSCluster, query: Application.get_env(:tiny_llm_talk, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: TinyLlmTalk.PubSub},
+      {Task.Supervisor, name: TinyLlmTalk.TaskSupervisor},
       TinyLlmTalk.Model,
       TinyLlmTalk.Room,
+      TinyLlmTalk.Trainer,
       # Start to serve requests, typically the last entry
       TinyLlmTalkWeb.Endpoint
     ]
@@ -39,6 +41,7 @@ defmodule TinyLlmTalk.Application do
       Enum.each([:bigram, :transformer], &TinyLlmTalk.Model.agreement/1)
       TinyLlmTalk.Model.lineup()
       TinyLlmTalk.Room.activities()
+      TinyLlmTalk.Writer.paragraph(TinyLlmTalk.Writer.seed(0))
     end)
   end
 

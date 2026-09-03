@@ -141,7 +141,9 @@ defmodule TinyLlmTalkWeb.FigureComponents do
   attr :floor, :float, required: true
   attr :floor_label, :string, default: "one-word floor"
   attr :series_label, :string, default: "held-out loss"
-  attr :draw, :boolean, default: false
+  attr :line, :boolean, default: true, doc: "show the curve at all"
+  attr :draw, :boolean, default: false, doc: "animate the curve in when it appears"
+  attr :steps, :integer, default: nil, doc: "fix the x axis here, for a run still going"
   attr :width, :integer, default: 900
   attr :height, :integer, default: 400
 
@@ -216,8 +218,8 @@ defmodule TinyLlmTalkWeb.FigureComponents do
         </text>
 
         <polyline
-          :if={@draw}
-          class="chart__line chart__line--draw"
+          :if={@line}
+          class={["chart__line", @draw && "chart__line--draw"]}
           points={Chart.polyline(@chart, @losses)}
         />
       </svg>
@@ -296,12 +298,12 @@ defmodule TinyLlmTalkWeb.FigureComponents do
   defp format_percent(value), do: "#{:erlang.float_to_binary(value * 100, decimals: 1)}%"
 
   defp loss_chart_scale(assigns) do
-    steps = Enum.map(assigns.losses, &elem(&1, 0))
+    last = assigns.losses |> Enum.map(&elem(&1, 0)) |> Enum.max(fn -> 1 end)
 
     Chart.new(
       width: assigns.width,
       height: assigns.height,
-      x_domain: {0, Enum.max(steps)},
+      x_domain: {0, max(assigns.steps || last, 1)},
       y_domain: {1.5, ceil_to(assigns.knowing_nothing)}
     )
   end

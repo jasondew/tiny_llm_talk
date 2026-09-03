@@ -294,3 +294,18 @@
     stroke-dashoffset: 0;
   }
 }
+
+/* A heatmap with no column labels, for a picture that only needs its shape */
+
+.heatmap--compact {
+  gap: 1px;
+}
+
+.heatmap--compact .heatmap__corner,
+.heatmap--compact .heatmap__column-label {
+  display: none;
+}
+
+.heatmap--compact .heatmap__row-label {
+  font-size: 11px;
+}

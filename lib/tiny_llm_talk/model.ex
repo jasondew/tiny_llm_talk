@@ -259,6 +259,28 @@ defmodule TinyLlmTalk.Model do
   end
 
   @doc """
+  A paragraph for the writer to write: `count` sentences from a seed, each
+  short enough to draw a forward pass for. Longer ones are skipped, not cut,
+  so every sentence shown is one the model actually finished.
+  """
+  @spec paragraph(integer(), pos_integer()) :: [[Vocab.word()]] | nil
+  def paragraph(seed, count) do
+    memoize({:paragraph, seed, count}, fn ->
+      case params(:transformer) do
+        nil ->
+          nil
+
+        params ->
+          Sampler.seed(seed)
+
+          Stream.repeatedly(fn -> Sampler.sentence(params, temperature: 1.0) end)
+          |> Stream.filter(&(length(&1) <= 10 and List.last(&1) == "."))
+          |> Enum.take(count)
+      end
+    end)
+  end
+
+  @doc """
   Three sentences for the room to judge: one written by the grammar, two
   written by the model and never seen in training. Shuffled from a seed, so
   the human one is in the same place every time the talk is given.

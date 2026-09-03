@@ -1245,3 +1245,218 @@
 .ask--stacked .join-card__url {
   font-size: 26px;
 }
+
+/* Training, live --------------------------------------------------------- */
+
+.training {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.training__controls {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.training__status {
+  font-family: var(--mono);
+  font-size: 20px;
+  color: var(--accent-cool);
+}
+
+/* The writer: a paragraph on the left, the forward pass on the right ------ */
+
+.writer {
+  display: grid;
+  grid-template-columns: 440px 1fr;
+  grid-template-rows: 1fr;
+  gap: 40px;
+  padding-top: 44px;
+}
+
+.writer__left {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  min-height: 0;
+}
+
+.writer__paragraph {
+  flex: 1;
+  min-height: 150px;
+  font-family: var(--serif);
+  font-size: 30px;
+  line-height: 1.35;
+}
+
+.writer__sentence {
+  color: var(--ink-dim);
+}
+
+.writer__sentence::after {
+  content: " ";
+}
+
+.writer__sentence--current {
+  color: var(--ink);
+}
+
+.writer__cursor {
+  margin-left: 0.15em;
+  color: var(--accent);
+  animation: writer-blink 1s steps(2, start) infinite;
+}
+
+@keyframes writer-blink {
+  to {
+    visibility: hidden;
+  }
+}
+
+.writer__controls {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.writer__controls .picker {
+  flex-wrap: nowrap;
+  gap: 6px;
+}
+
+.writer__controls .picker__option {
+  padding: 4px 12px;
+  font-size: 15px;
+}
+
+.writer__controls .button {
+  padding: 5px 12px;
+  font-size: 15px;
+  white-space: nowrap;
+}
+
+.writer__count {
+  font-family: var(--mono);
+  font-size: 16px;
+  color: var(--ink-dim);
+}
+
+.writer__pipe {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-height: 0;
+}
+
+.writer__stage {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 14px;
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  transition: border-color 160ms linear, opacity 160ms linear;
+}
+
+.writer__stage--waiting {
+  opacity: 0.35;
+}
+
+.writer__stage--done {
+  opacity: 0.7;
+}
+
+.writer__stage--live {
+  opacity: 1;
+  border-color: var(--accent);
+}
+
+.writer__label {
+  font-size: 15px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+}
+
+.writer__stage--live .writer__label {
+  color: var(--accent);
+}
+
+.writer__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.writer__chip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: var(--paper-raised);
+  color: var(--ink-dim);
+}
+
+.writer__chip--lit {
+  color: var(--ink);
+  outline: 1px solid var(--accent);
+}
+
+.writer__chip-word {
+  font-family: var(--serif);
+  font-size: 20px;
+}
+
+.writer__chip-id {
+  font-family: var(--mono);
+  font-size: 14px;
+  color: var(--accent);
+}
+
+.writer__qk {
+  display: grid;
+  grid-template-columns: repeat(var(--walk-columns), 44px);
+  gap: 6px;
+}
+
+.writer__qk .walk__cell {
+  min-height: 32px;
+  font-size: 18px;
+}
+
+.writer__qk .walk__cell--key {
+  grid-row: 2;
+}
+
+.writer__qk .walk__cell--query {
+  grid-column: var(--walk-columns);
+  grid-row: 1;
+  outline: 1px solid var(--accent);
+}
+
+.writer .bars__row {
+  grid-template-columns: 110px 1fr 70px;
+  font-size: 20px;
+}
+
+.writer .bars__track {
+  height: 14px;
+}
+
+.writer .bars__value {
+  font-size: 15px;
+}
+
+.beats--small {
+  gap: 6px;
+  font-size: 22px;
+}
+
+.beats-row {
+  flex: 0 0 auto;
+}

@@ -105,11 +105,25 @@ seeded, so the attention weights the slides quote reproduce exactly.
 Without checkpoints the deck still runs; the figures that need trained weights
 say so and tell you to run the task.
 
+## The opener trains and writes, live
+
+`TinyLlmTalk.Trainer` runs the checkpoint's training run again on the first
+slide, in the same BEAM, with the same config and seed. Because the model is
+pure Elixir over a seeded `:rand`, that is the same run: the loss it lands on
+is the checkpoint's loss, and the slide says whether it matched. Nothing later
+depends on it; every other slide reads the checkpoint.
+
+`TinyLlmTalk.Writer` is the model writing a paragraph with its forward pass
+drawn beside it, one phase of one word per frame. A slide marked `ticks: true`
+gets a clock from `TinyLlmTalkWeb.Animation`; each window runs its own, and
+they agree because a frame is a pure function of its number and a seed.
+
 ## The speaker's controls
 
-Some slides have a control the room watches you turn: the softmax slider, the
-fuzzy map's query word, the mask toggle, the position in the walkthrough, the
-next-word button, the temperature dial. They live in the socket's `controls`
+Some slides have a control the room watches you turn: start and start over on
+the training slide, pace and new paragraph on the writer, the softmax slider,
+the fuzzy map's query word, the mask toggle, the position in the walkthrough,
+the next-word button, the temperature dial. They live in the socket's `controls`
 map and travel over the same PubSub topic as the position, so a control turned
 in the presenter view's preview turns on the projector. Every demo is driven
 from the podium; nobody reaches for the big screen's mouse.

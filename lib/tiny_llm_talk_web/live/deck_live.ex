@@ -13,21 +13,40 @@ defmodule TinyLlmTalkWeb.DeckLive do
 
   use TinyLlmTalkWeb, :live_view
 
-  alias TinyLlmTalk.Room
-  alias TinyLlmTalkWeb.{Controls, Position}
+  alias TinyLlmTalk.{Room, Trainer}
+  alias TinyLlmTalkWeb.{Animation, Controls, Position}
   alias TinyLlmTalkWeb.SlideComponents
 
   @impl true
   def mount(_params, _session, socket) do
     Position.subscribe(socket)
-    if connected?(socket), do: Room.subscribe()
 
-    {:ok, assign(socket, controls: %{}, room: Room.state(), activity: :none), layout: false}
+    if connected?(socket) do
+      Room.subscribe()
+      Trainer.subscribe()
+    end
+
+    {:ok,
+     assign(socket,
+       controls: %{},
+       room: Room.state(),
+       trainer: Trainer.state(),
+       activity: :none,
+       frame: 0,
+       ticking: false
+     ), layout: false}
   end
 
   @impl true
   def handle_params(params, _uri, socket) do
-    {:noreply, socket |> Position.apply(params) |> sync_activity() |> sync_reveal()}
+    previous = socket.assigns[:slide] && socket.assigns.slide.index
+
+    {:noreply,
+     socket
+     |> Position.apply(params)
+     |> sync_activity()
+     |> sync_reveal()
+     |> Animation.sync(previous)}
   end
 
   @impl true
@@ -54,12 +73,23 @@ defmodule TinyLlmTalkWeb.DeckLive do
 
   def handle_info({:room, room}, socket), do: {:noreply, assign(socket, room: room)}
 
+  def handle_info({:trainer, trainer}, socket), do: {:noreply, assign(socket, trainer: trainer)}
+
+  def handle_info(:frame, socket), do: {:noreply, Animation.tick(socket)}
+
   @impl true
   def render(assigns) do
     ~H"""
     <div class="deck" phx-window-keydown="key">
       <div class="stage">
-        <SlideComponents.slide slide={@slide} step={@step} controls={@controls} room={@room} />
+        <SlideComponents.slide
+          slide={@slide}
+          step={@step}
+          controls={@controls}
+          room={@room}
+          trainer={@trainer}
+          frame={@frame}
+        />
         <.footer slide={@slide} />
       </div>
     </div>

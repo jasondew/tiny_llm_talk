@@ -20,15 +20,60 @@ defmodule TinyLlmTalk.Deck do
     %Section{
       number: 0,
       title: "Cold open",
-      minutes: 3,
-      lands: "the sentence, and the question it asks",
+      minutes: 5,
+      lands: "it trains, it writes, this is all of it, and the sentence it has to get right",
       slides: [
+        %Slide{
+          id: :live_training,
+          title: "Training, live",
+          notes: """
+          Press start as you walk up, then introduce yourself over it. Same
+          config and seed as the checkpoint, so the loss it lands on is the
+          loss every later slide was rehearsed on, and the slide says whether
+          it matched. Point at it once, in the last ten seconds: it started
+          at knowing nothing and went under the best any one-word model can
+          do. Do not explain the chart yet.
+          """
+        },
+        %Slide{
+          id: :it_writes,
+          title: "It writes",
+          ticks: true,
+          notes: """
+          Let it run. Left, the paragraph. Right, the forward pass for the
+          word being written: integers, rows, query and keys, attention, the
+          distribution, the pick. Say only: fifteen thousand floats, pure
+          Elixir, no library, and every one of those pictures is real. Slow
+          it down if people lean in. Shuffle if a sentence is dull.
+          """
+        },
+        %Slide{
+          id: :all_of_it,
+          title: "This is all of it",
+          steps: 2,
+          notes: """
+          Seven lines, from a word to a distribution. Line five opens into
+          eight more, and one of those into sixteen. That is the entire
+          model, and forty minutes from now the room reads all of it.
+          """
+        },
+        %Slide{
+          id: :what_you_leave_with,
+          title: "You will leave able to explain how a transformer works",
+          steps: 3,
+          notes: """
+          The promise, before the constraints. To the person next to you, in
+          three verbs: each position looks back, scores what it sees, and pulls
+          in what it needs. Everything else today is in service of those.
+          """
+        },
         %Slide{
           id: :the_sentence,
           title: "the llama who chases the dogs ____",
           notes: """
-          Say nothing for a beat. Then: fill in the blank. Wait for the room to
-          say it. Do not advance until someone does.
+          The bet. This is the one thing that seven-line model has to get
+          right that a lookup table cannot. Fill in the blank. Wait for the
+          room to say it.
           """
         },
         %Slide{
@@ -52,18 +97,8 @@ defmodule TinyLlmTalk.Deck do
           notes: """
           A plural noun sits right next to the blank pointing the wrong way.
           Humans fail this too: the key to the cabinets were rusty. Say the
-          line rather than putting it on the slide: we are going to build,
-          from nothing, a program that draws this bracket.
-          """
-        },
-        %Slide{
-          id: :what_you_leave_with,
-          title: "You will leave able to explain how a transformer works",
-          steps: 3,
-          notes: """
-          The promise, before the constraints. To the person next to you, in
-          three verbs: each position looks back, scores what it sees, and pulls
-          in what it needs. Everything else today is in service of those.
+          line rather than putting it on the slide: we are going to open up
+          those seven lines and watch them draw this bracket.
           """
         },
         %Slide{
@@ -72,9 +107,9 @@ defmodule TinyLlmTalk.Deck do
           steps: 5,
           notes: """
           Pure Elixir standard library. No Nx, no Axon, deps are empty. About
-          fifteen thousand parameters. Trains in about a minute on this laptop.
-          Every gradient written out and checked. The repo link is in the footer
-          now and stays there.
+          fifteen thousand parameters. Trains in about a minute, as you saw.
+          Every gradient written out and checked. The repo link is in the
+          footer now and stays there.
           """
         }
       ]
@@ -204,7 +239,7 @@ defmodule TinyLlmTalk.Deck do
     %Section{
       number: 4,
       title: "Attention, from Map",
-      minutes: 11,
+      minutes: 10,
       lands: "a fuzzy lookup: score every key, budget the scores, blend the values",
       slides: [
         %Slide{
@@ -380,7 +415,7 @@ defmodule TinyLlmTalk.Deck do
     %Section{
       number: 7,
       title: "Back to words",
-      minutes: 5,
+      minutes: 4,
       lands: "rows become a distribution, the loop, and the knob",
       slides: [
         %Slide{
@@ -516,6 +551,18 @@ defmodule TinyLlmTalk.Deck do
           """
         },
         %Slide{
+          id: :all_of_it_again,
+          title: "This was all of it",
+          steps: 5,
+          notes: """
+          The same seven lines from the opener, read out loud now. A word
+          becomes a row, position is added. The block: attention gathers,
+          the residual keeps, the MLP thinks. One more norm. Thirty-two floats
+          become thirty-two probabilities. Nobody in the room needed a
+          library to follow that.
+          """
+        },
+        %Slide{
           id: :what_is_not_here,
           title: "What is not here, and what is",
           steps: 2,
@@ -531,8 +578,16 @@ defmodule TinyLlmTalk.Deck do
           id: :the_sentence_again,
           title: "the llama who chases the dogs flees",
           notes: """
-          The bracket drawn, and the probability the model puts on flees. Repo
-          link, large. Stop talking.
+          The bracket drawn, and the probability the model puts on flees.
+          """
+        },
+        %Slide{
+          id: :it_writes_again,
+          title: "It writes",
+          ticks: true,
+          notes: """
+          The writer again, under the repo link. Leave it running through the
+          questions. Stop talking.
           """
         }
       ]

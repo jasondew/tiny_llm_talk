@@ -7,18 +7,21 @@ defmodule TinyLlmTalkWeb.Controls do
   value in the socket's `controls` map, shared over `TinyLlmTalkWeb.Position`
   so that turning it in one window turns it in the other.
 
-  Two of these do work rather than just store a value: drawing the next word
-  asks the model, and featuring a sentence tells the room. The rest are
-  bookkeeping a slide reads back out.
+  A few of these do work rather than just store a value: drawing the next
+  word asks the model, featuring a sentence tells the room, and starting
+  training tells the trainer. The rest are bookkeeping a slide reads back out.
   """
 
-  alias TinyLlmTalk.{Model, Room}
+  alias TinyLlmTalk.{Model, Room, Trainer}
   alias TinyLlmTalkWeb.Position
 
-  @events ~w(control next_word restart feature)
+  @events ~w(control next_word restart feature train retrain shuffle)
 
   # A sentence the room watches being written should not run off the slide.
   @longest_generation 12
+
+  # Milliseconds a frame of an animated slide lasts, by pace.
+  @paces %{"slow" => 500, "normal" => 280, "fast" => 140}
 
   @doc "The events a slide may send, so both LiveViews can match on them."
   @spec events() :: [String.t()]
@@ -50,6 +53,25 @@ defmodule TinyLlmTalkWeb.Controls do
     socket
   end
 
+  def handle("train", _params, socket) do
+    Trainer.start()
+
+    socket
+  end
+
+  def handle("retrain", _params, socket) do
+    Trainer.restart()
+
+    socket
+  end
+
+  # A new paragraph for the writer, and back to the top of it.
+  def handle("shuffle", _params, socket) do
+    socket
+    |> Position.control("shuffles", shuffles(socket.assigns.controls) + 1)
+    |> Phoenix.Component.assign(frame: 0)
+  end
+
   @doc "The words the room has watched the model write so far."
   @spec generated(map()) :: [String.t()]
   def generated(controls), do: Map.get(controls, "generated", [])
@@ -61,6 +83,17 @@ defmodule TinyLlmTalkWeb.Controls do
   @doc "The temperature dial, which more than one slide reads."
   @spec temperature(map()) :: float()
   def temperature(controls), do: number(controls, "temperature", 1.0)
+
+  @doc "How many times the writer has been asked for a new paragraph."
+  @spec shuffles(map()) :: non_neg_integer()
+  def shuffles(controls), do: controls |> number("shuffles", 0.0) |> round()
+
+  @doc "Milliseconds per frame, from the pace control."
+  @spec pace(map()) :: pos_integer()
+  def pace(controls), do: Map.fetch!(@paces, choice(controls, "pace", "normal"))
+
+  @spec paces() :: [String.t()]
+  def paces, do: ~w(slow normal fast)
 
   @doc "A numeric control, with a default for before anyone has touched it."
   @spec number(map(), String.t(), float()) :: float()
