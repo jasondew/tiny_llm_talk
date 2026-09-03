@@ -15,7 +15,7 @@ defmodule TinyLlmTalkWeb.Controls do
   alias TinyLlmTalk.{Model, Room, Trainer}
   alias TinyLlmTalkWeb.{Animation, Position}
 
-  @events ~w(control next_word restart feature train retrain shuffle)
+  @events ~w(control next_word restart feature train retrain shuffle step_frame)
 
   # A sentence the room watches being written should not run off the slide.
   @longest_generation 12
@@ -23,8 +23,9 @@ defmodule TinyLlmTalkWeb.Controls do
   # Milliseconds a frame of an animated slide lasts, by pace. Six frames a word,
   # so normal is about four seconds a word: slow enough to read the picture.
   # Realtime is no delay at all: the next frame goes out as soon as this one
-  # has rendered, so the room sees how fast the model actually is.
-  @paces %{"slow" => 1_100, "normal" => 700, "realtime" => 0}
+  # has rendered, so the room sees how fast the model actually is. Step has no
+  # clock; the speaker advances a frame at a time with the step button.
+  @paces %{"slow" => 1_100, "normal" => 700, "realtime" => 0, "step" => nil}
   @default_pace "normal"
 
   @doc "The events a slide may send, so both LiveViews can match on them."
@@ -35,6 +36,10 @@ defmodule TinyLlmTalkWeb.Controls do
   # A button sends its choice under "choice", never "value": LiveView merges a
   # clicked button's own `value` attribute into the event, and a button with
   # none sends an empty string, which would silently overwrite the real one.
+  def handle("control", %{"name" => "pace", "choice" => choice}, socket) do
+    socket |> Position.control("pace", choice) |> Animation.resume()
+  end
+
   def handle("control", %{"name" => name, "choice" => choice}, socket) do
     Position.control(socket, name, choice)
   end
@@ -77,6 +82,9 @@ defmodule TinyLlmTalkWeb.Controls do
     socket
   end
 
+  # One frame forward, for the step pace.
+  def handle("step_frame", _params, socket), do: Animation.step(socket)
+
   # A new paragraph for the writer, from the top, with the clock running again.
   def handle("shuffle", _params, socket) do
     socket
@@ -100,14 +108,17 @@ defmodule TinyLlmTalkWeb.Controls do
   @spec shuffles(map()) :: non_neg_integer()
   def shuffles(controls), do: controls |> number("shuffles", 0.0) |> round()
 
-  @doc "Milliseconds per frame, from the pace control. Junk means normal."
-  @spec pace(map()) :: pos_integer()
+  @doc """
+  Milliseconds per frame, from the pace control, or nil when the speaker is
+  stepping by hand. Junk means normal.
+  """
+  @spec pace(map()) :: non_neg_integer() | nil
   def pace(controls) do
     Map.get(@paces, choice(controls, "pace", @default_pace), Map.fetch!(@paces, @default_pace))
   end
 
   @spec paces() :: [String.t()]
-  def paces, do: ~w(slow normal realtime)
+  def paces, do: ~w(slow normal realtime step)
 
   @doc "A numeric control, with a default for before anyone has touched it."
   @spec number(map(), String.t(), float()) :: float()

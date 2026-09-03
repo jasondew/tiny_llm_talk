@@ -10,7 +10,8 @@ defmodule TinyLlmTalkWeb.Animation do
 
   The frame resets whenever the slide changes, so walking back to an animated
   slide starts it from the top. A slide that has finished stops its clock and
-  holds the last frame; `restart/1` starts it over.
+  holds the last frame; `restart/1` starts it over. With the pace set to step
+  there is no clock at all, and `step/1` advances one frame per click.
   """
 
   import Phoenix.Component, only: [assign: 2]
@@ -28,41 +29,54 @@ defmodule TinyLlmTalkWeb.Animation do
         do: socket,
         else: assign(socket, frame: 0)
 
-    if socket.assigns.slide.ticks and not socket.assigns.ticking do
-      schedule(socket)
-      assign(socket, ticking: true)
-    else
-      socket
-    end
+    resume(socket)
   end
 
   @doc "One tick. Advances the frame if the slide still wants one, else stops."
   @spec tick(Phoenix.LiveView.Socket.t()) :: Phoenix.LiveView.Socket.t()
   def tick(socket) do
-    socket = assign(socket, frame: socket.assigns.frame + 1)
-
-    if socket.assigns.slide.ticks and not finished?(socket) do
-      schedule(socket)
-      socket
-    else
+    if manual?(socket) do
       assign(socket, ticking: false)
+    else
+      socket = assign(socket, frame: socket.assigns.frame + 1)
+
+      if socket.assigns.slide.ticks and not finished?(socket) do
+        schedule(socket)
+        socket
+      else
+        assign(socket, ticking: false)
+      end
     end
   end
 
-  @doc "Back to the first frame, with the clock running."
-  @spec restart(Phoenix.LiveView.Socket.t()) :: Phoenix.LiveView.Socket.t()
-  def restart(socket) do
-    socket = assign(socket, frame: 0)
+  @doc "One frame forward by hand, whatever the clock is doing."
+  @spec step(Phoenix.LiveView.Socket.t()) :: Phoenix.LiveView.Socket.t()
+  def step(socket) do
+    if finished?(socket), do: socket, else: assign(socket, frame: socket.assigns.frame + 1)
+  end
 
-    if socket.assigns.ticking do
-      socket
-    else
+  @doc "Starts the clock if the slide wants one, it is not already running, and the pace is not step."
+  @spec resume(Phoenix.LiveView.Socket.t()) :: Phoenix.LiveView.Socket.t()
+  def resume(socket) do
+    wants_clock? =
+      socket.assigns.slide.ticks and not socket.assigns.ticking and not manual?(socket) and
+        not finished?(socket)
+
+    if wants_clock? do
       schedule(socket)
       assign(socket, ticking: true)
+    else
+      socket
     end
   end
 
+  @doc "Back to the first frame, with the clock running unless the pace is step."
+  @spec restart(Phoenix.LiveView.Socket.t()) :: Phoenix.LiveView.Socket.t()
+  def restart(socket), do: socket |> assign(frame: 0) |> resume()
+
   ## PRIVATE FUNCTIONS
+
+  defp manual?(socket), do: is_nil(Controls.pace(socket.assigns.controls))
 
   # Only the writer knows when it is done. Any other animated slide runs
   # until the deck moves on.

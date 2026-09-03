@@ -1499,6 +1499,17 @@ defmodule TinyLlmTalkWeb.SlideComponents do
         </p>
         <div class="writer__controls">
           <.picker name="pace" options={Controls.paces()} chosen={@pace} class="picker--small" />
+        </div>
+        <div class="writer__controls">
+          <button
+            :if={@pace == "step"}
+            type="button"
+            phx-click="step_frame"
+            class="button"
+            disabled={@frame && @frame.finished}
+          >
+            step
+          </button>
           <button type="button" phx-click="shuffle" class="button button--quiet">
             {if @frame && @frame.finished, do: "again", else: "new paragraph"}
           </button>
