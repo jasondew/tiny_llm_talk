@@ -165,7 +165,7 @@ defmodule TinyLlmTalkWeb.DeckLiveTest do
 
       # Normal pace is 700ms a frame, so 2.3 seconds is at least three frames.
       Process.sleep(2_300)
-      assert live_stage(render(view)) =~ ~r/[3-6]\./
+      assert live_stage(render(view)) =~ ~r/[3-7]\./
 
       render_keydown(view, "key", %{"key" => "ArrowRight"})
       Process.sleep(600)

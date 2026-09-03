@@ -1274,7 +1274,7 @@
   grid-template-columns: 1fr 400px;
   grid-template-rows: 1fr;
   gap: 40px;
-  padding-top: 40px;
+  padding-top: 28px;
 }
 
 /* The forward pass reads left to right into the paragraph it produces, so
@@ -1357,15 +1357,15 @@
 .writer__pipe {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 5px;
   min-height: 0;
 }
 
 .writer__stage {
   display: flex;
   flex-direction: column;
-  gap: 3px;
-  padding: 5px 12px;
+  gap: 2px;
+  padding: 4px 12px;
   border: 1px solid var(--rule);
   border-radius: 8px;
   transition: border-color 160ms linear, opacity 160ms linear;
@@ -1385,7 +1385,7 @@
 }
 
 .writer__label {
-  font-size: 13px;
+  font-size: 12px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--ink-dim);
@@ -1439,7 +1439,8 @@
 
 .writer__pending {
   font-family: var(--mono);
-  font-size: 18px;
+  font-size: 14px;
+  line-height: 1;
   color: var(--ink-dim);
   opacity: 0.5;
 }

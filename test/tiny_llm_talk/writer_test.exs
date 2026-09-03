@@ -4,6 +4,7 @@ defmodule TinyLlmTalk.WriterTest do
   alias TinyLlmTalk.Writer
 
   @seed Writer.seed(0)
+  @per_word length(Writer.phases())
 
   test "writes four sentences a seed always writes the same way" do
     assert length(Writer.paragraph(@seed)) == 4
@@ -18,11 +19,12 @@ defmodule TinyLlmTalk.WriterTest do
     end
   end
 
-  test "walks six phases per word, in the order of the forward pass" do
-    phases = Enum.map(0..5, &Writer.frame(@seed, &1).phase)
+  test "walks seven phases per word, in the order of the forward pass" do
+    phases = Enum.map(0..(@per_word - 1), &Writer.frame(@seed, &1).phase)
 
     assert phases == Writer.phases()
-    assert Writer.frame(@seed, 6).phase == :word
+    assert :values in phases
+    assert Writer.frame(@seed, @per_word).phase == :word
   end
 
   test "reads the prefix the model would be given, with the start token" do
@@ -30,19 +32,19 @@ defmodule TinyLlmTalk.WriterTest do
 
     assert Writer.frame(@seed, 0).prefix == ["<start>"]
     assert Writer.frame(@seed, 0).chosen == hd(first)
-    assert Writer.frame(@seed, 6).prefix == ["<start>", hd(first)]
+    assert Writer.frame(@seed, @per_word).prefix == ["<start>", hd(first)]
   end
 
   test "only shows the chosen word once it has been picked" do
     [first | _rest] = Writer.paragraph(@seed)
 
-    assert Writer.frame(@seed, 4).current == []
-    assert Writer.frame(@seed, 5).current == [hd(first)]
+    assert Writer.frame(@seed, @per_word - 2).current == []
+    assert Writer.frame(@seed, @per_word - 1).current == [hd(first)]
   end
 
   test "moves on to the next sentence and keeps the ones written" do
     [first | _rest] = Writer.paragraph(@seed)
-    frame = Writer.frame(@seed, length(first) * 6)
+    frame = Writer.frame(@seed, length(first) * @per_word)
 
     assert frame.sentence == 1
     assert frame.written == [first]

@@ -1487,6 +1487,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
         rows: frame && stage_data(frame, :rows),
         qk: frame && stage_data(frame, :query_keys),
         attention: frame && stage_data(frame, :attention),
+        values: frame && stage_data(frame, :values),
         next: frame && stage_data(frame, :next)
       )
 
@@ -1584,19 +1585,36 @@ defmodule TinyLlmTalkWeb.SlideComponents do
           </div>
           <p :if={is_nil(@attention)} class="writer__pending">&hellip;</p>
         </div>
+        <div class={["writer__stage", stage_class(@frame.phase, :values)]}>
+          <p class="writer__label">
+            5. every row hands over a value (v). blend them by those shares: what the last row now carries
+          </p>
+          <.heatmap
+            :if={@values}
+            values={@values.scaled.values ++ [@values.scaled.blend]}
+            row_labels={Enum.map(@values.prefix, &("v · " <> &1)) ++ ["= blend"]}
+            column_labels={List.duplicate("", 32)}
+            highlight={[{@values.size, -1}]}
+            cell={rows_cell(@values.size)}
+            class="heatmap--compact heatmap--query"
+          />
+          <p :if={is_nil(@values)} class="writer__pending">&hellip;</p>
+        </div>
         <div class={["writer__stage", stage_class(@frame.phase, :next)]}>
-          <p class="writer__label">5. one more weighted sum, then softmax: what comes next</p>
+          <p class="writer__label">
+            6. residual, MLP, norm, then one more weighted sum and softmax: what comes next
+          </p>
           <.bars
             :if={@next}
             values={@next.distribution}
             words={Vocab.words()}
-            top={4}
+            top={3}
             highlight={if @frame.phase == :pick, do: [@frame.chosen], else: []}
           />
           <p :if={is_nil(@next)} class="writer__pending">&hellip;</p>
         </div>
         <div class={["writer__stage", stage_class(@frame.phase, :pick)]}>
-          <p class="writer__label">6. pick: one draw from that distribution</p>
+          <p class="writer__label">7. pick: one draw from that distribution</p>
           <p :if={@frame.phase == :pick} class="writer__picked">{@frame.chosen}</p>
           <p :if={@frame.phase != :pick} class="writer__pending">&hellip;</p>
         </div>
@@ -1622,9 +1640,9 @@ defmodule TinyLlmTalkWeb.SlideComponents do
 
   # The writer's pictures shrink as the prefix grows, so a ten-word sentence
   # still fits above the footer.
-  defp rows_cell(size) when size <= 5, do: 11
-  defp rows_cell(size) when size <= 8, do: 9
-  defp rows_cell(_size), do: 7
+  defp rows_cell(size) when size <= 5, do: 10
+  defp rows_cell(size) when size <= 8, do: 8
+  defp rows_cell(_size), do: 6
 
   # What a stage of the writer draws: the word being written once the wave has
   # reached the stage, the previous word until then, nothing at the start of a
@@ -1653,13 +1671,20 @@ defmodule TinyLlmTalkWeb.SlideComponents do
 
   defp phase_index(phase), do: Enum.find_index(Writer.phases(), &(&1 == phase))
 
-  # The query and keys as magnitudes on one shared scale, so the room can see
-  # they are the same kind of thing as the rows they came from.
+  # The query, keys and values as magnitudes on one shared scale, so the room
+  # can see they are the same kind of thing as the rows they came from. The
+  # blend is the last row of the context: the values, weighted by attention.
   defp query_and_keys(trace) do
-    peak = (trace.queries ++ trace.keys) |> List.flatten() |> Enum.map(&abs/1) |> Enum.max()
+    everything = trace.queries ++ trace.keys ++ trace.values ++ trace.context
+    peak = everything |> List.flatten() |> Enum.map(&abs/1) |> Enum.max()
     scale = fn rows -> Enum.map(rows, fn row -> Enum.map(row, &(abs(&1) / peak)) end) end
 
-    %{queries: scale.(trace.queries), keys: scale.(trace.keys)}
+    %{
+      queries: scale.(trace.queries),
+      keys: scale.(trace.keys),
+      values: scale.(trace.values),
+      blend: [List.last(trace.context)] |> scale.() |> hd()
+    }
   end
 
   # What the last position pulls in from each position: the raw score its
