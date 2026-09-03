@@ -39,6 +39,11 @@ defmodule TinyLlmTalkWeb.SlideComponents do
   # The four scores the softmax playground turns into a budget.
   @playground_scores [{"llama", 2.0}, {"dogs", 1.0}, {"who", 0.5}, {"chases", -1.0}]
 
+  # The writer's last stage: 128 hidden units drawn four to a cell so the row
+  # lines up with the 32-wide ones, and how many words the softmax row names.
+  @hidden_per_cell 4
+  @logit_chips 8
+
   @map_get_snippet """
   plural = %{"llama" => 0.0, "llamas" => 1.0, "dog" => 0.0, "dogs" => 1.0}
 
@@ -102,7 +107,9 @@ defmodule TinyLlmTalkWeb.SlideComponents do
           >
             start over
           </button>
-          <p class="training__status">{status_line(@trainer, @elapsed, @final)}</p>
+          <p :if={@trainer.status != :idle} class="training__status">
+            {status_line(@trainer, @elapsed, @final)}
+          </p>
         </div>
       </div>
       <.loss_chart
@@ -1546,48 +1553,57 @@ defmodule TinyLlmTalkWeb.SlideComponents do
               :for={cell <- @attention.row}
               class={["writer__attention-cell", cell.top? && "writer__attention-cell--top"]}
             >
-              <span class="writer__attention-word">{cell.word}</span>
-              <span class="writer__attention-score">{format_signed(cell.score)}</span>
+              <span class="writer__attention-line">
+                <span class="writer__attention-word">{cell.word}</span>
+                <span class="writer__attention-score">{format_signed(cell.score)}</span>
+                <span class="writer__attention-weight">{format_percent(cell.weight)}</span>
+              </span>
               <span class="writer__attention-track">
                 <span class="writer__attention-fill" style={"width: #{round(cell.weight * 100)}%"} />
               </span>
-              <span class="writer__attention-weight">{format_percent(cell.weight)}</span>
             </div>
           </div>
           <p :if={is_nil(@attention)} class="writer__pending">&hellip;</p>
         </div>
-        <div class="writer__pair">
-          <div class={["writer__stage", stage_class(@frame.phase, :values)]}>
-            <p class="writer__label">5. every row offers a value (v). blend by those shares</p>
-            <.heatmap
-              :if={@values}
-              values={@values.scaled.values ++ [@values.scaled.blend]}
-              row_labels={Enum.map(@values.prefix, &("v · " <> &1)) ++ ["= blend"]}
-              column_labels={List.duplicate("", 32)}
-              highlight={[{@values.size, -1}]}
-              cell={rows_cell(@values.size)}
-              class="heatmap--compact heatmap--query"
-            />
-            <p :if={is_nil(@values)} class="writer__pending">&hellip;</p>
+        <div class={["writer__stage", stage_class(@frame.phase, :values)]}>
+          <p class="writer__label">5. every row offers a value (v). blend by those shares</p>
+          <.heatmap
+            :if={@values}
+            values={@values.scaled.values ++ [@values.scaled.blend]}
+            row_labels={Enum.map(@values.prefix, &("v · " <> &1)) ++ ["= blend"]}
+            column_labels={List.duplicate("", 32)}
+            highlight={[{@values.size, -1}]}
+            cell={rows_cell(@values.size)}
+            class="heatmap--compact heatmap--query"
+          />
+          <p :if={is_nil(@values)} class="writer__pending">&hellip;</p>
+        </div>
+        <div class={["writer__stage", stage_class(@frame.phase, :next)]}>
+          <p class="writer__label">6. the rest of the block, then softmax and one draw</p>
+          <.heatmap
+            :if={@next}
+            values={plumbing_rows(@next)}
+            row_labels={plumbing_labels()}
+            column_labels={List.duplicate("", 32)}
+            cell={8}
+            class="heatmap--compact heatmap--query"
+          />
+          <div :if={@next} class="writer__logits">
+            <span
+              :for={chip <- logit_chips(@next.distribution, drawn(@frame))}
+              class={["writer__logit", chip.drawn? && "writer__logit--drawn"]}
+            >
+              <span class="writer__logit-word">{chip.word}</span>
+              <span class="writer__logit-share">{format_percent(chip.probability)}</span>
+            </span>
           </div>
-          <div class={["writer__stage", stage_class(@frame.phase, :next)]}>
-            <p class="writer__label">6. the rest of the block, then softmax and one draw</p>
-            <.heatmap
-              :if={@next}
-              values={plumbing_rows(@next)}
-              row_labels={plumbing_labels(@frame)}
-              column_labels={List.duplicate("", 32)}
-              highlight={plumbing_highlight(@frame)}
-              scale={:sqrt}
-              cell={7}
-              class="heatmap--compact heatmap--query"
-            />
-            <p :if={is_nil(@next)} class="writer__pending">&hellip;</p>
-          </div>
+          <p :if={is_nil(@next)} class="writer__pending">&hellip;</p>
         </div>
       </div>
       <div class="writer__bar">
-        <p class="writer__count">{@parameters} parameters &middot; pure Elixir &middot; no library</p>
+        <p class="writer__count">
+          {@parameters} parameters &middot; temperature {Writer.temperature()} &middot; pure Elixir &middot; no library
+        </p>
         <div class="writer__controls">
           <.picker name="pace" options={Controls.paces()} chosen={@pace} class="picker--small" />
           <button
@@ -1652,29 +1668,48 @@ defmodule TinyLlmTalkWeb.SlideComponents do
       trace: trace,
       scaled: query_and_keys(trace),
       row: attention_row(trace, prefix),
-      distribution: Model.distribution(prefix, 1.0)
+      distribution: Model.distribution(prefix, Writer.temperature())
     }
   end
 
   defp phase_index(phase), do: Enum.find_index(Writer.phases(), &(&1 == phase))
 
   # The last row's trip through the rest of the block, as rows of 32 so they
-  # line up: the 128 hidden units fold into four rows. Each row is on its own
-  # 0 to 1 scale, a picture of its shape rather than a comparison of sizes.
-  defp plumbing_rows(%{trace: %{block: block}, distribution: distribution}) do
-    hidden = block.hidden |> unit() |> Enum.chunk_every(32)
+  # line up: the 128 hidden units are shown four to a cell, the largest of
+  # each four, so a cell that stays light is a patch the ReLU switched off.
+  # Each row is on its own 0 to 1 scale, a picture of its shape rather than a
+  # comparison of sizes.
+  defp plumbing_rows(%{trace: %{block: block}}) do
+    hidden = block.hidden |> unit() |> Enum.chunk_every(@hidden_per_cell) |> Enum.map(&Enum.max/1)
 
-    [unit(block.residual)] ++ hidden ++ [unit(block.output), unit(block.logits), distribution]
+    [unit(block.residual), hidden, unit(block.output), unit(block.logits)]
   end
 
-  defp plumbing_labels(frame) do
-    ["blend + row", "MLP hidden 1/4 · ReLU", "hidden 2/4", "hidden 3/4", "hidden 4/4"] ++
-      ["MLP out + row", "norm · project", softmax_label(frame)]
+  defp plumbing_labels do
+    [
+      "blend + row",
+      "MLP hidden · ReLU (128, 4 per cell)",
+      "MLP out + row",
+      "norm · project = logits"
+    ]
   end
 
-  # The softmax row is the last of the eight; the drawn word's cell is ringed.
-  defp plumbing_highlight(%{phase: :pick, chosen: chosen}), do: [{7, Vocab.word_to_id(chosen)}]
-  defp plumbing_highlight(_frame), do: [{7, -1}]
+  # The softmax as the top few words with their shares, and the drawn word
+  # wherever it landed. Until the draw there is nothing to ring.
+  defp logit_chips(distribution, drawn) do
+    distribution
+    |> Enum.zip(Vocab.words())
+    |> Enum.sort_by(fn {probability, _word} -> -probability end)
+    |> Enum.with_index()
+    |> Enum.filter(fn {{_probability, word}, index} -> index < @logit_chips or word in drawn end)
+    |> Enum.map(fn {{probability, word}, _index} ->
+      %{word: word, probability: probability, drawn?: word in drawn}
+    end)
+  end
+
+  # The word drawn, once it has been.
+  defp drawn(%{phase: :pick, chosen: chosen}), do: [chosen]
+  defp drawn(_frame), do: []
 
   # One row as magnitudes on its own 0 to 1 scale, for a picture of its shape.
   defp unit(row) do
@@ -1682,9 +1717,6 @@ defmodule TinyLlmTalkWeb.SlideComponents do
 
     Enum.map(row, &(abs(&1) / max(peak, 1.0e-9)))
   end
-
-  defp softmax_label(%{phase: :pick, chosen: chosen}), do: "softmax · draw: " <> chosen
-  defp softmax_label(_frame), do: "softmax, 32 words"
 
   # The query, keys and values as magnitudes on one shared scale, so the room
   # can see they are the same kind of thing as the rows they came from. The
@@ -1730,10 +1762,6 @@ defmodule TinyLlmTalkWeb.SlideComponents do
 
   defp final_loss(%Trainer{losses: [{_step, loss} | _rest]}), do: loss
   defp final_loss(_trainer), do: nil
-
-  defp status_line(%Trainer{status: :idle}, _elapsed, _final) do
-    "same config and seed as the checkpoint. press start."
-  end
 
   defp status_line(%Trainer{status: :running} = trainer, elapsed, final) do
     "step #{trainer.step} of #{trainer.config.steps} · #{round(elapsed)}s" <>

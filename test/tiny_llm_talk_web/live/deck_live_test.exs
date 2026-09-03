@@ -210,6 +210,14 @@ defmodule TinyLlmTalkWeb.DeckLiveTest do
       assert html =~ "Training, live"
       assert html =~ "seed"
       assert html =~ ~r/phx-click="(train|retrain)"/
+      refute html =~ "press start"
+    end
+
+    test "says what temperature the writer samples at", %{conn: conn} do
+      slide = Enum.find(Deck.slides(), &(&1.id == :it_writes))
+      {:ok, _view, html} = live(conn, ~p"/s/#{slide.index}")
+
+      assert html =~ "temperature 0.8"
     end
   end
 

@@ -25,6 +25,10 @@ defmodule TinyLlmTalk.Writer do
   @sentences_per_paragraph 4
   @seed 1234
 
+  # At 1.0 the model slips on agreement in about one sentence in thirty, one
+  # paragraph in nine. Cooling it a little halves that and keeps the variety.
+  @temperature 0.8
+
   @type phase :: :word | :rows | :query_keys | :attention | :values | :next | :pick
   @type frame :: %{
           phase: phase(),
@@ -44,9 +48,13 @@ defmodule TinyLlmTalk.Writer do
   @spec seed(non_neg_integer()) :: integer()
   def seed(shuffles), do: @seed + shuffles
 
+  @doc "The temperature the writer samples at, which the slide says out loud."
+  @spec temperature() :: float()
+  def temperature, do: @temperature
+
   @doc "The paragraph a seed writes. Four sentences, short enough to draw."
   @spec paragraph(integer()) :: [[String.t()]] | nil
-  def paragraph(seed), do: Model.paragraph(seed, @sentences_per_paragraph)
+  def paragraph(seed), do: Model.paragraph(seed, @sentences_per_paragraph, @temperature)
 
   @doc "How many frames the paragraph takes to finish."
   @spec length(integer()) :: pos_integer()

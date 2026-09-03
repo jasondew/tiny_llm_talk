@@ -1267,11 +1267,12 @@
   color: var(--accent-cool);
 }
 
-/* The writer: a paragraph on the left, the forward pass on the right ------ */
+/* The writer: the forward pass, top to bottom ----------------------------- */
 
 /* The pipeline takes the whole stage: the sentence so far is readable off
- * stage one. The controls and the parameter count share one row along the
- * bottom. */
+ * stage one. Rows and their queries and keys share a row; attention, values
+ * and the rest of the block each get the width. The controls and the
+ * parameter count share one row along the bottom. */
 .writer {
   display: flex;
   flex-direction: column;
@@ -1302,6 +1303,43 @@
 .writer__pair .writer__stage {
   min-width: 0;
   overflow: hidden;
+}
+
+/* The softmax as a row of words with their shares; the drawn one is ringed. */
+.writer__logits {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.writer__logit {
+  flex: 1 1 0;
+  display: flex;
+  justify-content: center;
+  align-items: baseline;
+  gap: 8px;
+  padding: 2px 10px;
+  border-radius: 6px;
+  background: var(--paper-raised);
+  color: var(--ink-dim);
+  white-space: nowrap;
+}
+
+.writer__logit--drawn {
+  color: var(--ink);
+  outline: 1px solid var(--accent);
+}
+
+.writer__logit-word {
+  font-family: var(--serif);
+  font-size: 18px;
+}
+
+.writer__logit-share {
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--accent);
 }
 
 .writer__bar {
@@ -1436,7 +1474,7 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
-  padding: 4px 6px;
+  padding: 3px 6px;
   border-radius: 6px;
   background: var(--paper-raised);
   font-family: var(--mono);
@@ -1472,26 +1510,19 @@
   transition: width 200ms ease-out;
 }
 
+.writer__attention-line {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.writer__attention-line .writer__attention-word {
+  flex: 1;
+  min-width: 0;
+}
+
 .writer__attention-weight {
   color: var(--accent);
-}
-
-.writer .bars {
-  gap: 4px;
-}
-
-.writer .bars__row {
-  grid-template-columns: 90px 1fr 60px;
-  gap: 10px;
-  font-size: 17px;
-}
-
-.writer .bars__track {
-  height: 11px;
-}
-
-.writer .bars__value {
-  font-size: 13px;
 }
 
 .beats--small {

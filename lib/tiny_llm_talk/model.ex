@@ -273,13 +273,13 @@ defmodule TinyLlmTalk.Model do
   end
 
   @doc """
-  A paragraph for the writer to write: `count` sentences from a seed, each
-  short enough to draw a forward pass for. Longer ones are skipped, not cut,
+  A paragraph for the writer to write: `count` sentences from a seed at a
+  temperature, each short enough to draw a forward pass for. Longer ones are skipped, not cut,
   so every sentence shown is one the model actually finished.
   """
-  @spec paragraph(integer(), pos_integer()) :: [[Vocab.word()]] | nil
-  def paragraph(seed, count) do
-    memoize({:paragraph, seed, count}, fn ->
+  @spec paragraph(integer(), pos_integer(), float()) :: [[Vocab.word()]] | nil
+  def paragraph(seed, count, temperature) do
+    memoize({:paragraph, seed, count, temperature}, fn ->
       case params(:transformer) do
         nil ->
           nil
@@ -287,7 +287,7 @@ defmodule TinyLlmTalk.Model do
         params ->
           Sampler.seed(seed)
 
-          Stream.repeatedly(fn -> Sampler.sentence(params, temperature: 1.0) end)
+          Stream.repeatedly(fn -> Sampler.sentence(params, temperature: temperature) end)
           |> Stream.filter(&(length(&1) <= 10 and List.last(&1) == "."))
           |> Enum.take(count)
       end

@@ -12,6 +12,12 @@ defmodule TinyLlmTalk.WriterTest do
     assert Writer.paragraph(@seed) != Writer.paragraph(Writer.seed(1))
   end
 
+  test "samples a little cooler than 1.0, and says so" do
+    assert Writer.temperature() == 0.8
+    assert Writer.paragraph(@seed) == TinyLlmTalk.Model.paragraph(@seed, 4, 0.8)
+    assert Writer.paragraph(@seed) != TinyLlmTalk.Model.paragraph(@seed, 4, 1.0)
+  end
+
   test "keeps every sentence short enough to draw" do
     for sentence <- Writer.paragraph(@seed) do
       assert length(sentence) <= 10

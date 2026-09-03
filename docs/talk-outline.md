@@ -38,10 +38,12 @@ whether it matched. Every later slide reads the checkpoint, so nothing
 downstream depends on the live run finishing. Rehearse on the laptop you
 present from; the match is a claim about that machine.
 
-The writer is the forward pass animated: a paragraph drawn from a seed, six
-phases a word, one every quarter second. Both windows keep their own clock and
-agree because a frame is a pure function of its number
-(`TinyLlmTalk.Writer`).
+The writer is the forward pass animated: a paragraph drawn from a seed at
+temperature 0.8, seven phases a word, one every 0.7 seconds at the normal
+pace. The temperature is on the slide; at 1.0 the model slips on agreement in
+about one paragraph in nine, and 0.8 halves that without flattening the
+variety. Both windows keep their own clock and agree because a frame is a
+pure function of its number (`TinyLlmTalk.Writer`).
 
 ## The audience
 
@@ -59,7 +61,7 @@ Every demo can be driven from the presenter view: a control clicked in the
 preview is a control turned on the big screen. The controls are
 
 - start and start over, for training (section 0)
-- pace and new paragraph, for the writer (sections 0 and 9)
+- pace, step while paused, and reset, for the writer (sections 0 and 9)
 - the softmax slider (section 2)
 - the fuzzy map's query word (section 4)
 - the mask toggle (section 4)
