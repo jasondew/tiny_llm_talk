@@ -12,6 +12,11 @@ defmodule TinyLlmTalk.DeckTest do
       assert Deck.sections() |> Enum.map(& &1.minutes) |> Enum.sum() == 41
     end
 
+    test "opens with the vote, so the room has something to do while it arrives" do
+      assert %{id: :the_vote, activity: :verb_vote} = Deck.at(1)
+      assert %{id: :title, activity: nil} = Deck.at(2)
+    end
+
     test "gives every slide a unique id" do
       ids = Enum.map(Deck.slides(), & &1.id)
       assert length(Enum.uniq(ids)) == length(ids)

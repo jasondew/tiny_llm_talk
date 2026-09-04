@@ -11,19 +11,51 @@ defmodule TinyLlmTalkWeb.DeckLiveTest do
     :ok
   end
 
-  test "opens on the cold open", %{conn: conn} do
+  test "opens on the vote, with the question already open for the room", %{conn: conn} do
     {:ok, _view, html} = live(conn, ~p"/")
 
     assert html =~ "llama"
+    assert html =~ "join at"
     assert html =~ Application.fetch_env!(:tiny_llm_talk, :repo_label)
+    assert Room.state().activity == :verb_vote
   end
 
-  test "puts the position in the address bar so a crash can recover it", %{conn: conn} do
-    {:ok, view, _html} = live(conn, ~p"/s/1")
+  test "moves the opening vote's bars as the room votes", %{conn: conn} do
+    {:ok, view, _html} = live(conn, ~p"/")
+    refute render(view) =~ "1 vote"
+
+    Room.vote(self(), "flees")
+    assert Room.state().votes == %{self() => "flees"}
+
+    assert render(view) =~ "1 vote"
+  end
+
+  test "reveals the opening vote's answer on its second step", %{conn: conn} do
+    {:ok, view, _html} = live(conn, ~p"/")
+    Room.vote(self(), "flees")
+    refute render(view) =~ "tally__row--answer"
 
     render_keydown(view, "key", %{"key" => "ArrowRight"})
 
-    assert_patched(view, "/s/2/1")
+    assert Room.state().revealed
+    assert render(view) =~ "tally__row--answer"
+  end
+
+  test "puts the title after the vote", %{conn: conn} do
+    {:ok, _view, html} = live(conn, ~p"/s/2")
+
+    assert html =~ "Transformers from Scratch,"
+    assert html =~ "in Elixir"
+    assert html =~ "llama"
+    assert is_nil(Room.state().activity)
+  end
+
+  test "puts the position in the address bar so a crash can recover it", %{conn: conn} do
+    {:ok, view, _html} = live(conn, ~p"/s/2")
+
+    render_keydown(view, "key", %{"key" => "ArrowRight"})
+
+    assert_patched(view, "/s/3/1")
   end
 
   test "walks a slide's steps before moving on", %{conn: conn} do
