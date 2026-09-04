@@ -549,6 +549,24 @@
   flex: 1;
 }
 
+.dot {
+  align-items: center;
+}
+
+.dot__arithmetic {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  font-family: var(--mono);
+  font-size: 32px;
+}
+
+.dot__vectors {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
 .arithmetic {
   display: flex;
   flex-direction: column;

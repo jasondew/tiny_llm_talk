@@ -310,3 +310,99 @@
   font-size: 11px;
   white-space: nowrap;
 }
+
+
+/* A vector as one heatmap row with its numbers printed, and two of them on a
+ * graph. The arrow colours match the row labels, so a on the graph is the a
+ * in the arithmetic. */
+.vector .heatmap__row-label {
+  font-family: var(--sans);
+  font-size: 20px;
+  line-height: var(--heatmap-cell);
+  min-width: 9em;
+}
+
+.vector__cell {
+  font-size: 24px;
+}
+
+.vector--a .heatmap__row-label {
+  color: var(--accent);
+}
+
+.vector--b .heatmap__row-label {
+  color: var(--accent-cool);
+}
+
+.vector--work .heatmap__row-label {
+  color: var(--ink-dim);
+}
+
+.vector-graph {
+  max-width: 100%;
+  height: auto;
+  font-family: var(--mono);
+}
+
+.vector-graph__axis {
+  stroke: var(--rule);
+  stroke-width: 2;
+}
+
+.vector-graph__tick line {
+  stroke: var(--rule);
+  stroke-width: 2;
+}
+
+.vector-graph__tick text {
+  fill: var(--ink-dim);
+  font-size: 13px;
+}
+
+.vector-graph__vector {
+  stroke-width: 4;
+  stroke-linecap: round;
+}
+
+.vector-graph__vector--a,
+.vector-graph__head--a {
+  stroke: var(--accent);
+  fill: var(--accent);
+}
+
+.vector-graph__vector--b,
+.vector-graph__head--b {
+  stroke: var(--accent-cool);
+  fill: var(--accent-cool);
+}
+
+.vector-graph__name {
+  font-family: var(--sans);
+  font-size: 22px;
+}
+
+.vector-graph__name--a {
+  fill: var(--accent);
+}
+
+.vector-graph__name--b {
+  fill: var(--accent-cool);
+}
+
+.vector-graph__drop {
+  stroke: var(--ink-dim);
+  stroke-width: 2;
+  stroke-dasharray: 6 6;
+}
+
+.vector-graph__shadow {
+  stroke: var(--accent);
+  stroke-width: 12;
+  stroke-linecap: butt;
+  opacity: 0.35;
+}
+
+.vector-graph__dot {
+  fill: var(--accent);
+  font-size: 24px;
+}

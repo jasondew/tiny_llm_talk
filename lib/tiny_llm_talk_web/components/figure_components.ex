@@ -90,6 +90,179 @@ defmodule TinyLlmTalkWeb.FigureComponents do
   end
 
   @doc """
+  One vector as a row of the writer's heatmap: a label, then a cell per entry
+  with the number printed in it. Colour is magnitude, so a negative entry is
+  as dark as its positive twin and only the printed sign tells them apart.
+  """
+  attr :label, :string, required: true
+  attr :values, :list, required: true
+  attr :cell, :integer, default: 72
+  attr :class, :string, default: nil
+
+  def vector(assigns) do
+    peak = assigns.values |> Enum.map(&abs/1) |> Enum.max(fn -> 1.0 end)
+    assigns = assign(assigns, peak: max(peak, 1.0e-9))
+
+    ~H"""
+    <div
+      class={["heatmap heatmap--compact vector", @class]}
+      style={"--heatmap-cell: #{@cell}px; --heatmap-columns: #{length(@values)}"}
+    >
+      <div class="heatmap__row-label vector__label">{@label}</div>
+      <div
+        :for={value <- @values}
+        class="heatmap__cell vector__cell"
+        style={"--heat: #{Float.round(abs(value) / @peak, 3)}"}
+      >
+        {format_signed(value)}
+      </div>
+    </div>
+    """
+  end
+
+  @doc """
+  Two vectors drawn as arrows from the origin, and their dot product as a
+  picture: the shadow `b` casts on `a`, times the length of `a`. Two entries
+  each, because a graph has two axes.
+  """
+  attr :a, :list, required: true
+  attr :b, :list, required: true
+  attr :shadow, :boolean, default: false, doc: "draw the projection of b onto a"
+  attr :size, :integer, default: 440
+
+  def vector_graph(assigns) do
+    [ax, ay] = assigns.a
+    [bx, by] = assigns.b
+    dot = ax * bx + ay * by
+    along = dot / (ax * ax + ay * ay)
+    reach = Enum.max([ax, ay, bx, by, 1.0]) + 0.6
+    pad = 36
+    unit = (assigns.size - 2 * pad) / reach
+    place = fn {x, y} -> {pad + x * unit, assigns.size - pad - y * unit} end
+
+    assigns =
+      assign(assigns,
+        origin: place.({0, 0}),
+        a_tip: place.({ax, ay}),
+        b_tip: place.({bx, by}),
+        shadow_tip: place.({ax * along, ay * along}),
+        ticks: Enum.map(1..floor(reach), &{&1, place.({&1, 0}), place.({0, &1})}),
+        dot: dot
+      )
+
+    ~H"""
+    <svg
+      class="vector-graph"
+      viewBox={"0 0 #{@size} #{@size}"}
+      width={@size}
+      height={@size}
+      role="img"
+      aria-label={"a and b on a graph, dot product #{format_signed(@dot)}"}
+    >
+      <defs>
+        <marker
+          id="arrow-a"
+          viewBox="0 0 10 10"
+          refX="9"
+          refY="5"
+          markerWidth="8"
+          markerHeight="8"
+          orient="auto-start-reverse"
+        >
+          <path d="M 0 0 L 10 5 L 0 10 z" class="vector-graph__head vector-graph__head--a" />
+        </marker>
+        <marker
+          id="arrow-b"
+          viewBox="0 0 10 10"
+          refX="9"
+          refY="5"
+          markerWidth="8"
+          markerHeight="8"
+          orient="auto-start-reverse"
+        >
+          <path d="M 0 0 L 10 5 L 0 10 z" class="vector-graph__head vector-graph__head--b" />
+        </marker>
+      </defs>
+      <line
+        x1={elem(@origin, 0)}
+        y1={elem(@origin, 1)}
+        x2={@size - 12}
+        y2={elem(@origin, 1)}
+        class="vector-graph__axis"
+      />
+      <line
+        x1={elem(@origin, 0)}
+        y1={elem(@origin, 1)}
+        x2={elem(@origin, 0)}
+        y2="12"
+        class="vector-graph__axis"
+      />
+      <g :for={{n, {tx, ty}, {sx, sy}} <- @ticks} class="vector-graph__tick">
+        <line x1={tx} y1={ty - 4} x2={tx} y2={ty + 4} />
+        <text x={tx} y={ty + 18} text-anchor="middle">{n}</text>
+        <line x1={sx - 4} y1={sy} x2={sx + 4} y2={sy} />
+        <text x={sx - 10} y={sy + 4} text-anchor="end">{n}</text>
+      </g>
+      <g :if={@shadow}>
+        <line
+          x1={elem(@b_tip, 0)}
+          y1={elem(@b_tip, 1)}
+          x2={elem(@shadow_tip, 0)}
+          y2={elem(@shadow_tip, 1)}
+          class="vector-graph__drop"
+        />
+        <line
+          x1={elem(@origin, 0)}
+          y1={elem(@origin, 1)}
+          x2={elem(@shadow_tip, 0)}
+          y2={elem(@shadow_tip, 1)}
+          class="vector-graph__shadow"
+        />
+      </g>
+      <line
+        x1={elem(@origin, 0)}
+        y1={elem(@origin, 1)}
+        x2={elem(@a_tip, 0)}
+        y2={elem(@a_tip, 1)}
+        class="vector-graph__vector vector-graph__vector--a"
+        marker-end="url(#arrow-a)"
+      />
+      <line
+        x1={elem(@origin, 0)}
+        y1={elem(@origin, 1)}
+        x2={elem(@b_tip, 0)}
+        y2={elem(@b_tip, 1)}
+        class="vector-graph__vector vector-graph__vector--b"
+        marker-end="url(#arrow-b)"
+      />
+      <text
+        x={elem(@a_tip, 0) + 12}
+        y={elem(@a_tip, 1) + 6}
+        class="vector-graph__name vector-graph__name--a"
+      >
+        a
+      </text>
+      <text
+        x={elem(@b_tip, 0) + 12}
+        y={elem(@b_tip, 1) + 6}
+        class="vector-graph__name vector-graph__name--b"
+      >
+        b
+      </text>
+      <text
+        :if={@shadow}
+        x={@size - 16}
+        y={elem(@origin, 1) - 14}
+        text-anchor="end"
+        class="vector-graph__dot"
+      >
+        a &middot; b = {format_signed(@dot)}
+      </text>
+    </svg>
+    """
+  end
+
+  @doc """
   A matrix as colour. One hue, light to dark, because the value being shown is
   a magnitude and a magnitude has an order.
 
@@ -305,6 +478,9 @@ defmodule TinyLlmTalkWeb.FigureComponents do
   defp intensity(value, :linear), do: value |> max(0.0) |> min(1.0) |> Float.round(3)
 
   defp format_weight(value), do: :erlang.float_to_binary(value * 1.0, decimals: 2)
+
+  defp format_signed(value) when value < 0, do: "\u2212" <> format_weight(-value)
+  defp format_signed(value), do: format_weight(value)
 
   defp format_percent(value), do: "#{:erlang.float_to_binary(value * 100, decimals: 1)}%"
 

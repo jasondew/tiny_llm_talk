@@ -39,6 +39,11 @@ defmodule TinyLlmTalkWeb.SlideComponents do
   # The four scores the softmax playground turns into a budget.
   @playground_scores [{"llama", 2.0}, {"dogs", 1.0}, {"who", 0.5}, {"chases", -1.0}]
 
+  # The two lists on the dot product slide. Two entries each, so the same
+  # numbers can be drawn as arrows on a graph.
+  @dot_a [3.0, 1.0]
+  @dot_b [1.0, 4.0]
+
   # The writer's last stage: 128 hidden units drawn four to a cell so the row
   # lines up with the 32-wide ones, and how many words the softmax row names.
   @hidden_per_cell 4
@@ -251,26 +256,32 @@ defmodule TinyLlmTalkWeb.SlideComponents do
   end
 
   def slide(%{slide: %Slide{id: :dot_product}} = assigns) do
+    products = Enum.zip_with(@dot_a, @dot_b, &(&1 * &2))
+    assigns = assign(assigns, a: @dot_a, b: @dot_b, products: products, total: Enum.sum(products))
+
     ~H"""
     <section class="slide">
       <h2 class="slide__title">A dot product is a similarity score</h2>
-      <div class="arithmetic">
-        <.step n={1} step={@step}>
-          <p class="arithmetic__row"><span>a</span> 2.0 &nbsp; 1.0 &nbsp; &minus;3.0</p>
-          <p class="arithmetic__row"><span>b</span> 1.0 &nbsp; 4.0 &nbsp; &nbsp;&nbsp;0.5</p>
-        </.step>
-        <.step n={2} step={@step}>
-          <p class="arithmetic__row arithmetic__row--work">
-            <span>multiply pairwise</span> 2.0 &nbsp; 4.0 &nbsp; &minus;1.5
-          </p>
-        </.step>
-        <.step n={3} step={@step}>
-          <p class="arithmetic__row arithmetic__row--total"><span>add</span> 4.5</p>
-        </.step>
+      <div class="two-up two-up--lists dot">
+        <div class="dot__arithmetic">
+          <.step n={1} step={@step} class="dot__vectors">
+            <.vector label="a" values={@a} class="vector--a" />
+            <.vector label="b" values={@b} class="vector--b" />
+          </.step>
+          <.step n={2} step={@step}>
+            <.vector label="multiply pairwise" values={@products} class="vector--work" />
+          </.step>
+          <.step n={3} step={@step}>
+            <p class="arithmetic__row arithmetic__row--total">
+              <span>add</span> {format_signed(@total)}
+            </p>
+          </.step>
+        </div>
+        <.vector_graph a={@a} b={@b} shadow={@step >= 3} />
       </div>
       <.step n={3} step={@step} class="slide__note">
-        Big when two lists point the same way. Near zero when unrelated. Negative when opposed.
-        That is the only arithmetic in attention.
+        The shadow b casts on a, times the length of a. Big when two lists point the same way.
+        Near zero when unrelated. Negative when opposed. That is the only arithmetic in attention.
       </.step>
     </section>
     """
