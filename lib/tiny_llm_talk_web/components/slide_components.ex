@@ -88,6 +88,31 @@ defmodule TinyLlmTalkWeb.SlideComponents do
 
   # 0. Cold open ------------------------------------------------------------
 
+  def slide(%{slide: %Slide{id: :the_vote}} = assigns) do
+    assigns = assign(assigns, activity: Room.activity(:verb_vote))
+
+    ~H"""
+    <section class="slide slide--tight">
+      <.probe words={~w(the llama who chases the dogs ____)} class="probe--wide" />
+      <div class="ask">
+        <.qr size={200} />
+        <.tally tally={Room.tally(@room, :verb_vote)} answer={@activity.answer} reveal={@step >= 2} />
+      </div>
+    </section>
+    """
+  end
+
+  def slide(%{slide: %Slide{id: :title}} = assigns) do
+    ~H"""
+    <section class="slide slide--centred">
+      <h1 class="slide__statement slide__statement--wide">
+        Transformers from Scratch,<br />in Elixir
+      </h1>
+      <.probe words={~w(the llama who chases the dogs ____)} class="probe--wide" />
+    </section>
+    """
+  end
+
   def slide(%{slide: %Slide{id: :live_training}} = assigns) do
     trainer = assigns.trainer || Trainer.state()
     config = trainer.config || Trainer.checkpoint_config()

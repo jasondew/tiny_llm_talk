@@ -24,6 +24,29 @@ defmodule TinyLlmTalk.Deck do
       lands: "it trains, it writes, this is all of it, and none of it is hidden",
       slides: [
         %Slide{
+          id: :the_vote,
+          title: "flees, or flee?",
+          activity: :verb_vote,
+          steps: 2,
+          notes: """
+          On screen while the room arrives. Paste the join link in the chat
+          and let the bars move; do not fill the silence. The second step
+          lights the answer and every phone learns whether it agreed, and the
+          room's record starts here. Everybody knew. Say, do not show: the
+          rule is easy to name, the hard part is knowing which noun is the
+          subject when a plural one sits right next to the blank. That is
+          the talk.
+          """
+        },
+        %Slide{
+          id: :title,
+          title: "Transformers from Scratch, in Elixir",
+          notes: """
+          Say the title once. The sentence under it is the one the whole
+          talk is about, and the room has just voted on it.
+          """
+        },
+        %Slide{
           id: :live_training,
           title: "Training, live",
           notes: """

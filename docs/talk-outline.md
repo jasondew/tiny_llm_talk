@@ -18,7 +18,7 @@ the sentence, the picture of where attention looks, and the score.
 
 | # | section | min | slides | interactive |
 | --- | --- | --- | --- | --- |
-| 0 | Cold open | 5 | **training, live** (under the introduction), **it writes** (the forward pass animated, word by word), this is all of it (the seven lines, said not shown), from nothing | presenter start |
+| 0 | Cold open | 5 | **vote: flees, or flee** (the sentence and the join link, on screen while the room arrives), title, **training, live** (under the introduction), **it writes** (the forward pass animated, word by word), this is all of it (the seven lines, said not shown), from nothing | audience vote, presenter start |
 | 1 | Words become numbers | 3 | 32 words, the grammar, one function | |
 | 2 | All the math there is | 2 | **dot product**, with two arrows to drag, **softmax playground** | presenter drags, presenter slider |
 | 3 | Embedding and position | 3 | a word is a row, position is added, the model forgets it saw words | |

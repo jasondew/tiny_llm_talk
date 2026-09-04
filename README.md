@@ -135,6 +135,7 @@ from the podium; nobody reaches for the big screen's mouse.
 The talk is delivered over Zoom, so the audience is already in a browser. They
 open `/join` on any device and it shows whatever question the deck is on:
 
+- **section 0** flees, or flee? The first slide, on screen while the room arrives.
 - **section 4** where will the blank look? They bet, then the walkthrough answers.
 - **section 4** their own sentence, built from the 32 words, run through
   attention on the big screen.
