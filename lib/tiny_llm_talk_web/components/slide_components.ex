@@ -31,7 +31,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
   # The public surface of the model's entire math library, in file order. The
   # two that matter are lit; the rest are dimmed to make the point that this
   # is all there is.
-  @tensor_functions ~w(zeros ones fan_scale random one_hot shape transpose add sub hadamard scale
+  @tensor_functions ~w(zeros ones random one_hot shape transpose add sub hadamard scale
     map dot outer_product matmul add_bias unit normalize softmax add_row cross_entropy argmax
     weighted_random_index)
   @tensor_lit ~w(dot softmax)
