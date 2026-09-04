@@ -184,9 +184,10 @@ defmodule TinyLlmTalk.Deck do
           title: "Start with a lookup you already trust",
           steps: 2,
           notes: """
-          Map.get finds the one key equal to the query and hands back its
-          value. Ask for a key that is not there and you get nil. That
-          brittleness is the problem attention solves.
+          A map from words to one fact about each: is it plural. Map.get
+          finds the one key equal to the query and hands back its value; ask
+          for geese and it is nil. Say the line: attention is Map.get with
+          equal replaced by similar. The next slide does exactly that.
           """
         },
         %Slide{

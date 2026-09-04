@@ -54,12 +54,13 @@ defmodule TinyLlmTalkWeb.SlideComponents do
   @logit_chips 8
 
   @map_get_snippet """
-  plural = %{"llama" => 0.0, "llamas" => 1.0, "dog" => 0.0, "dogs" => 1.0}
+  # keys are words. values are one fact about each: is it plural?
+  is_plural = %{"llama" => 0.0, "llamas" => 1.0, "dog" => 0.0, "dogs" => 1.0}
 
-  Map.get(plural, "llamas")
+  Map.get(is_plural, "llamas")
   #=> 1.0
 
-  Map.get(plural, "geese")
+  Map.get(is_plural, "geese")
   #=> nil
   """
 
@@ -414,9 +415,10 @@ defmodule TinyLlmTalkWeb.SlideComponents do
     ~H"""
     <section class="slide">
       <h2 class="slide__title">Start with a lookup you already trust</h2>
-      <.snippet source={@source} step={@step} focus={[:all, 6..7]} />
+      <.snippet source={@source} step={@step} focus={[:all, 7..8]} />
       <.step n={2} step={@step} class="slide__lede">
-        Ask for a key that is not there, and you get nothing. That is the problem.
+        Map.get finds the one key <span class="word word--lit">equal</span> to the query.
+        Attention is Map.get with equal replaced by <span class="word word--lit">similar</span>.
       </.step>
     </section>
     """
