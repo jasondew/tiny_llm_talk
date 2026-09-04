@@ -1,21 +1,12 @@
 /* Figures.
  *
- * Colour has one job per figure. Magnitude (heatmaps, bars) gets a single hue
- * from the surface up to the accent, so it reads as more and less. Identity
- * (the scatter, the two-series chart) gets a fixed categorical order, assigned
- * in order and never cycled; the six hues below pass the lightness band, chroma
- * floor, colour-vision separation, and contrast checks against this surface.
- * Text always wears text colours, never the series colour. */
+ * Colour has one job per figure. Magnitude (heatmaps, bars, the loss curve)
+ * gets a single hue from the surface up to the accent, so it reads as more and
+ * less. Text always wears text colours, never the figure's colour. */
 
 :root {
   --heat-hue: #f0b429;
 
-  --series-1: #3987e5;
-  --series-2: #d95926;
-  --series-3: #199e70;
-  --series-4: #c98500;
-  --series-5: #d55181;
-  --series-6: #9085e9;
 }
 
 /* The recurring box ------------------------------------------------------ */
@@ -235,14 +226,6 @@
   stroke-linecap: round;
 }
 
-.chart__line--series-1 {
-  stroke: var(--series-1);
-}
-
-.chart__line--series-2 {
-  stroke: var(--series-2);
-}
-
 .chart__caption,
 .chart__legend {
   display: flex;
@@ -270,40 +253,6 @@
   background: currentColor;
 }
 
-.chart__legend-item--series-1 .chart__swatch {
-  background: var(--series-1);
-}
-
-.chart__legend-item--series-2 .chart__swatch {
-  background: var(--series-2);
-}
-
-/* Scatter: identity, so a fixed categorical order --------------------------- */
-
-.scatter circle {
-  stroke: var(--paper);
-  stroke-width: 2;
-}
-
-.scatter text {
-  fill: var(--ink-dim);
-  font-family: var(--mono);
-  font-size: 14px;
-}
-
-.scatter--noun circle,
-.scatter--noun .chart__swatch { fill: var(--series-1); background: var(--series-1); }
-.scatter--verb circle,
-.scatter--verb .chart__swatch { fill: var(--series-2); background: var(--series-2); }
-.scatter--adjective circle,
-.scatter--adjective .chart__swatch { fill: var(--series-3); background: var(--series-3); }
-.scatter--determiner circle,
-.scatter--determiner .chart__swatch { fill: var(--series-4); background: var(--series-4); }
-.scatter--connective circle,
-.scatter--connective .chart__swatch { fill: var(--series-5); background: var(--series-5); }
-.scatter--boundary circle,
-.scatter--boundary .chart__swatch { fill: var(--series-6); background: var(--series-6); }
-
 /* Before mix talk.train -------------------------------------------------- */
 
 .untrained {
@@ -330,4 +279,158 @@
 .untrained code {
   font-family: var(--mono);
   color: var(--accent-cool);
+}
+
+/* A loss curve that draws itself ----------------------------------------- */
+
+.chart__line--draw {
+  stroke-dasharray: 4000;
+  stroke-dashoffset: 4000;
+  animation: chart-draw 6s ease-out forwards;
+}
+
+@keyframes chart-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* A heatmap with no column labels, for a picture that only needs its shape */
+
+.heatmap--compact {
+  gap: 1px;
+}
+
+.heatmap--compact .heatmap__corner,
+.heatmap--compact .heatmap__column-label {
+  display: none;
+}
+
+.heatmap--compact .heatmap__row-label {
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+
+/* A vector as one heatmap row with its numbers printed, and two of them on a
+ * graph. The arrow colours match the row labels, so a on the graph is the a
+ * in the arithmetic. */
+.vector .heatmap__row-label {
+  font-family: var(--sans);
+  font-size: 20px;
+  line-height: var(--heatmap-cell);
+  min-width: 9em;
+}
+
+.vector__cell {
+  font-size: 24px;
+}
+
+.vector--a .heatmap__row-label {
+  color: var(--accent);
+}
+
+.vector--b .heatmap__row-label {
+  color: var(--accent-cool);
+}
+
+.vector--work .heatmap__row-label {
+  color: var(--ink-dim);
+}
+
+.vector--total .heatmap__row-label {
+  color: var(--accent);
+}
+
+.vector-graph {
+  max-width: 100%;
+  height: auto;
+  font-family: var(--mono);
+}
+
+.vector-graph__axis {
+  stroke: var(--rule);
+  stroke-width: 2;
+}
+
+.vector-graph__tick line {
+  stroke: var(--rule);
+  stroke-width: 2;
+}
+
+.vector-graph__tick text {
+  fill: var(--ink-dim);
+  font-size: 13px;
+}
+
+.vector-graph__vector {
+  stroke-width: 4;
+  stroke-linecap: round;
+}
+
+.vector-graph__vector--a,
+.vector-graph__head--a {
+  stroke: var(--accent);
+  fill: var(--accent);
+}
+
+.vector-graph__vector--b,
+.vector-graph__head--b {
+  stroke: var(--accent-cool);
+  fill: var(--accent-cool);
+}
+
+.vector-graph__name {
+  font-family: var(--sans);
+  font-size: 22px;
+}
+
+.vector-graph__name--a {
+  fill: var(--accent);
+}
+
+.vector-graph__name--b {
+  fill: var(--accent-cool);
+}
+
+.vector-graph__drop {
+  stroke: var(--ink-dim);
+  stroke-width: 2;
+  stroke-dasharray: 6 6;
+}
+
+.vector-graph__agreement {
+  stroke: var(--accent);
+  stroke-width: 12;
+  stroke-linecap: butt;
+  opacity: 0.35;
+}
+
+.vector-graph__dot {
+  fill: var(--accent);
+  font-size: 24px;
+}
+
+
+.vector-graph--interactive {
+  touch-action: none;
+  user-select: none;
+}
+
+.vector-graph__handle {
+  fill: transparent;
+  stroke-width: 2;
+  cursor: grab;
+}
+
+.vector-graph__handle--a {
+  stroke: var(--accent);
+}
+
+.vector-graph__handle--b {
+  stroke: var(--accent-cool);
+}
+
+.vector-graph__handle:active {
+  cursor: grabbing;
 }

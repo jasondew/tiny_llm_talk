@@ -8,6 +8,9 @@ defmodule TinyLlmTalkWeb.JoinLive do
   scanned the code twenty minutes ago and locked their phone, gets the current
   question the moment they look.
 
+  When the deck reveals an answer, the phone says whether its owner agreed. That
+  is the whole reason to vote rather than shout.
+
   This is the only route the audience touches, so it holds no state worth
   losing: closing the tab is a clean leave and re-opening it is a clean join.
   """
@@ -75,6 +78,9 @@ defmodule TinyLlmTalkWeb.JoinLive do
       <div :if={is_nil(@activity)} class="join__idle">
         <p class="join__idle-title">You are in.</p>
         <p class="join__idle-body">Leave this open. A question will appear here.</p>
+        <p :if={Room.score(@room).asked > 0} class="join__idle-score">
+          {score_line(Room.score(@room))}
+        </p>
       </div>
 
       <div :if={@activity && @room.activity != :sentence} class="join__ask">
@@ -85,9 +91,19 @@ defmodule TinyLlmTalkWeb.JoinLive do
           type="button"
           phx-click="vote"
           phx-value-choice={option}
-          class={["join__option", @choice == option && "join__option--chosen"]}
+          disabled={@room.revealed}
+          class={[
+            "join__option",
+            @choice == option && "join__option--chosen",
+            @room.revealed && option == @activity.answer && "join__option--answer"
+          ]}
         >{option}</button>
-        <p :if={@choice} class="join__hint">Tap another to change your mind.</p>
+        <p :if={@choice && not @room.revealed} class="join__hint">
+          Tap another to change your mind.
+        </p>
+        <p :if={@room.revealed} class={["join__verdict", verdict_class(@choice, @activity.answer)]}>
+          {verdict(@choice, @activity.answer)}
+        </p>
       </div>
 
       <div :if={@room.activity == :sentence} class="join__build">
@@ -141,6 +157,17 @@ defmodule TinyLlmTalkWeb.JoinLive do
     else
       assign(socket, choice: nil, words: [], sent: false)
     end
+  end
+
+  defp verdict(nil, answer), do: "It was #{answer}."
+  defp verdict(answer, answer), do: "#{answer}. You called it."
+  defp verdict(_choice, answer), do: "It was #{answer}. Nobody gets them all."
+
+  defp verdict_class(answer, answer), do: "join__verdict--right"
+  defp verdict_class(_choice, _answer), do: "join__verdict--wrong"
+
+  defp score_line(%{right: right, asked: asked}) do
+    "So far the room is #{right} for #{asked}."
   end
 
   defp sentence_so_far([]), do: "tap a word"

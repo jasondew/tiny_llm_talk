@@ -1,7 +1,8 @@
 defmodule TinyLlmTalkWeb.DeckComponents do
   @moduledoc """
   The furniture every slide sits in: the footer, the reveal step, the code
-  block, and the probe sentence the talk opens and closes on.
+  block, the probe sentence the talk opens and closes on, and the pieces an
+  audience question is made of.
 
   These are the pieces a slide body is allowed to assume. Anything a single
   slide needs and no other slide needs belongs in that slide's clause in
@@ -65,21 +66,51 @@ defmodule TinyLlmTalkWeb.DeckComponents do
 
     assigns =
       assign(assigns,
-        quotation: quotation,
-        rows: Code.focused(quotation.code, assigns.focus, assigns.step)
+        rows: Code.focused(quotation.code, assigns.focus, assigns.step),
+        longest: Code.longest_line(quotation.code),
+        location: quotation.location
       )
 
     ~H"""
+    <.listing rows={@rows} longest={@longest} caption={@caption && @location} />
+    """
+  end
+
+  @doc """
+  Elixir written for the slide rather than quoted from the model: the `Map.get`
+  the room already knows, and the fuzzy version of it. Highlighted and stepped
+  the same way, but with no caption, because it is not a claim about the repo.
+  """
+  attr :source, :string, required: true
+  attr :focus, :list, default: []
+  attr :step, :integer, default: 1
+
+  def snippet(assigns) do
+    assigns =
+      assign(assigns,
+        rows: Code.focused(assigns.source, assigns.focus, assigns.step),
+        longest: Code.longest_line(assigns.source)
+      )
+
+    ~H"""
+    <.listing rows={@rows} longest={@longest} caption={nil} />
+    """
+  end
+
+  attr :rows, :list, required: true
+  attr :longest, :integer, required: true
+  attr :caption, :any, default: nil
+
+  defp listing(assigns) do
+    ~H"""
     <figure class="code">
-      <pre class={Code.css_class()} style={"font-size: #{Code.font_size(length(@rows))}px"}><code>
+      <pre class={Code.css_class()} style={"font-size: #{Code.font_size(length(@rows), @longest)}px"}><code>
         <span
           :for={row <- @rows}
           class={["code__line", not row.lit? && "code__line--dim"]}
         ><span class="code__number">{row.number}</span>{row.html}</span>
       </code></pre>
-      <figcaption :if={@caption} class="code__caption">
-        {@quotation.location}
-      </figcaption>
+      <figcaption :if={@caption} class="code__caption">{@caption}</figcaption>
     </figure>
     """
   end
@@ -144,12 +175,13 @@ defmodule TinyLlmTalkWeb.DeckComponents do
   attr :tally, :list, required: true
   attr :answer, :string, default: nil
   attr :reveal, :boolean, default: false
+  attr :wide, :boolean, default: false, doc: "labels are sentences, not words"
 
   def tally(assigns) do
     assigns = assign(assigns, total: assigns.tally |> Enum.map(&elem(&1, 1)) |> Enum.sum())
 
     ~H"""
-    <div class="tally">
+    <div class={["tally", @wide && "tally--wide"]}>
       <div
         :for={{option, count} <- @tally}
         class={["tally__row", (@reveal and option == @answer) && "tally__row--answer"]}
@@ -161,6 +193,30 @@ defmodule TinyLlmTalkWeb.DeckComponents do
         <span class="tally__count">{count}</span>
       </div>
       <p class="tally__total">{@total} {if @total == 1, do: "vote", else: "votes"}</p>
+    </div>
+    """
+  end
+
+  @doc """
+  A row of choices the speaker clicks through, on either window. The chosen one
+  is lit; the rest wait.
+  """
+  attr :name, :string, required: true
+  attr :options, :list, required: true
+  attr :chosen, :string, required: true
+  attr :class, :string, default: nil
+
+  def picker(assigns) do
+    ~H"""
+    <div class={["picker", @class]}>
+      <button
+        :for={option <- @options}
+        type="button"
+        phx-click="control"
+        phx-value-name={@name}
+        phx-value-choice={option}
+        class={["picker__option", option == @chosen && "picker__option--chosen"]}
+      >{option}</button>
     </div>
     """
   end

@@ -28,6 +28,14 @@ defmodule TinyLlmTalk.CodeTest do
     assert Phoenix.HTML.safe_to_string(first) =~ "forward"
   end
 
+  describe "font_size/2" do
+    test "shrinks a listing with a long line so it fits the stage" do
+      assert Code.font_size(3, 30) == 24.0
+      assert Code.font_size(3, 100) < 20.0
+      assert Code.longest_line("short\na much longer line here") == 23
+    end
+  end
+
   describe "focused/3" do
     test "lights every line when a step has no window" do
       rows = Code.focused(@source, [], 1)

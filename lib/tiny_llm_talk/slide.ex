@@ -5,11 +5,13 @@ defmodule TinyLlmTalk.Slide do
   `id` is what the renderer pattern-matches on, so a slide's drawing lives in
   `TinyLlmTalkWeb.SlideComponents` as a function clause named by this atom and
   nowhere else. `steps` is how many times the right arrow fires before the deck
-  moves on, which is what lets a code slide arrive a line at a time.
+  moves on, which is what lets a code slide arrive a line at a time. `ticks`
+  says the slide moves on its own, and `TinyLlmTalkWeb.Animation` runs its
+  clock while it is on screen.
   """
 
   @enforce_keys [:id, :title]
-  defstruct [:id, :title, :section, :index, :activity, notes: "", steps: 1]
+  defstruct [:id, :title, :section, :index, :activity, notes: "", steps: 1, ticks: false]
 
   @type t :: %__MODULE__{
           id: atom(),
@@ -18,7 +20,8 @@ defmodule TinyLlmTalk.Slide do
           index: pos_integer() | nil,
           notes: String.t(),
           steps: pos_integer(),
-          activity: atom() | nil
+          activity: atom() | nil,
+          ticks: boolean()
         }
 
   @doc """

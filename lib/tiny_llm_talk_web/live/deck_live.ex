@@ -6,25 +6,47 @@ defmodule TinyLlmTalkWeb.DeckLive do
   or a websocket that drops mid-talk comes back on the slide it was on. The
   presenter window drives this view and is driven by it, over one PubSub topic,
   which means either window can hold the clicker.
+
+  This is also the window that runs the room: arriving at a slide opens its
+  activity, and reaching a slide's second step reveals the answer.
   """
 
   use TinyLlmTalkWeb, :live_view
 
-  alias TinyLlmTalk.Room
-  alias TinyLlmTalkWeb.Position
+  alias TinyLlmTalk.{Room, Trainer}
+  alias TinyLlmTalkWeb.{Animation, Controls, Position}
   alias TinyLlmTalkWeb.SlideComponents
 
   @impl true
   def mount(_params, _session, socket) do
     Position.subscribe(socket)
-    if connected?(socket), do: Room.subscribe()
 
-    {:ok, assign(socket, controls: %{}, room: Room.state(), activity: :none), layout: false}
+    if connected?(socket) do
+      Room.subscribe()
+      Trainer.subscribe()
+    end
+
+    {:ok,
+     assign(socket,
+       controls: %{},
+       room: Room.state(),
+       trainer: Trainer.state(),
+       activity: :none,
+       frame: 0,
+       ticking: false
+     ), layout: false}
   end
 
   @impl true
   def handle_params(params, _uri, socket) do
-    {:noreply, socket |> Position.apply(params) |> sync_activity()}
+    previous = socket.assigns[:slide] && socket.assigns.slide.index
+
+    {:noreply,
+     socket
+     |> Position.apply(params)
+     |> sync_activity()
+     |> sync_reveal()
+     |> Animation.sync(previous)}
   end
 
   @impl true
@@ -32,17 +54,12 @@ defmodule TinyLlmTalkWeb.DeckLive do
     {:noreply, Position.move(socket, key)}
   end
 
-  # The one thing a slide can hold that a picture cannot: a control the room
-  # watches you turn, with the model answering in the same BEAM.
-  def handle_event("control", %{"name" => name, "value" => value}, socket) do
-    {:noreply, update(socket, :controls, &Map.put(&1, name, value))}
-  end
-
-  # Putting one of the audience's sentences on the big screen.
-  def handle_event("feature", %{"words" => words}, socket) do
-    Room.feature(String.split(words, " "))
-
-    {:noreply, socket}
+  def handle_event(event, params, socket) do
+    if event in Controls.events() do
+      {:noreply, Controls.handle(event, params, socket)}
+    else
+      {:noreply, socket}
+    end
   end
 
   @impl true
@@ -50,14 +67,29 @@ defmodule TinyLlmTalkWeb.DeckLive do
     {:noreply, Position.follow(socket, index, step)}
   end
 
+  def handle_info({:controls, controls}, socket) do
+    {:noreply, Position.follow_controls(socket, controls)}
+  end
+
   def handle_info({:room, room}, socket), do: {:noreply, assign(socket, room: room)}
+
+  def handle_info({:trainer, trainer}, socket), do: {:noreply, assign(socket, trainer: trainer)}
+
+  def handle_info(:frame, socket), do: {:noreply, Animation.tick(socket)}
 
   @impl true
   def render(assigns) do
     ~H"""
     <div class="deck" phx-window-keydown="key">
       <div class="stage">
-        <SlideComponents.slide slide={@slide} step={@step} controls={@controls} room={@room} />
+        <SlideComponents.slide
+          slide={@slide}
+          step={@step}
+          controls={@controls}
+          room={@room}
+          trainer={@trainer}
+          frame={@frame}
+        />
         <.footer slide={@slide} />
       </div>
     </div>
@@ -80,5 +112,15 @@ defmodule TinyLlmTalkWeb.DeckLive do
 
       assign(socket, activity: wanted)
     end
+  end
+
+  # A question's answer is on its second step, by convention across the deck.
+  # The room does the revealing, so every phone hears about it.
+  defp sync_reveal(%{assigns: %{slide: %{activity: nil}}} = socket), do: socket
+
+  defp sync_reveal(%{assigns: %{slide: slide, step: step}} = socket) do
+    if step >= 2 and not is_nil(Room.activity(slide.activity).answer), do: Room.reveal()
+
+    socket
   end
 end
