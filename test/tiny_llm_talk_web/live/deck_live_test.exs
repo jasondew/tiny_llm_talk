@@ -54,14 +54,14 @@ defmodule TinyLlmTalkWeb.DeckLiveTest do
 
   describe "the audience activities" do
     test "opens a slide's activity on arrival", %{conn: conn} do
-      slide = Enum.find(Deck.slides(), &(&1.activity == :verb_vote))
+      slide = Enum.find(Deck.slides(), &(&1.activity == :rematch))
       {:ok, _view, _html} = live(conn, ~p"/s/#{slide.index}")
 
-      assert Room.state().activity == :verb_vote
+      assert Room.state().activity == :rematch
     end
 
     test "closes it again on the way out", %{conn: conn} do
-      slide = Enum.find(Deck.slides(), &(&1.activity == :verb_vote))
+      slide = Enum.find(Deck.slides(), &(&1.activity == :rematch))
       {:ok, view, _html} = live(conn, ~p"/s/#{slide.index}/#{slide.steps}")
 
       render_keydown(view, "key", %{"key" => "ArrowRight"})
@@ -70,26 +70,26 @@ defmodule TinyLlmTalkWeb.DeckLiveTest do
     end
 
     test "keeps the votes and reveals the answer on the second step", %{conn: conn} do
-      slide = Enum.find(Deck.slides(), &(&1.activity == :verb_vote))
+      slide = Enum.find(Deck.slides(), &(&1.activity == :rematch))
       {:ok, view, _html} = live(conn, ~p"/s/#{slide.index}")
-      Room.vote(self(), "flees")
+      Room.vote(self(), "flee")
       refute Room.state().revealed
 
       render_keydown(view, "key", %{"key" => "ArrowRight"})
 
-      assert Room.state().activity == :verb_vote
+      assert Room.state().activity == :rematch
       assert Room.state().revealed
-      assert Room.tally(Room.state(), :verb_vote) == [{"flees", 1}, {"flee", 0}]
+      assert Room.tally(Room.state(), :rematch) == [{"flee", 1}, {"flees", 0}]
     end
 
     test "records the room's answer once the deck moves on", %{conn: conn} do
-      slide = Enum.find(Deck.slides(), &(&1.activity == :verb_vote))
+      slide = Enum.find(Deck.slides(), &(&1.activity == :rematch))
       {:ok, view, _html} = live(conn, ~p"/s/#{slide.index}/#{slide.steps}")
-      Room.vote(self(), "flees")
+      Room.vote(self(), "flee")
 
       render_keydown(view, "key", %{"key" => "ArrowRight"})
 
-      assert [{:verb_vote, %{correct?: true}}] = Room.results(Room.state())
+      assert [{:rematch, %{correct?: true}}] = Room.results(Room.state())
     end
 
     test "puts a submitted sentence on the screen when it is picked", %{conn: conn} do

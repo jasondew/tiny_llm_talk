@@ -21,7 +21,7 @@ defmodule TinyLlmTalk.Deck do
       number: 0,
       title: "Cold open",
       minutes: 5,
-      lands: "it trains, it writes, this is all of it, and the sentence it has to get right",
+      lands: "it trains, it writes, this is all of it, and none of it is hidden",
       slides: [
         %Slide{
           id: :live_training,
@@ -50,55 +50,11 @@ defmodule TinyLlmTalk.Deck do
         %Slide{
           id: :all_of_it,
           title: "This is all of it",
-          steps: 2,
           notes: """
-          Seven lines, from a word to a distribution. Line five opens into
-          eight more, and one of those into sixteen. That is the entire
-          model, and forty minutes from now the room reads all of it.
-          """
-        },
-        %Slide{
-          id: :what_you_leave_with,
-          title: "You will leave able to explain how a transformer works",
-          steps: 3,
-          notes: """
-          The promise, before the constraints. To the person next to you, in
-          three verbs: each position looks back, scores what it sees, and pulls
-          in what it needs. Everything else today is in service of those.
-          """
-        },
-        %Slide{
-          id: :the_sentence,
-          title: "the llama who chases the dogs ____",
-          notes: """
-          The bet. This is the one thing that seven-line model has to get
-          right that a lookup table cannot. Fill in the blank. Wait for the
-          room to say it.
-          """
-        },
-        %Slide{
-          id: :the_vote,
-          title: "flees, or flee?",
-          activity: :verb_vote,
-          steps: 2,
-          notes: """
-          Paste the join link in the chat and let the bars move. Do not fill
-          the silence. On reveal every phone learns whether it was right, and
-          the room's record starts here. Everyone knew. Someone will say
-          "subject-verb agreement", and they are right: the rule is easy to
-          name. The hard part is knowing which noun is the subject when a
-          plural one sits right next to the blank. That is the talk.
-          """
-        },
-        %Slide{
-          id: :the_bracket,
-          title: "The word that decides it is five back",
-          steps: 3,
-          notes: """
-          A plural noun sits right next to the blank pointing the wrong way.
-          Humans fail this too: the key to the cabinets were rusty. Say the
-          line rather than putting it on the slide: we are going to open up
-          those seven lines and watch them draw this bracket.
+          Say it, do not show it: seven lines, from a word to a distribution.
+          Line five opens into eight more, and one of those into sixteen.
+          That is the entire model, and forty minutes from now the room reads
+          all of it.
           """
         },
         %Slide{

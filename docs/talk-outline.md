@@ -18,7 +18,7 @@ the sentence, the picture of where attention looks, and the score.
 
 | # | section | min | slides | interactive |
 | --- | --- | --- | --- | --- |
-| 0 | Cold open | 5 | **training, live** (under the introduction), **it writes** (the forward pass animated, word by word), this is all of it (seven lines), the promise, the sentence, **vote: flees or flee**, the bracket, from nothing | presenter start, audience vote |
+| 0 | Cold open | 5 | **training, live** (under the introduction), **it writes** (the forward pass animated, word by word), this is all of it (the seven lines, said not shown), from nothing | presenter start |
 | 1 | Words become numbers | 3 | 32 words, the grammar, one function, **vote: you are a count table** | audience vote |
 | 2 | All the math there is | 2 | the `Tensor` list with everything but `dot` and `softmax` dimmed, dot product, **softmax playground** | presenter slider |
 | 3 | Embedding and position | 3 | a word is a row, position is added, the model forgets it saw words | |
@@ -51,7 +51,7 @@ Every vote has a right answer and a reveal step. On reveal every phone says
 whether its owner agreed, and the room's record accumulates for the
 scoreboard. The record is kept in `TinyLlmTalk.Room`.
 
-Seven audience moments is a lot for forty-one minutes. If rehearsal says so,
+Six audience moments is a lot for forty-one minutes. If rehearsal says so,
 cut in this order: **you are a count table** first, **spot the human**
 second. Both are marked in their speaker notes.
 
