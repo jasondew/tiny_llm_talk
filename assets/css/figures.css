@@ -338,6 +338,10 @@
   color: var(--ink-dim);
 }
 
+.vector--total .heatmap__row-label {
+  color: var(--accent);
+}
+
 .vector-graph {
   max-width: 100%;
   height: auto;

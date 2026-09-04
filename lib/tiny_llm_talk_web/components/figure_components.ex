@@ -205,10 +205,10 @@ defmodule TinyLlmTalkWeb.FigureComponents do
       </g>
       <g :if={@shadow}>
         <line
-          x1={elem(@b_tip, 0)}
-          y1={elem(@b_tip, 1)}
-          x2={elem(@shadow_tip, 0)}
-          y2={elem(@shadow_tip, 1)}
+          x1={elem(@a_tip, 0)}
+          y1={elem(@a_tip, 1)}
+          x2={elem(@b_tip, 0)}
+          y2={elem(@b_tip, 1)}
           class="vector-graph__drop"
         />
         <line

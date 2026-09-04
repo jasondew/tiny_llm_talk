@@ -272,16 +272,14 @@ defmodule TinyLlmTalkWeb.SlideComponents do
             <.vector label="multiply pairwise" values={@products} class="vector--work" />
           </.step>
           <.step n={3} step={@step}>
-            <p class="arithmetic__row arithmetic__row--total">
-              <span>add</span> {format_signed(@total)}
-            </p>
+            <.vector label="add" values={[@total]} class="vector--total" />
           </.step>
         </div>
-        <.vector_graph a={@a} b={@b} shadow={@step >= 3} />
+        <.vector_graph a={@a} b={@b} shadow={@step >= 3} size={380} />
       </div>
       <.step n={3} step={@step} class="slide__note">
-        The shadow b casts on a, times the length of a. Big when two lists point the same way.
-        Near zero when unrelated. Negative when opposed. That is the only arithmetic in attention.
+        The shadow b casts on a, times the length of a. Big when they point the same way,
+        near zero when unrelated, negative when opposed.
       </.step>
     </section>
     """

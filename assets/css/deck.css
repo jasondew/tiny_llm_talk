@@ -556,9 +556,7 @@
 .dot__arithmetic {
   display: flex;
   flex-direction: column;
-  gap: 18px;
-  font-family: var(--mono);
-  font-size: 32px;
+  gap: 12px;
 }
 
 .dot__vectors {
