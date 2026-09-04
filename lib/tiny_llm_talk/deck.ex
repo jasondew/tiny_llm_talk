@@ -157,7 +157,8 @@ defmodule TinyLlmTalk.Deck do
           notes: """
           Attention on its own is a bag of words. So each position has a
           learned vector of its own, added to the word's row, not appended to
-          it. Sixteen positions, sixteen rows. Same width, which is why nothing
+          it. Sixteen rows, so the context length is 16: say the number, it is
+          the only hard limit in the model. Same width, which is why nothing
           downstream has to know.
           """
         },

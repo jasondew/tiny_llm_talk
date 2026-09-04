@@ -125,7 +125,9 @@ defmodule TinyLlmTalkWeb.FigureComponents do
   picture: the shadow `b` casts on `a`, times the length of `a`. Two entries
   each, because a graph has two axes.
 
-  With `interactive`, the arrow tips can be dragged. The hook turns pointer
+  With `interactive`, the arrow tips can be dragged. The hook is always
+  attached, because a colocated hook's name is only rewritten when it is a
+  literal; it does nothing on a still graph. When dragging, it turns pointer
   positions back into coordinates, snaps them to the half grid so the
   numbers stay readable, and sends them up as the controls `vector_a` and
   `vector_b`, which `TinyLlmTalkWeb.Controls.vector/3` reads back.
@@ -169,6 +171,7 @@ defmodule TinyLlmTalkWeb.FigureComponents do
       export default {
         mounted() {
           const svg = this.el
+          if (svg.dataset.interactive !== "true") return
           const originX = parseFloat(svg.dataset.originX)
           const originY = parseFloat(svg.dataset.originY)
           const unit = parseFloat(svg.dataset.unit)
@@ -207,7 +210,8 @@ defmodule TinyLlmTalkWeb.FigureComponents do
     </script>
     <svg
       id={@id}
-      phx-hook={@interactive && ".VectorDrag"}
+      phx-hook=".VectorDrag"
+      data-interactive={to_string(@interactive)}
       data-origin-x={elem(@origin, 0)}
       data-origin-y={elem(@origin, 1)}
       data-unit={@unit}

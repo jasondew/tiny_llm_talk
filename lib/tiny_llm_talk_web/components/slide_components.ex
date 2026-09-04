@@ -33,7 +33,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
   # is all there is.
 
   # The four scores the softmax playground turns into a budget.
-  @playground_scores [{"llama", 2.0}, {"dogs", 1.0}, {"who", 0.5}, {"chases", -1.0}]
+  @playground_scores [{"llama", 2.0}, {"dogs", 1.0}, {"who", 0.5}, {"the", 0.0}, {"chases", -1.0}]
 
   # The two lists on the dot product slide. Two entries each, so the same
   # numbers can be drawn as arrows on a graph.
@@ -294,7 +294,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
         </div>
         <div>
           <p class="row-caption">budget out &middot; sums to {format_weight(Enum.sum(@budget))}</p>
-          <.bars values={@budget} words={@words} top={4} highlight={@words} />
+          <.bars values={@budget} words={@words} top={5} highlight={@words} />
         </div>
       </div>
       <form id="sharpness-dial" phx-change="control" class="dial">
@@ -356,7 +356,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
     <section class="slide">
       <h2 class="slide__title">Position is another row, added on</h2>
       <div class="lookup">
-        <span class="lookup__word">position 2</span>
+        <span class="lookup__word">position 2 of 16</span>
         <span class="lookup__arrow">&rarr;</span>
         <span class="lookup__row">
           <.spark :if={@row} values={Enum.map(@row, &abs/1)} />
@@ -366,7 +366,8 @@ defmodule TinyLlmTalkWeb.SlideComponents do
       <.code path="lib/tiny_llm/transformer.ex" range={114..116} step={@step} focus={[2..2, 3..3]} />
       <.step n={2} step={@step} class="slide__note">
         Added, not appended. Same width in, same width out, so nothing downstream has to know
-        that position exists. Sixteen positions, sixteen learned rows.
+        that position exists. Sixteen learned rows, so the context length is 16: the model
+        can never read more words than that at once.
       </.step>
     </section>
     """
@@ -377,6 +378,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
 
     ~H"""
     <section class="slide slide--tight">
+      <.sentence_line />
       <h2 class="slide__title slide__title--small">
         From here on, the model has forgotten it ever saw words
       </h2>
@@ -531,6 +533,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
 
     ~H"""
     <section class="slide slide--tight">
+      <.sentence_line />
       <h2 class="slide__title slide__title--small">Three details do all the work</h2>
       <div class="two-up two-up--lists">
         <ol class="beats beats--numbered">
@@ -570,10 +573,10 @@ defmodule TinyLlmTalkWeb.SlideComponents do
 
     ~H"""
     <section class="slide slide--tight">
+      <.sentence_line />
       <h2 class="slide__title slide__title--small">
         Which word will the blank look at hardest?
       </h2>
-      <.probe words={probe_marks() ++ [{"____", :blank}]} show_marks class="probe--wide" />
       <div class="ask">
         <.qr size={200} />
         <.tally
@@ -601,6 +604,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
 
     ~H"""
     <section class="slide slide--tight">
+      <.sentence_line />
       <h2 class="slide__title slide__title--small">One position, all the way through</h2>
       <div :if={@trace} class="walk" style={"--walk-columns: #{length(@words)}"}>
         <span class="walk__label">position</span>
@@ -667,6 +671,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
 
     ~H"""
     <section class="slide">
+      <.sentence_line />
       <h2 class="slide__title slide__title--small">Every position at once</h2>
       <.heatmap
         :if={@weights}
@@ -690,6 +695,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
 
     ~H"""
     <section class="slide">
+      <.sentence_line />
       <h2 class="slide__title">Read it honestly</h2>
       <.bars
         :if={@weights}
@@ -717,6 +723,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
 
     ~H"""
     <section class="slide">
+      <.sentence_line />
       <h2 class="slide__title">It found the attention sink by itself</h2>
       <.bars
         :if={@weights}
@@ -893,11 +900,11 @@ defmodule TinyLlmTalkWeb.SlideComponents do
 
     ~H"""
     <section class="slide">
+      <.sentence_line />
       <h2 class="slide__title slide__title--small">
         Thirty-two floats become thirty-two probabilities
       </h2>
       <.code path="lib/tiny_llm/transformer.ex" range={118..120} step={@step} focus={[3..3]} />
-      <p class="row-caption">after <span class="word">the llama who chases the dogs</span></p>
       <.bars
         :if={@distribution}
         values={@distribution}
@@ -973,6 +980,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
 
     ~H"""
     <section class="slide">
+      <.sentence_line />
       <h2 class="slide__title slide__title--small">Divide the scores before the softmax</h2>
       <form id="temperature-dial" phx-change="control" class="dial">
         <input type="hidden" name="name" value="temperature" />
@@ -989,7 +997,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
       </form>
       <div :if={Model.trained?(:transformer)} class="two-up">
         <div>
-          <p class="row-caption">after <span class="word">the llama who chases the dogs</span></p>
+          <p class="row-caption">what comes next</p>
           <.bars
             values={Model.distribution(Model.probe(), @temperature)}
             words={Vocab.words()}
@@ -1669,6 +1677,16 @@ defmodule TinyLlmTalkWeb.SlideComponents do
 
   defp format_loss(nil), do: "--"
   defp format_loss(value), do: :erlang.float_to_binary(value, decimals: 4)
+
+  # The sentence the talk turns on, small, at the top of every slide that is
+  # about it, so the room never has to remember which sentence a picture is of.
+  defp sentence_line(assigns) do
+    assigns = assign(assigns, words: probe_marks() ++ [{"____", :blank}])
+
+    ~H"""
+    <.probe words={@words} show_marks class="probe--line" />
+    """
+  end
 
   # The probe, marked up: the subject that decides the answer, and the noun that
   # sits next to the blank pointing the wrong way.

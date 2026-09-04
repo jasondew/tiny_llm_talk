@@ -431,6 +431,13 @@
   font-size: 40px;
 }
 
+/* The sentence as a header line: small, dim, the marks still in colour. */
+.probe--line {
+  grid-template-rows: auto;
+  font-size: 24px;
+  color: var(--ink-dim);
+}
+
 .word-groups {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
