@@ -399,7 +399,7 @@
   stroke-dasharray: 6 6;
 }
 
-.vector-graph__shadow {
+.vector-graph__agreement {
   stroke: var(--accent);
   stroke-width: 12;
   stroke-linecap: butt;

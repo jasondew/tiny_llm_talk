@@ -122,8 +122,8 @@ defmodule TinyLlmTalkWeb.FigureComponents do
 
   @doc """
   Two vectors drawn as arrows from the origin, and their dot product as a
-  picture: the shadow `b` casts on `a`, times the length of `a`. Two entries
-  each, because a graph has two axes.
+  picture of how much they agree: the part of `b` that lies along `a`, times
+  the length of `a`. Two entries each, because a graph has two axes.
 
   With `interactive`, the arrow tips can be dragged. The hook is always
   attached, because a colocated hook's name is only rewritten when it is a
@@ -135,7 +135,7 @@ defmodule TinyLlmTalkWeb.FigureComponents do
   attr :id, :string, default: "vector-graph"
   attr :a, :list, required: true
   attr :b, :list, required: true
-  attr :shadow, :boolean, default: false, doc: "draw the projection of b onto a"
+  attr :agreement, :boolean, default: false, doc: "draw the part of b that lies along a"
   attr :interactive, :boolean, default: false, doc: "let the arrow tips be dragged"
   attr :reach, :float, default: 4.5, doc: "how far each axis runs from the origin"
   attr :size, :integer, default: 420
@@ -156,7 +156,7 @@ defmodule TinyLlmTalkWeb.FigureComponents do
         unit: unit,
         a_tip: place.({ax, ay}),
         b_tip: place.({bx, by}),
-        shadow_tip: place.({ax * along, ay * along}),
+        agreement_tip: place.({ax * along, ay * along}),
         ticks:
           for(
             n <- -floor(assigns.reach)..floor(assigns.reach),
@@ -267,7 +267,7 @@ defmodule TinyLlmTalkWeb.FigureComponents do
         <line x1={sx - 4} y1={sy} x2={sx + 4} y2={sy} />
         <text x={sx - 8} y={sy + 4} text-anchor="end">{n}</text>
       </g>
-      <g :if={@shadow}>
+      <g :if={@agreement}>
         <line
           x1={elem(@a_tip, 0)}
           y1={elem(@a_tip, 1)}
@@ -278,9 +278,9 @@ defmodule TinyLlmTalkWeb.FigureComponents do
         <line
           x1={elem(@origin, 0)}
           y1={elem(@origin, 1)}
-          x2={elem(@shadow_tip, 0)}
-          y2={elem(@shadow_tip, 1)}
-          class="vector-graph__shadow"
+          x2={elem(@agreement_tip, 0)}
+          y2={elem(@agreement_tip, 1)}
+          class="vector-graph__agreement"
         />
       </g>
       <line
@@ -329,7 +329,7 @@ defmodule TinyLlmTalkWeb.FigureComponents do
           class="vector-graph__handle vector-graph__handle--b"
         />
       </g>
-      <text :if={@shadow} x={@size - 12} y="28" text-anchor="end" class="vector-graph__dot">
+      <text :if={@agreement} x={@size - 12} y="28" text-anchor="end" class="vector-graph__dot">
         a &middot; b = {format_signed(@dot)}
       </text>
     </svg>

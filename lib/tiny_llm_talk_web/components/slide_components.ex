@@ -257,11 +257,11 @@ defmodule TinyLlmTalkWeb.SlideComponents do
             <span class="dot__hint">drag the arrow tips</span>
           </.step>
         </div>
-        <.vector_graph id="dot-graph" a={@a} b={@b} shadow={@step >= 3} interactive size={400} />
+        <.vector_graph id="dot-graph" a={@a} b={@b} agreement={@step >= 3} interactive size={400} />
       </div>
       <.step n={3} step={@step} class="slide__note">
-        The shadow b casts on a, times the length of a. Big when they point the same way,
-        near zero when unrelated, negative when opposed.
+        How much a and b agree. Big when they point the same way, near zero when unrelated,
+        negative when opposed.
       </.step>
     </section>
     """
