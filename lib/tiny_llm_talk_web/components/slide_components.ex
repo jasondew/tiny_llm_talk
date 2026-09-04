@@ -53,16 +53,40 @@ defmodule TinyLlmTalkWeb.SlideComponents do
   @hidden_per_cell 4
   @logit_chips 8
 
-  @map_get_snippet """
-  # keys are words. values are one fact about each: is it plural?
-  is_plural = %{"llama" => 0.0, "llamas" => 1.0, "dog" => 0.0, "dogs" => 1.0}
+  # The lookup slide builds its map up in three steps: the map anyone would
+  # write, then floats for the values, then vectors for the keys. Each step
+  # is the whole map again, so nothing has to be imagined.
+  @map_get_snippets %{
+    1 => """
+    is_plural = %{"llama" => false, "llamas" => true, "dog" => false, "dogs" => true}
 
-  Map.get(is_plural, "llamas")
-  #=> 1.0
+    Map.get(is_plural, "llamas")
+    #=> true
 
-  Map.get(is_plural, "geese")
-  #=> nil
-  """
+    Map.get(is_plural, "geese")
+    #=> nil
+    """,
+    2 => """
+    is_plural = %{"llama" => 0.0, "llamas" => 1.0, "dog" => 0.0, "dogs" => 1.0}
+
+    Map.get(is_plural, "llamas")
+    #=> 1.0
+
+    Map.get(is_plural, "geese")
+    #=> nil
+    """,
+    3 => """
+    is_plural = %{
+      [1.0, -1.0] => 0.0,  # llama
+      [1.0,  1.0] => 1.0,  # llamas
+      [0.9, -1.0] => 0.0,  # dog
+      [0.9,  1.0] => 1.0   # dogs
+    }
+
+    Map.get(is_plural, [0.8, 1.0])  # geese
+    #=> nil
+    """
+  }
 
   @doc "Whether this slide has been drawn yet, or is still a stub."
   @spec drawn?(atom()) :: boolean()
@@ -410,16 +434,25 @@ defmodule TinyLlmTalkWeb.SlideComponents do
   # 4. Attention, from Map --------------------------------------------------
 
   def slide(%{slide: %Slide{id: :map_get}} = assigns) do
-    assigns = assign(assigns, source: @map_get_snippet)
+    assigns = assign(assigns, source: Map.fetch!(@map_get_snippets, min(assigns.step, 3)))
 
     ~H"""
     <section class="slide">
       <h2 class="slide__title">Start with a lookup you already trust</h2>
-      <.snippet source={@source} step={@step} focus={[:all, 7..8]} />
-      <.step n={2} step={@step} class="slide__lede">
+      <.snippet source={@source} />
+      <p :if={@step == 1} class="slide__lede">
+        Ask for a key that is not there, and you get nothing.
+      </p>
+      <p :if={@step == 2} class="slide__lede">
+        Floats, not booleans: we are about to blend answers, and you cannot average
+        <span class="word word--lit">true</span>
+        and <span class="word word--lit">false</span>.
+      </p>
+      <p :if={@step >= 3} class="slide__lede">
+        Vectors, not strings: similar is a dot product, and you cannot dot a string.
         Map.get finds the one key <span class="word word--lit">equal</span> to the query.
         Attention is Map.get with equal replaced by <span class="word word--lit">similar</span>.
-      </.step>
+      </p>
     </section>
     """
   end
@@ -442,17 +475,14 @@ defmodule TinyLlmTalkWeb.SlideComponents do
       <div class="fuzzy-head">
         <.picker name="query" options={@options} chosen={@query} />
         <p class="row-caption">
-          <code>Map.get</code>
-          says {if @exact, do: format_weight(@exact), else: "nil"} &middot; query vector {format_vector(
-            @lookup.vector
-          )}
+          query {format_vector(@lookup.vector)} &middot; <code>Map.get</code>
+          says {if @exact, do: format_weight(@exact), else: "nil"}
         </p>
       </div>
       <table class="fuzzy">
         <thead>
           <tr>
             <th>key</th>
-            <th>key vector</th>
             <th>1. score (dot)</th>
             <th class={@step < 2 && "fuzzy--hidden"}>2. budget (softmax)</th>
             <th class={@step < 3 && "fuzzy--hidden"}>3. value &times; budget</th>
@@ -460,8 +490,10 @@ defmodule TinyLlmTalkWeb.SlideComponents do
         </thead>
         <tbody>
           <tr :for={row <- @lookup.scores}>
-            <td class="fuzzy__key">{row.key}</td>
-            <td class="fuzzy__vector">{format_vector(entry_vector(row.key))}</td>
+            <td class="fuzzy__key">
+              <span class="fuzzy__vector">{format_vector(entry_vector(row.key))}</span>
+              <span class="fuzzy__word">{row.key}</span>
+            </td>
             <td class="fuzzy__number">{format_signed(row.score)}</td>
             <td class={["fuzzy__budget", @step < 2 && "fuzzy--hidden"]}>
               <span class="fuzzy__track">

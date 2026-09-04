@@ -1011,8 +1011,18 @@
 }
 
 .fuzzy__key {
+  white-space: nowrap;
+}
+
+.fuzzy__key .fuzzy__vector {
+  color: var(--ink);
+}
+
+.fuzzy__word {
+  margin-left: 14px;
   font-family: var(--serif);
-  font-size: 26px;
+  font-size: 22px;
+  color: var(--ink-dim);
 }
 
 .fuzzy__vector,

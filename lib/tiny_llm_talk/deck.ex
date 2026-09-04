@@ -182,12 +182,15 @@ defmodule TinyLlmTalk.Deck do
         %Slide{
           id: :map_get,
           title: "Start with a lookup you already trust",
-          steps: 2,
+          steps: 3,
           notes: """
-          A map from words to one fact about each: is it plural. Map.get
-          finds the one key equal to the query and hands back its value; ask
-          for geese and it is nil. Say the line: attention is Map.get with
-          equal replaced by similar. The next slide does exactly that.
+          The map anyone would write: words to booleans, is it plural. Ask
+          for geese and it is nil. Step two rewrites the values as floats,
+          because we are about to blend answers and you cannot average a
+          boolean. Step three rewrites the keys as vectors, because similar
+          is a dot product and you cannot dot a string. Say the line:
+          attention is Map.get with equal replaced by similar. The next slide
+          runs exactly this map.
           """
         },
         %Slide{
