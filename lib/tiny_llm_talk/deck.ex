@@ -127,8 +127,8 @@ defmodule TinyLlmTalk.Deck do
           id: :softmax_playground,
           title: "A softmax turns scores into a budget",
           notes: """
-          Drag the slider. Four scores in, four shares out, always summing to
-          one. Sharp means commit to the top score; soft means spread the
+          Drag the slider. Five scores in, five shares out, always summing to
+          one. The words are just labels, none of them from the sentence. Sharp means commit to the top score; soft means spread the
           budget. Say "budget" and "commit"; never say exponential.
           """
         }

@@ -33,7 +33,15 @@ defmodule TinyLlmTalkWeb.SlideComponents do
   # is all there is.
 
   # The four scores the softmax playground turns into a budget.
-  @playground_scores [{"llama", 2.0}, {"dogs", 1.0}, {"who", 0.5}, {"the", 0.0}, {"chases", -1.0}]
+  # Words from the vocabulary but not from the sentence, so the room does not
+  # read the playground as attention over the probe. They are only labels.
+  @playground_scores [
+    {"fox", 2.0},
+    {"goose", 1.0},
+    {"mouse", 0.5},
+    {"sleepy", 0.0},
+    {"big", -1.0}
+  ]
 
   # The two lists on the dot product slide. Two entries each, so the same
   # numbers can be drawn as arrows on a graph.
