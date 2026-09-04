@@ -228,34 +228,6 @@ defmodule TinyLlmTalkWeb.SlideComponents do
     """
   end
 
-  def slide(%{slide: %Slide{id: :be_the_bigram}} = assigns) do
-    assigns = assign(assigns, activity: Room.activity(:bigram_next))
-
-    ~H"""
-    <section class="slide slide--tight">
-      <h2 class="slide__title slide__title--small">
-        You have read two thousand sentences. You just saw <span class="word word--lit">chases</span>. What comes next?
-      </h2>
-      <div class="ask">
-        <.qr />
-        <.tally tally={Room.tally(@room, :bigram_next)} answer={@activity.answer} reveal={@step >= 2} />
-      </div>
-      <.step n={2} step={@step}>
-        <p class="row-caption">
-          what actually followed <span class="word word--lit">chases</span>, in two thousand
-          sentences. You just ran the dumbest model that works.
-        </p>
-        <.bars
-          values={Model.bigram_row("chases")}
-          words={Vocab.words()}
-          top={2}
-          highlight={~w(the a)}
-        />
-      </.step>
-    </section>
-    """
-  end
-
   # 2. All the math there is ------------------------------------------------
 
   def slide(%{slide: %Slide{id: :all_the_math}} = assigns) do

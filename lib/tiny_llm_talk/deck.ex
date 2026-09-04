@@ -100,19 +100,9 @@ defmodule TinyLlmTalk.Deck do
           notes: """
           Input: the words so far. Output: 32 probabilities. State the frame
           here and never let go of it. Everything we build today goes inside
-          the box.
-          """
-        },
-        %Slide{
-          id: :be_the_bigram,
-          title: "You are a count table",
-          activity: :bigram_next,
-          steps: 2,
-          notes: """
-          Ask: you have read two thousand sentences and just saw chases. What
-          comes next? Let them vote, then show the real row. Counting adjacent
-          pairs is the dumbest model that works, and the room just ran it in
-          their heads. CUT THIS FIRST if running long.
+          the box. Say once: the simplest thing that fits in the box is a
+          count table over adjacent pairs, and it fails exactly where the
+          nearest noun lies. That is the baseline section 9 beats.
           """
         }
       ]
