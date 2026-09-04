@@ -31,10 +31,6 @@ defmodule TinyLlmTalkWeb.SlideComponents do
   # The public surface of the model's entire math library, in file order. The
   # two that matter are lit; the rest are dimmed to make the point that this
   # is all there is.
-  @tensor_functions ~w(zeros ones random one_hot shape transpose add sub hadamard scale
-    map dot outer_product matmul add_bias unit normalize softmax add_row cross_entropy argmax
-    weighted_random_index)
-  @tensor_lit ~w(dot softmax)
 
   # The four scores the softmax playground turns into a budget.
   @playground_scores [{"llama", 2.0}, {"dogs", 1.0}, {"who", 0.5}, {"chases", -1.0}]
@@ -235,29 +231,11 @@ defmodule TinyLlmTalkWeb.SlideComponents do
 
   # 2. All the math there is ------------------------------------------------
 
-  def slide(%{slide: %Slide{id: :all_the_math}} = assigns) do
-    assigns = assign(assigns, functions: @tensor_functions, lit: @tensor_lit)
-
-    ~H"""
-    <section class="slide">
-      <h2 class="slide__title">The entire math library</h2>
-      <div class="chips">
-        <span
-          :for={name <- @functions}
-          class={["chip", @step >= 2 && if(name in @lit, do: "chip--lit", else: "chip--dim")]}
-        >{name}</span>
-      </div>
-      <p class="code__caption">lib/tiny_llm/tensor.ex, every public function</p>
-      <.step n={2} step={@step} class="slide__lede">
-        Two of these are ideas. The rest are bookkeeping.
-      </.step>
-    </section>
-    """
-  end
-
   def slide(%{slide: %Slide{id: :dot_product}} = assigns) do
-    products = Enum.zip_with(@dot_a, @dot_b, &(&1 * &2))
-    assigns = assign(assigns, a: @dot_a, b: @dot_b, products: products, total: Enum.sum(products))
+    a = Controls.vector(assigns.controls, "vector_a", @dot_a)
+    b = Controls.vector(assigns.controls, "vector_b", @dot_b)
+    products = Enum.zip_with(a, b, &(&1 * &2))
+    assigns = assign(assigns, a: a, b: b, products: products, total: Enum.sum(products))
 
     ~H"""
     <section class="slide">
@@ -274,8 +252,12 @@ defmodule TinyLlmTalkWeb.SlideComponents do
           <.step n={3} step={@step}>
             <.vector label="add" values={[@total]} class="vector--total" />
           </.step>
+          <.step n={3} step={@step} class="dot__controls">
+            <button type="button" phx-click="reset_vectors" class="button button--quiet">reset</button>
+            <span class="dot__hint">drag the arrow tips</span>
+          </.step>
         </div>
-        <.vector_graph a={@a} b={@b} shadow={@step >= 3} size={380} />
+        <.vector_graph id="dot-graph" a={@a} b={@b} shadow={@step >= 3} interactive size={400} />
       </div>
       <.step n={3} step={@step} class="slide__note">
         The shadow b casts on a, times the length of a. Big when they point the same way,

@@ -124,35 +124,95 @@ defmodule TinyLlmTalkWeb.FigureComponents do
   Two vectors drawn as arrows from the origin, and their dot product as a
   picture: the shadow `b` casts on `a`, times the length of `a`. Two entries
   each, because a graph has two axes.
+
+  With `interactive`, the arrow tips can be dragged. The hook turns pointer
+  positions back into coordinates, snaps them to the half grid so the
+  numbers stay readable, and sends them up as the controls `vector_a` and
+  `vector_b`, which `TinyLlmTalkWeb.Controls.vector/3` reads back.
   """
+  attr :id, :string, default: "vector-graph"
   attr :a, :list, required: true
   attr :b, :list, required: true
   attr :shadow, :boolean, default: false, doc: "draw the projection of b onto a"
-  attr :size, :integer, default: 440
+  attr :interactive, :boolean, default: false, doc: "let the arrow tips be dragged"
+  attr :reach, :float, default: 4.5, doc: "how far each axis runs from the origin"
+  attr :size, :integer, default: 420
 
   def vector_graph(assigns) do
     [ax, ay] = assigns.a
     [bx, by] = assigns.b
     dot = ax * bx + ay * by
-    along = dot / (ax * ax + ay * ay)
-    reach = Enum.max([ax, ay, bx, by, 1.0]) + 0.6
-    pad = 36
-    unit = (assigns.size - 2 * pad) / reach
-    place = fn {x, y} -> {pad + x * unit, assigns.size - pad - y * unit} end
+    along = if ax == 0.0 and ay == 0.0, do: 0.0, else: dot / (ax * ax + ay * ay)
+    pad = 24
+    unit = (assigns.size - 2 * pad) / (2 * assigns.reach)
+    origin = assigns.size / 2
+    place = fn {x, y} -> {origin + x * unit, origin - y * unit} end
 
     assigns =
       assign(assigns,
-        origin: place.({0, 0}),
+        origin: {origin, origin},
+        unit: unit,
         a_tip: place.({ax, ay}),
         b_tip: place.({bx, by}),
         shadow_tip: place.({ax * along, ay * along}),
-        ticks: Enum.map(1..floor(reach), &{&1, place.({&1, 0}), place.({0, &1})}),
+        ticks:
+          for(
+            n <- -floor(assigns.reach)..floor(assigns.reach),
+            n != 0,
+            do: {n, place.({n, 0}), place.({0, n})}
+          ),
         dot: dot
       )
 
     ~H"""
+    <script :type={Phoenix.LiveView.ColocatedHook} name=".VectorDrag">
+      export default {
+        mounted() {
+          const svg = this.el
+          const originX = parseFloat(svg.dataset.originX)
+          const originY = parseFloat(svg.dataset.originY)
+          const unit = parseFloat(svg.dataset.unit)
+          const reach = parseFloat(svg.dataset.reach)
+          let dragging = null
+          let lastSent = 0
+
+          const toVector = (event) => {
+            const point = new DOMPoint(event.clientX, event.clientY).matrixTransform(svg.getScreenCTM().inverse())
+            const snap = (value) => Math.max(-reach, Math.min(reach, Math.round(value * 2) / 2))
+            return [snap((point.x - originX) / unit), snap((originY - point.y) / unit)]
+          }
+
+          const send = (event, force) => {
+            const now = performance.now()
+            if (!force && now - lastSent < 40) return
+            lastSent = now
+            const [x, y] = toVector(event)
+            this.pushEvent("control", {name: `vector_${dragging}`, value: `${x},${y}`})
+          }
+
+          svg.addEventListener("pointerdown", (event) => {
+            const handle = event.target.closest("[data-vector]")
+            if (!handle) return
+            dragging = handle.dataset.vector
+            svg.setPointerCapture(event.pointerId)
+            event.preventDefault()
+            send(event, true)
+          })
+          svg.addEventListener("pointermove", (event) => { if (dragging) send(event, false) })
+          const release = (event) => { if (dragging) { send(event, true); dragging = null } }
+          svg.addEventListener("pointerup", release)
+          svg.addEventListener("pointercancel", release)
+        }
+      }
+    </script>
     <svg
-      class="vector-graph"
+      id={@id}
+      phx-hook={@interactive && ".VectorDrag"}
+      data-origin-x={elem(@origin, 0)}
+      data-origin-y={elem(@origin, 1)}
+      data-unit={@unit}
+      data-reach={@reach}
+      class={["vector-graph", @interactive && "vector-graph--interactive"]}
       viewBox={"0 0 #{@size} #{@size}"}
       width={@size}
       height={@size}
@@ -161,7 +221,7 @@ defmodule TinyLlmTalkWeb.FigureComponents do
     >
       <defs>
         <marker
-          id="arrow-a"
+          id={"#{@id}-arrow-a"}
           viewBox="0 0 10 10"
           refX="9"
           refY="5"
@@ -172,7 +232,7 @@ defmodule TinyLlmTalkWeb.FigureComponents do
           <path d="M 0 0 L 10 5 L 0 10 z" class="vector-graph__head vector-graph__head--a" />
         </marker>
         <marker
-          id="arrow-b"
+          id={"#{@id}-arrow-b"}
           viewBox="0 0 10 10"
           refX="9"
           refY="5"
@@ -184,24 +244,24 @@ defmodule TinyLlmTalkWeb.FigureComponents do
         </marker>
       </defs>
       <line
-        x1={elem(@origin, 0)}
+        x1="8"
         y1={elem(@origin, 1)}
-        x2={@size - 12}
+        x2={@size - 8}
         y2={elem(@origin, 1)}
         class="vector-graph__axis"
       />
       <line
         x1={elem(@origin, 0)}
-        y1={elem(@origin, 1)}
+        y1="8"
         x2={elem(@origin, 0)}
-        y2="12"
+        y2={@size - 8}
         class="vector-graph__axis"
       />
       <g :for={{n, {tx, ty}, {sx, sy}} <- @ticks} class="vector-graph__tick">
         <line x1={tx} y1={ty - 4} x2={tx} y2={ty + 4} />
-        <text x={tx} y={ty + 18} text-anchor="middle">{n}</text>
+        <text x={tx} y={ty + 16} text-anchor="middle">{n}</text>
         <line x1={sx - 4} y1={sy} x2={sx + 4} y2={sy} />
-        <text x={sx - 10} y={sy + 4} text-anchor="end">{n}</text>
+        <text x={sx - 8} y={sy + 4} text-anchor="end">{n}</text>
       </g>
       <g :if={@shadow}>
         <line
@@ -225,7 +285,7 @@ defmodule TinyLlmTalkWeb.FigureComponents do
         x2={elem(@a_tip, 0)}
         y2={elem(@a_tip, 1)}
         class="vector-graph__vector vector-graph__vector--a"
-        marker-end="url(#arrow-a)"
+        marker-end={"url(##{@id}-arrow-a)"}
       />
       <line
         x1={elem(@origin, 0)}
@@ -233,29 +293,39 @@ defmodule TinyLlmTalkWeb.FigureComponents do
         x2={elem(@b_tip, 0)}
         y2={elem(@b_tip, 1)}
         class="vector-graph__vector vector-graph__vector--b"
-        marker-end="url(#arrow-b)"
+        marker-end={"url(##{@id}-arrow-b)"}
       />
       <text
-        x={elem(@a_tip, 0) + 12}
+        x={elem(@a_tip, 0) + 14}
         y={elem(@a_tip, 1) + 6}
         class="vector-graph__name vector-graph__name--a"
       >
         a
       </text>
       <text
-        x={elem(@b_tip, 0) + 12}
+        x={elem(@b_tip, 0) + 14}
         y={elem(@b_tip, 1) + 6}
         class="vector-graph__name vector-graph__name--b"
       >
         b
       </text>
-      <text
-        :if={@shadow}
-        x={@size - 16}
-        y={elem(@origin, 1) - 14}
-        text-anchor="end"
-        class="vector-graph__dot"
-      >
+      <g :if={@interactive}>
+        <circle
+          cx={elem(@a_tip, 0)}
+          cy={elem(@a_tip, 1)}
+          r="18"
+          data-vector="a"
+          class="vector-graph__handle vector-graph__handle--a"
+        />
+        <circle
+          cx={elem(@b_tip, 0)}
+          cy={elem(@b_tip, 1)}
+          r="18"
+          data-vector="b"
+          class="vector-graph__handle vector-graph__handle--b"
+        />
+      </g>
+      <text :if={@shadow} x={@size - 12} y="28" text-anchor="end" class="vector-graph__dot">
         a &middot; b = {format_signed(@dot)}
       </text>
     </svg>

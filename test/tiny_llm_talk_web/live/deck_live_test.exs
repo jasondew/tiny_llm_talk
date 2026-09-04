@@ -125,6 +125,22 @@ defmodule TinyLlmTalkWeb.DeckLiveTest do
       assert render(view) =~ ~s(picker__option picker__option--chosen">slow)
     end
 
+    test "moves the dot product's arrows, and puts them back", %{conn: conn} do
+      slide = Enum.find(Deck.slides(), &(&1.id == :dot_product))
+      {:ok, view, _html} = live(conn, ~p"/s/#{slide.index}/3")
+
+      render_click(view, "control", %{"name" => "vector_a", "value" => "2.0,-1.5"})
+
+      html = render(view)
+      assert html =~ "−1.50"
+      # a = [2, -1.5], b = [1, 4]: 2 - 6
+      assert html =~ "a · b = −4.00"
+
+      render_click(view, "reset_vectors", %{})
+
+      assert render(view) =~ "a · b = 7.00"
+    end
+
     test "writes a sentence one word at a time and can start over", %{conn: conn} do
       slide = Enum.find(Deck.slides(), &(&1.id == :one_word_at_a_time))
       {:ok, view, _html} = live(conn, ~p"/s/#{slide.index}")

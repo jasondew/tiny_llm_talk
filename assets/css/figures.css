@@ -410,3 +410,27 @@
   fill: var(--accent);
   font-size: 24px;
 }
+
+
+.vector-graph--interactive {
+  touch-action: none;
+  user-select: none;
+}
+
+.vector-graph__handle {
+  fill: transparent;
+  stroke-width: 2;
+  cursor: grab;
+}
+
+.vector-graph__handle--a {
+  stroke: var(--accent);
+}
+
+.vector-graph__handle--b {
+  stroke: var(--accent-cool);
+}
+
+.vector-graph__handle:active {
+  cursor: grabbing;
+}

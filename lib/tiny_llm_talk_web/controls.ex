@@ -15,7 +15,7 @@ defmodule TinyLlmTalkWeb.Controls do
   alias TinyLlmTalk.{Model, Room, Trainer}
   alias TinyLlmTalkWeb.{Animation, Position}
 
-  @events ~w(control next_word restart feature train retrain shuffle step_frame)
+  @events ~w(control next_word restart feature train retrain shuffle step_frame reset_vectors)
 
   # A sentence the room watches being written should not run off the slide.
   @longest_generation 12
@@ -83,6 +83,11 @@ defmodule TinyLlmTalkWeb.Controls do
     socket
   end
 
+  # The dot product slide's two arrows back where they started.
+  def handle("reset_vectors", _params, socket) do
+    socket |> Position.control("vector_a", nil) |> Position.control("vector_b", nil)
+  end
+
   # One frame forward, for the step pace.
   def handle("step_frame", _params, socket), do: Animation.step(socket)
 
@@ -127,6 +132,22 @@ defmodule TinyLlmTalkWeb.Controls do
     if choice(controls, "pace", @default_pace) == "realtime",
       do: length(TinyLlmTalk.Writer.phases()),
       else: 1
+  end
+
+  @doc """
+  A two-entry vector control, sent by the dragged graph as "x,y". Anything
+  that does not parse as two numbers means the default.
+  """
+  @spec vector(map(), String.t(), [float()]) :: [float()]
+  def vector(controls, name, default) do
+    with value when is_binary(value) <- Map.get(controls, name),
+         [x, y] <- String.split(value, ","),
+         {x, ""} <- Float.parse(x),
+         {y, ""} <- Float.parse(y) do
+      [x, y]
+    else
+      _junk -> default
+    end
   end
 
   @doc "A numeric control, with a default for before anyone has touched it."

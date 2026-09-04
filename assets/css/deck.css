@@ -559,6 +559,18 @@
   gap: 12px;
 }
 
+.dot__controls {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 6px;
+}
+
+.dot__hint {
+  font-size: 15px;
+  color: var(--ink-dim);
+}
+
 .dot__vectors {
   display: flex;
   flex-direction: column;

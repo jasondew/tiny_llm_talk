@@ -114,16 +114,6 @@ defmodule TinyLlmTalk.Deck do
       lands: "a dot product is a similarity score, a softmax is a budget",
       slides: [
         %Slide{
-          id: :all_the_math,
-          title: "The entire math library",
-          steps: 2,
-          notes: """
-          The whole file, then dim everything but two functions. Dot product
-          and softmax are the only two ideas you need for the next twenty
-          minutes. Everything else is bookkeeping.
-          """
-        },
-        %Slide{
           id: :dot_product,
           title: "A dot product is a similarity score",
           steps: 3,
