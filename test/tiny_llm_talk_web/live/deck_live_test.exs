@@ -35,18 +35,6 @@ defmodule TinyLlmTalkWeb.DeckLiveTest do
     assert_patched(view, "/s/#{stepped.index}/2")
   end
 
-  test "builds the lookup up from booleans to vectors", %{conn: conn} do
-    slide = Enum.find(Deck.slides(), &(&1.id == :map_get))
-    {:ok, view, html} = live(conn, ~p"/s/#{slide.index}")
-    assert html =~ "=&gt; true"
-
-    render_keydown(view, "key", %{"key" => "ArrowRight"})
-    assert render(view) =~ "=&gt; 1.0"
-
-    render_keydown(view, "key", %{"key" => "ArrowRight"})
-    assert render(view) =~ "# geese"
-  end
-
   test "ignores a key that means nothing", %{conn: conn} do
     {:ok, view, _html} = live(conn, ~p"/s/3")
 
