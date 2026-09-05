@@ -17,6 +17,11 @@ defmodule TinyLlmTalk.DeckTest do
       assert %{id: :title, activity: nil} = Deck.at(2)
     end
 
+    test "motivates the architecture before anything is built, and ends on the sources" do
+      assert %{id: :the_architecture, section: 0} = Deck.at(3)
+      assert %{id: :sources, section: 9} = Deck.at(Deck.count())
+    end
+
     test "gives every slide a unique id" do
       ids = Enum.map(Deck.slides(), & &1.id)
       assert length(Enum.uniq(ids)) == length(ids)

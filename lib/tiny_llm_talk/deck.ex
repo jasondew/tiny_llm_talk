@@ -47,6 +47,22 @@ defmodule TinyLlmTalk.Deck do
           """
         },
         %Slide{
+          id: :the_architecture,
+          title: "What a transformer is",
+          steps: 4,
+          notes: """
+          Motivate it before building it. One block, repeated: attention,
+          then a small MLP, then the same again. The frontier models say
+          so in their own reports: GPT-4 is "Transformer-based", Gemini
+          "builds on Transformer decoders", DeepSeek-V3 is "still within the
+          Transformer framework", Llama 4 is a mixture-of-experts one.
+          Anthropic does not publish Claude's. If someone raises Mamba or
+          Qwen3-Next: those swap most attention layers for a cheaper mixer
+          and keep the rest, so the block you are about to read is still in
+          them. The one on this laptop is one block deep and one head wide.
+          """
+        },
+        %Slide{
           id: :live_training,
           title: "Training, live",
           notes: """
@@ -549,6 +565,15 @@ defmodule TinyLlmTalk.Deck do
           notes: """
           The writer again, under the repo link. Leave it running through the
           questions. Stop talking.
+          """
+        },
+        %Slide{
+          id: :sources,
+          title: "Sources",
+          notes: """
+          Both repos and the paper. Everything quoted about the frontier
+          models came from the reports listed here. Step back one if you
+          would rather have the writer running during questions.
           """
         }
       ]

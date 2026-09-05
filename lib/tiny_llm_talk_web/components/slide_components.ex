@@ -113,6 +113,34 @@ defmodule TinyLlmTalkWeb.SlideComponents do
     """
   end
 
+  def slide(%{slide: %Slide{id: :the_architecture}} = assigns) do
+    ~H"""
+    <section class="slide">
+      <p class="slide__eyebrow">since 2017</p>
+      <h2 class="slide__title">A transformer is one block, repeated</h2>
+      <ul class="claims">
+        <.step n={1} step={@step}>
+          <li>
+            Attention: each position looks back, scores what it sees, and pulls in what it needs.
+          </li>
+        </.step>
+        <.step n={2} step={@step}>
+          <li>A small MLP: each position thinks about what it pulled in.</li>
+        </.step>
+        <.step n={3} step={@step}>
+          <li>Repeat. The last block hands over a distribution over the next word.</li>
+        </.step>
+        <.step n={4} step={@step}>
+          <li>
+            Every frontier model is one of these. GPT, Gemini, Llama, and DeepSeek say so in
+            their own reports. The one on this laptop is one block deep and one head wide.
+          </li>
+        </.step>
+      </ul>
+    </section>
+    """
+  end
+
   def slide(%{slide: %Slide{id: :live_training}} = assigns) do
     trainer = assigns.trainer || Trainer.state()
     config = trainer.config || Trainer.checkpoint_config()
@@ -1352,6 +1380,45 @@ defmodule TinyLlmTalkWeb.SlideComponents do
         of all thirty-two words.
       </p>
       <p class="slide__note">github.com/jasondew/tiny_llm</p>
+    </section>
+    """
+  end
+
+  def slide(%{slide: %Slide{id: :sources}} = assigns) do
+    assigns = assign(assigns, repo: Application.fetch_env!(:tiny_llm_talk, :repo_label))
+
+    ~H"""
+    <section class="slide">
+      <h2 class="slide__title">Sources</h2>
+      <div class="two-up two-up--lists">
+        <div>
+          <p class="slide__eyebrow">code</p>
+          <ul class="claims claims--compact">
+            <li>the model: <code>{@repo}</code></li>
+            <li>this deck: <code>github.com/jasondew/tiny_llm_talk</code></li>
+          </ul>
+        </div>
+        <div>
+          <p class="slide__eyebrow">papers</p>
+          <ul class="claims claims--compact">
+            <li>
+              Vaswani et al., 2017. Attention Is All You Need. <code>arxiv.org/abs/1706.03762</code>
+            </li>
+            <li>OpenAI, 2023. GPT-4 Technical Report. <code>arxiv.org/abs/2303.08774</code></li>
+            <li>
+              Google, 2023. Gemini: A Family of Highly Capable Multimodal Models.
+              <code>arxiv.org/abs/2312.11805</code>
+            </li>
+            <li>
+              DeepSeek, 2024. DeepSeek-V3 Technical Report. <code>arxiv.org/abs/2412.19437</code>
+            </li>
+            <li>
+              Meta, 2025. The Llama 4 herd.
+              <code>ai.meta.com/blog/llama-4-multimodal-intelligence</code>
+            </li>
+          </ul>
+        </div>
+      </div>
     </section>
     """
   end

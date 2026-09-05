@@ -18,7 +18,7 @@ the sentence, the picture of where attention looks, and the score.
 
 | # | section | min | slides | interactive |
 | --- | --- | --- | --- | --- |
-| 0 | Cold open | 5 | **vote: flees, or flee** (the sentence and the join link, on screen while the room arrives), title, **training, live** (under the introduction), **it writes** (the forward pass animated, word by word), this is all of it (the seven lines, said not shown), from nothing | audience vote, presenter start |
+| 0 | Cold open | 5 | **vote: flees, or flee** (the sentence and the join link, on screen while the room arrives), title, what a transformer is (one block repeated, and every frontier model is one), **training, live** (under the introduction), **it writes** (the forward pass animated, word by word), this is all of it (the seven lines, said not shown), from nothing | audience vote, presenter start |
 | 1 | Words become numbers | 3 | 32 words, the grammar, one function | |
 | 2 | All the math there is | 2 | **dot product**, with two arrows to drag, **softmax playground** | presenter drags, presenter slider |
 | 3 | Embedding and position | 3 | a word is a row, position is added, the model forgets it saw words | |
@@ -27,7 +27,7 @@ the sentence, the picture of where attention looks, and the score.
 | 6 | The rest of the block | 3 | lid off, three pieces of plumbing | |
 | 7 | Back to words | 4 | rows become a distribution, the loop, **one word at a time**, **temperature dial**, **vote: spot the human** | presenter, audience vote |
 | 8 | Training, in one slide | 3 | guess / measure / nudge / repeat, a loss chart that draws itself, tests for math | |
-| 9 | Did it learn it | 3 | the number, **rematch: room vs model**, **scoreboard**, this was all of it (the seven lines, walked), what is not here, the sentence again, **it writes** again under the repo link | audience vote |
+| 9 | Did it learn it | 3 | the number, **rematch: room vs model**, **scoreboard**, this was all of it (the seven lines, walked), what is not here, the sentence again, **it writes** again under the repo link, sources | audience vote |
 
 ## The opener
 

@@ -41,6 +41,22 @@ defmodule TinyLlmTalkWeb.DeckLiveTest do
     assert render(view) =~ "tally__row--answer"
   end
 
+  test "says what a transformer is, and that the frontier models are one", %{conn: conn} do
+    slide = Enum.find(Deck.slides(), &(&1.id == :the_architecture))
+    {:ok, _view, html} = live(conn, ~p"/s/#{slide.index}/#{slide.steps}")
+
+    assert html =~ "frontier"
+    assert html =~ "Gemini"
+  end
+
+  test "ends on the sources, with both repos and the paper", %{conn: conn} do
+    {:ok, _view, html} = live(conn, ~p"/s/#{Deck.count()}")
+
+    assert html =~ "Attention Is All You Need"
+    assert html =~ "github.com/jasondew/tiny_llm_talk"
+    assert html =~ Application.fetch_env!(:tiny_llm_talk, :repo_label)
+  end
+
   test "puts the title after the vote", %{conn: conn} do
     {:ok, _view, html} = live(conn, ~p"/s/2")
 
