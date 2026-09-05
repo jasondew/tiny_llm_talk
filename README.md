@@ -105,12 +105,12 @@ seeded, so the attention weights the slides quote reproduce exactly.
 Without checkpoints the deck still runs; the figures that need trained weights
 say so and tell you to run the task.
 
-## The opener trains and writes, live
+## It trains and writes, live
 
-`TinyLlmTalk.Trainer` runs the checkpoint's training run again on the first
-slide, in the same BEAM, with the same config and seed. Because the model is
+`TinyLlmTalk.Trainer` runs the checkpoint's training run again on the training
+slide, near the end, in the same BEAM, with the same config and seed. Because the model is
 pure Elixir over a seeded `:rand`, that is the same run: the loss it lands on
-is the checkpoint's loss, and the slide says whether it matched. Nothing later
+is the checkpoint's loss, and the slide says whether it matched. Nothing else
 depends on it; every other slide reads the checkpoint.
 
 `TinyLlmTalk.Writer` is the model writing a paragraph with its forward pass
@@ -136,11 +136,11 @@ The talk is delivered over Zoom, so the audience is already in a browser. They
 open `/join` on any device and it shows whatever question the deck is on:
 
 - **section 0** flees, or flee? The first slide, on screen while the room arrives.
-- **section 4** where will the blank look? They bet, then the walkthrough answers.
+- **section 3** where will the blank look? They bet, then the walkthrough answers.
 - **section 4** their own sentence, built from the 32 words, run through
   attention on the big screen.
-- **section 7** spot the human: one grammar sentence among two of the model's.
-- **section 9** a rematch on a sentence the model has never seen, room against
+- **section 6** spot the human: one grammar sentence among two of the model's.
+- **section 8** a rematch on a sentence the model has never seen, room against
   model.
 
 Every question with a right answer reveals it on the slide's second step. The

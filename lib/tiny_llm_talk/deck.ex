@@ -1,6 +1,6 @@
 defmodule TinyLlmTalk.Deck do
   @moduledoc """
-  The deck as data: the ten sections of `docs/talk-outline.md`, in order,
+  The deck as data: the nine sections of `docs/talk-outline.md`, in order,
   with every slide the outline names.
 
   Nothing here draws anything. A slide is a title, a note, and a count of
@@ -20,8 +20,8 @@ defmodule TinyLlmTalk.Deck do
     %Section{
       number: 0,
       title: "Cold open",
-      minutes: 5,
-      lands: "it trains, it writes, this is all of it, and none of it is hidden",
+      minutes: 3,
+      lands: "the room has voted, and a transformer is one block repeated",
       slides: [
         %Slide{
           id: :the_vote,
@@ -49,7 +49,7 @@ defmodule TinyLlmTalk.Deck do
         %Slide{
           id: :the_architecture,
           title: "What a transformer is",
-          steps: 4,
+          steps: 5,
           notes: """
           Motivate it before building it. One block, repeated: attention,
           then a small MLP, then the same again. The frontier models say
@@ -59,52 +59,10 @@ defmodule TinyLlmTalk.Deck do
           Anthropic does not publish Claude's. If someone raises Mamba or
           Qwen3-Next: those swap most attention layers for a cheaper mixer
           and keep the rest, so the block you are about to read is still in
-          them. The one on this laptop is one block deep and one head wide.
-          """
-        },
-        %Slide{
-          id: :live_training,
-          title: "Training, live",
-          notes: """
-          Press start as you walk up, then introduce yourself over it. Same
-          config and seed as the checkpoint, so the loss it lands on is the
-          loss every later slide was rehearsed on, and the slide says whether
-          it matched. Point at it once, in the last ten seconds: it started
-          at knowing nothing and went under the best any one-word model can
-          do. Do not explain the chart yet.
-          """
-        },
-        %Slide{
-          id: :it_writes,
-          title: "It writes",
-          ticks: true,
-          notes: """
-          Let it run. Left, the paragraph. Right, the forward pass for the
-          word being written: integers, rows, query and keys, attention, the
-          distribution, the pick. Say only: fifteen thousand floats, pure
-          Elixir, no library, and every one of those pictures is real. Slow
-          it down if people lean in. Shuffle if a sentence is dull.
-          """
-        },
-        %Slide{
-          id: :all_of_it,
-          title: "This is all of it",
-          notes: """
-          Say it, do not show it: seven lines, from a word to a distribution.
-          Line five opens into eight more, and one of those into sixteen.
-          That is the entire model, and forty minutes from now the room reads
-          all of it.
-          """
-        },
-        %Slide{
-          id: :from_nothing,
-          title: "What from nothing means",
-          steps: 5,
-          notes: """
-          Pure Elixir standard library. No Nx, no Axon, deps are empty. About
-          fifteen thousand parameters. Trains in about a minute, as you saw.
-          Every gradient written out and checked. The repo link is in the
-          footer now and stays there.
+          them. Last beat: the one on this laptop is one block deep, one head
+          wide, pure Elixir standard library with an empty deps list, about
+          fifteen thousand parameters, every gradient by hand and checked.
+          The repo link is in the footer and stays there.
           """
         }
       ]
@@ -112,8 +70,8 @@ defmodule TinyLlmTalk.Deck do
     %Section{
       number: 1,
       title: "Words become numbers",
-      minutes: 3,
-      lands: "32 words, a grammar we own, and the room was a language model for a moment",
+      minutes: 4,
+      lands: "32 words, a grammar we own, one function, and the whole path once, fast",
       slides: [
         %Slide{
           id: :vocabulary,
@@ -141,40 +99,27 @@ defmodule TinyLlmTalk.Deck do
           here and never let go of it. Everything we build today goes inside
           the box. Say once: the simplest thing that fits in the box is a
           count table over adjacent pairs, and it fails exactly where the
-          nearest noun lies. That is the baseline section 9 beats.
+          nearest noun lies. That is the baseline section 8 beats.
+          """
+        },
+        %Slide{
+          id: :it_writes,
+          title: "It writes",
+          ticks: true,
+          notes: """
+          The whole path once, fast, before we take it slowly. Left, the
+          paragraph. Right, the forward pass for the word being written:
+          integers, rows, query and keys, attention, the distribution, the
+          pick. Those are the stages the next thirty minutes walk one at a
+          time. Say only: fifteen thousand floats, pure Elixir, no library,
+          and every one of those pictures is real. Slow it down if people
+          lean in. Shuffle if a sentence is dull.
           """
         }
       ]
     },
     %Section{
       number: 2,
-      title: "All the math there is",
-      minutes: 2,
-      lands: "a dot product is a similarity score, a softmax is a budget",
-      slides: [
-        %Slide{
-          id: :dot_product,
-          title: "A dot product is a similarity score",
-          steps: 3,
-          notes: """
-          Two lists, multiply pairwise, add. Big when they point the same way,
-          near zero when unrelated, negative when opposed. That is the only
-          arithmetic in attention.
-          """
-        },
-        %Slide{
-          id: :softmax_playground,
-          title: "A softmax turns scores into a budget",
-          notes: """
-          Drag the slider. Five scores in, five shares out, always summing to
-          one. The words are just labels, none of them from the sentence. Sharp means commit to the top score; soft means spread the
-          budget. Say "budget" and "commit"; never say exponential.
-          """
-        }
-      ]
-    },
-    %Section{
-      number: 3,
       title: "Embedding and position",
       minutes: 3,
       lands: "a word is a row of floats, and position is added, not appended",
@@ -213,9 +158,9 @@ defmodule TinyLlmTalk.Deck do
       ]
     },
     %Section{
-      number: 4,
+      number: 3,
       title: "Attention, from Map",
-      minutes: 10,
+      minutes: 12,
       lands: "a fuzzy lookup: score every key, budget the scores, blend the values",
       slides: [
         %Slide{
@@ -227,6 +172,25 @@ defmodule TinyLlmTalk.Deck do
           finds the one key equal to the query and hands back its value; ask
           for geese and it is nil. Say the line: attention is Map.get with
           equal replaced by similar. The next slide does exactly that.
+          """
+        },
+        %Slide{
+          id: :dot_product,
+          title: "A dot product is a similarity score",
+          steps: 3,
+          notes: """
+          Two lists, multiply pairwise, add. Big when they point the same way,
+          near zero when unrelated, negative when opposed. That is the only
+          arithmetic in attention.
+          """
+        },
+        %Slide{
+          id: :softmax_playground,
+          title: "A softmax turns scores into a budget",
+          notes: """
+          Drag the slider. Five scores in, five shares out, always summing to
+          one. The words are just labels, none of them from the sentence. Sharp means commit to the top score; soft means spread the
+          budget. Say "budget" and "commit"; never say exponential.
           """
         },
         %Slide{
@@ -299,7 +263,7 @@ defmodule TinyLlmTalk.Deck do
       ]
     },
     %Section{
-      number: 5,
+      number: 4,
       title: "Look at what it did",
       minutes: 5,
       lands: "the sink, who gathers the subject, and half a route it cannot finish",
@@ -359,7 +323,7 @@ defmodule TinyLlmTalk.Deck do
       ]
     },
     %Section{
-      number: 6,
+      number: 5,
       title: "The rest of the block",
       minutes: 3,
       lands: "residual, RMSNorm, MLP: the plumbing that makes a layer stackable",
@@ -390,7 +354,7 @@ defmodule TinyLlmTalk.Deck do
       ]
     },
     %Section{
-      number: 7,
+      number: 6,
       title: "Back to words",
       minutes: 4,
       lands: "rows become a distribution, the loop, and the knob",
@@ -449,11 +413,24 @@ defmodule TinyLlmTalk.Deck do
       ]
     },
     %Section{
-      number: 8,
-      title: "Training, in one slide",
-      minutes: 3,
-      lands: "guess, measure, nudge, repeat; and tests for the math",
+      number: 7,
+      title: "Training",
+      minutes: 4,
+      lands: "it trains live; guess, measure, nudge, repeat; and tests for the math",
       slides: [
+        %Slide{
+          id: :live_training,
+          title: "Training, live",
+          notes: """
+          Press start, then talk over it; it takes about seventy seconds.
+          Same config and seed as the checkpoint, so the loss it lands on is
+          the loss every figure in this deck was drawn from, and the slide
+          says whether it matched. While it draws, name the two lines: it
+          starts at knowing nothing, ln 32, and the dashed line is the best
+          anything can do seeing only the previous word. The next slide says
+          what it is doing; come back to this one to watch it land.
+          """
+        },
         %Slide{
           id: :training,
           title: "Training, all of it",
@@ -469,10 +446,9 @@ defmodule TinyLlmTalk.Deck do
           title: "Watch it fall",
           steps: 2,
           notes: """
-          The line draws itself on the second step. It starts at knowing
-          nothing, ln 32, and ends well under the dashed line, which is the
-          best anything can do seeing only the previous word. Going under it is
-          the proof: it is using information the previous word does not carry.
+          The run you just watched, replayed on the second step with the
+          point made: it goes well under the dashed line, which is the
+          proof. It is using information the previous word does not carry.
           """
         },
         %Slide{
@@ -490,7 +466,7 @@ defmodule TinyLlmTalk.Deck do
       ]
     },
     %Section{
-      number: 9,
+      number: 8,
       title: "Did it learn it",
       minutes: 3,
       lands: "only the model beats chance when a distractor gets in the way",

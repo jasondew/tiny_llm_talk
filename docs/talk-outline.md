@@ -18,24 +18,23 @@ the sentence, the picture of where attention looks, and the score.
 
 | # | section | min | slides | interactive |
 | --- | --- | --- | --- | --- |
-| 0 | Cold open | 5 | **vote: flees, or flee** (the sentence and the join link, on screen while the room arrives), title, what a transformer is (one block repeated, and every frontier model is one), **training, live** (under the introduction), **it writes** (the forward pass animated, word by word), this is all of it (the seven lines, said not shown), from nothing | audience vote, presenter start |
-| 1 | Words become numbers | 3 | 32 words, the grammar, one function | |
-| 2 | All the math there is | 2 | **dot product**, with two arrows to drag, **softmax playground** | presenter drags, presenter slider |
-| 3 | Embedding and position | 3 | a word is a row, position is added, the model forgets it saw words | |
-| 4 | Attention, from `Map` | 10 | `Map.get`, **fuzzy map**, learn the lookup, the code, three details with a **mask toggle**, **bet: where will the blank look**, **the walkthrough** | presenter picks, audience bet |
-| 5 | Look at what it did | 5 | heatmap, read it honestly, the sink, half a route, **your sentence** | audience builds sentences |
-| 6 | The rest of the block | 3 | lid off, three pieces of plumbing | |
-| 7 | Back to words | 4 | rows become a distribution, the loop, **one word at a time**, **temperature dial**, **vote: spot the human** | presenter, audience vote |
-| 8 | Training, in one slide | 3 | guess / measure / nudge / repeat, a loss chart that draws itself, tests for math | |
-| 9 | Did it learn it | 3 | the number, **rematch: room vs model**, **scoreboard**, this was all of it (the seven lines, walked), what is not here, the sentence again, **it writes** again under the repo link, sources | audience vote |
+| 0 | Cold open | 3 | **vote: flees, or flee** (the sentence and the join link, on screen while the room arrives), title, what a transformer is (one block repeated, every frontier model is one, and this one from nothing) | audience vote |
+| 1 | Words become numbers | 4 | 32 words, the grammar, one function, **it writes** (the writer: the whole path once, fast) | presenter pace |
+| 2 | Embedding and position | 3 | a word is a row, position is added, the model forgets it saw words | |
+| 3 | Attention, from `Map` | 12 | `Map.get`, **dot product** with two arrows to drag, **softmax playground**, **fuzzy map**, learn the lookup, the code, three details with a **mask toggle**, **bet: where will the blank look**, **the walkthrough** | presenter drags, slider, picks; audience bet |
+| 4 | Look at what it did | 5 | heatmap, read it honestly, the sink, half a route, **your sentence** | audience builds sentences |
+| 5 | The rest of the block | 3 | lid off, three pieces of plumbing | |
+| 6 | Back to words | 4 | rows become a distribution, the loop, **one word at a time**, **temperature dial**, **vote: spot the human** | presenter, audience vote |
+| 7 | Training | 4 | **training, live** (press start, talk over it), guess / measure / nudge / repeat, the loss replayed, tests for math | presenter start |
+| 8 | Did it learn it | 3 | the number, **rematch: room vs model**, **scoreboard**, this was all of it (the seven lines, walked), what is not here, the sentence again, **it writes** again under the repo link, sources | audience vote |
 
-## The opener
+## Live training and the writer
 
-Training runs live on the first slide, in the deck's own BEAM, with the
+Training runs live at the top of the training section, in the deck's own BEAM, with the
 checkpoint's config and seed. Pure Elixir and seeded `:rand` make it the same
 run, so the loss it lands on is the checkpoint's loss and the slide says
-whether it matched. Every later slide reads the checkpoint, so nothing
-downstream depends on the live run finishing. Rehearse on the laptop you
+whether it matched. Every other slide reads the checkpoint, so nothing
+depends on the live run finishing. Rehearse on the laptop you
 present from; the match is a claim about that machine.
 
 The writer is the forward pass animated: a paragraph drawn from a seed at
@@ -59,18 +58,18 @@ cut **spot the human** first; it is marked in its speaker notes.
 Every demo can be driven from the presenter view: a control clicked in the
 preview is a control turned on the big screen. The controls are
 
-- start and start over, for training (section 0)
-- pace, step while paused, and reset, for the writer (sections 0 and 9)
-- the two arrows on the dot product graph, dragged by their tips (section 2)
-- the softmax slider (section 2)
-- the fuzzy map's query word (section 4)
-- the mask toggle (section 4)
-- the position in the walkthrough (section 4)
-- next word and restart (section 7)
-- the temperature dial (section 7)
+- start and start over, for training (section 7)
+- pace, step while paused, and reset, for the writer (sections 1 and 8)
+- the two arrows on the dot product graph, dragged by their tips (section 3)
+- the softmax slider (section 3)
+- the fuzzy map's query word (section 3)
+- the mask toggle (section 3)
+- the position in the walkthrough (section 3)
+- next word and restart (section 6)
+- the temperature dial (section 6)
 
 ## What is not in the talk, and where it went
 
 The neural bigram, the entropy floor as a section, PCA, and the
 temperature trade-off chart are in the repo and the Livebook, not on stage.
-They exist so that the two claims made in section 9 are true.
+They exist so that the two claims made in section 8 are true.

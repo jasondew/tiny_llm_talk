@@ -4,8 +4,8 @@ defmodule TinyLlmTalk.DeckTest do
   alias TinyLlmTalk.{Deck, Room}
 
   describe "the arc" do
-    test "covers the ten sections of the outline, in order" do
-      assert Enum.map(Deck.sections(), & &1.number) == Enum.to_list(0..9)
+    test "covers the nine sections of the outline, in order" do
+      assert Enum.map(Deck.sections(), & &1.number) == Enum.to_list(0..8)
     end
 
     test "budgets the 41 minutes the outline budgets, leaving four for questions" do
@@ -19,7 +19,28 @@ defmodule TinyLlmTalk.DeckTest do
 
     test "motivates the architecture before anything is built, and ends on the sources" do
       assert %{id: :the_architecture, section: 0} = Deck.at(3)
-      assert %{id: :sources, section: 9} = Deck.at(Deck.count())
+      assert %{id: :sources, section: 8} = Deck.at(Deck.count())
+    end
+
+    test "shows the writer once the setup is done, as the path taken fast" do
+      assert index(:it_writes) == index(:one_function) + 1
+    end
+
+    test "teaches the two bits of math right where the fuzzy map first uses them" do
+      assert Enum.slice(ids(), index(:map_get) - 1, 4) ==
+               [:map_get, :dot_product, :softmax_playground, :fuzzy_map]
+    end
+
+    test "trains live inside the training section, not under the introduction" do
+      training = Deck.at(index(:live_training))
+
+      assert Deck.section(training).title =~ "Training"
+      assert Deck.at(index(:live_training) + 1).id == :training
+    end
+
+    test "says the seven lines and the no-deps claim without their own slides" do
+      refute :all_of_it in ids()
+      refute :from_nothing in ids()
     end
 
     test "gives every slide a unique id" do
@@ -55,6 +76,10 @@ defmodule TinyLlmTalk.DeckTest do
       assert length(asked) == length(Enum.uniq(asked))
     end
   end
+
+  defp ids, do: Enum.map(Deck.slides(), & &1.id)
+
+  defp index(id), do: Enum.find(Deck.slides(), &(&1.id == id)).index
 
   describe "position/2" do
     test "defaults to the first slide" do

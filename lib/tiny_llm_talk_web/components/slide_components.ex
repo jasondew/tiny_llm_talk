@@ -114,6 +114,8 @@ defmodule TinyLlmTalkWeb.SlideComponents do
   end
 
   def slide(%{slide: %Slide{id: :the_architecture}} = assigns) do
+    assigns = assign(assigns, parameters: format_count(Model.parameter_count()))
+
     ~H"""
     <section class="slide">
       <p class="slide__eyebrow">since 2017</p>
@@ -133,7 +135,13 @@ defmodule TinyLlmTalkWeb.SlideComponents do
         <.step n={4} step={@step}>
           <li>
             Every frontier model is one of these. GPT, Gemini, Llama, and DeepSeek say so in
-            their own reports. The one on this laptop is one block deep and one head wide.
+            their own reports.
+          </li>
+        </.step>
+        <.step n={5} step={@step}>
+          <li>
+            The one on this laptop: one block deep, one head wide, {@parameters} parameters,
+            the Elixir standard library and nothing else, every gradient by hand and checked.
           </li>
         </.step>
       </ul>
@@ -192,42 +200,6 @@ defmodule TinyLlmTalkWeb.SlideComponents do
   def slide(%{slide: %Slide{id: :it_writes}} = assigns) do
     ~H"""
     <.writer controls={@controls} frame={@frame} />
-    """
-  end
-
-  def slide(%{slide: %Slide{id: :all_of_it}} = assigns) do
-    ~H"""
-    <section class="slide">
-      <h2 class="slide__title">This is all of it</h2>
-      <.code path="lib/tiny_llm/transformer.ex" range={114..120} step={@step} focus={[:all, 5..5]} />
-    </section>
-    """
-  end
-
-  def slide(%{slide: %Slide{id: :from_nothing}} = assigns) do
-    assigns = assign(assigns, parameters: format_count(Model.parameter_count()))
-
-    ~H"""
-    <section class="slide">
-      <h2 class="slide__title">From nothing</h2>
-      <ul class="claims">
-        <.step n={1} step={@step}>
-          <li>The Elixir standard library. Nothing else.</li>
-        </.step>
-        <.step n={2} step={@step}>
-          <li><code>mix.exs</code> deps are empty.</li>
-        </.step>
-        <.step n={3} step={@step}>
-          <li>{@parameters} parameters. Lists of lists of floats.</li>
-        </.step>
-        <.step n={4} step={@step}>
-          <li>Trains in about a minute on this laptop.</li>
-        </.step>
-        <.step n={5} step={@step}>
-          <li>Every gradient by hand, and checked.</li>
-        </.step>
-      </ul>
-    </section>
     """
   end
 

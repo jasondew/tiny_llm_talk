@@ -235,7 +235,7 @@ defmodule TinyLlmTalkWeb.DeckLiveTest do
       Process.sleep(600)
 
       refute render(view) =~ "writer__stage--live"
-      assert render(view) =~ "This is all of it"
+      assert render(view) =~ Deck.at(slide.index + 1).title
     end
 
     test "steps a frame at a time by hand while paused", %{conn: conn} do
