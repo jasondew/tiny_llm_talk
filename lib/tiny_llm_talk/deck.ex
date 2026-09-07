@@ -146,7 +146,7 @@ defmodule TinyLlmTalk.Deck do
       slides: [
         %Slide{
           id: :a_word_is_a_row,
-          title: "A word becomes a row of floats",
+          title: "Each word becomes a row of floats",
           steps: 3,
           notes: """
           The sentence alone first; it stays on top from here to the end of
@@ -160,11 +160,13 @@ defmodule TinyLlmTalk.Deck do
         %Slide{
           id: :positions_added,
           title: "Position is another row, added on",
-          steps: 2,
+          steps: 4,
           notes: """
-          Attention on its own is a bag of words. So each position has a
-          learned vector of its own, added to the word's row, not appended to
-          it. dogs is position six, counting the start token as zero. Same width in, same width out, so nothing downstream has to
+          The sentence alone first, as on the last slide. Then the title and
+          the row for position six. Attention on its own is a bag of words.
+          So each position has a learned vector of its own, added to the
+          word's row, not appended to it. Third step, the line that looks
+          the position up; fourth, the line that adds it on. dogs is position six, counting the start token as zero. Same width in, same width out, so nothing downstream has to
           know position exists. Sixteen rows, so the context length is 16:
           say the number, it is the only hard limit in the model, and it can
           never read more words than that at once.

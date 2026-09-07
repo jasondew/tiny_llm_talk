@@ -396,7 +396,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
     <section class="slide slide--tight">
       <.sentence_line />
       <.step n={2} step={@step}>
-        <h2 class="slide__title slide__title--small">A word becomes a row of floats</h2>
+        <h2 class="slide__title slide__title--small">Each word becomes a row of floats</h2>
       </.step>
       <.step n={2} step={@step}>
         <div class="lookup">
@@ -433,21 +433,32 @@ defmodule TinyLlmTalkWeb.SlideComponents do
     ~H"""
     <section class="slide slide--tight">
       <.sentence_line />
-      <h2 class="slide__title slide__title--small">Position is another row, added on</h2>
-      <div class="lookup">
-        <span class="lookup__word">position 6 of 16</span>
-        <span class="lookup__arrow">&rarr;</span>
-        <span class="lookup__row">
-          <.spark :if={@row} values={Enum.map(@row, &abs/1)} />
-          <.untrained :if={is_nil(@row)} what="This row of floats" />
-        </span>
-      </div>
-      <div :if={@row} class="floats floats--all">
-        <span :for={value <- @row} class="floats__value">{format_signed(value)}</span>
-      </div>
-      <div>
-        <.code path="lib/tiny_llm/transformer.ex" range={114..116} step={@step} focus={[2..2, 3..3]} />
-      </div>
+      <.step n={2} step={@step}>
+        <h2 class="slide__title slide__title--small">Position is another row, added on</h2>
+      </.step>
+      <.step n={2} step={@step}>
+        <div class="lookup">
+          <span class="lookup__word">position 6 of 16</span>
+          <span class="lookup__arrow">&rarr;</span>
+          <span class="lookup__row">
+            <.spark :if={@row} values={Enum.map(@row, &abs/1)} />
+            <.untrained :if={is_nil(@row)} what="This row of floats" />
+          </span>
+        </div>
+      </.step>
+      <.step :if={@row} n={2} step={@step}>
+        <div class="floats floats--all">
+          <span :for={value <- @row} class="floats__value">{format_signed(value)}</span>
+        </div>
+      </.step>
+      <.step n={3} step={@step}>
+        <.code
+          path="lib/tiny_llm/transformer.ex"
+          range={114..116}
+          step={@step}
+          focus={[2..2, 2..2, 2..2, 3..3]}
+        />
+      </.step>
     </section>
     """
   end
