@@ -465,7 +465,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
 
     ~H"""
     <section class="slide slide--tight">
-      <h2 class="slide__title slide__title--small">A small example, by hand</h2>
+      <h2 class="slide__title slide__title--small">A small example, by hand: "Is it plural?"</h2>
       <div class="fuzzy-head">
         <div class="fuzzy-query">
           <span class="fuzzy-query__label">Q =</span>
