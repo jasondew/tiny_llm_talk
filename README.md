@@ -137,7 +137,6 @@ open `/join` on any device and it shows whatever question the deck is on:
 
 - **section 0** flees, or flee? The first slide, on screen while the room arrives.
 - **section 3** where will the blank look? They bet, then the walkthrough answers.
-- **section 5** spot the human: one grammar sentence among two of the model's.
 - **section 7** a rematch on a sentence the model has never seen, room against
   model.
 

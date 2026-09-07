@@ -334,7 +334,7 @@ defmodule TinyLlmTalk.Deck do
     %Section{
       number: 5,
       title: "Back to words",
-      minutes: 4,
+      minutes: 3,
       lands: "rows become a distribution, the loop, and the knob",
       slides: [
         %Slide{
@@ -374,18 +374,6 @@ defmodule TinyLlmTalk.Deck do
           above one wanders, zero is argmax. Turn it to zero: one sentence
           forever, and it is not in the corpus. Turn it past two: structure
           goes before content.
-          """
-        },
-        %Slide{
-          id: :spot_the_human,
-          title: "One of these is human",
-          activity: :spot_the_human,
-          steps: 2,
-          notes: """
-          One sentence from the grammar, two from the model that never appeared
-          in training. Vote. The point is not that the model wins; it is that
-          the room cannot tell, and that the model's are new sentences, not
-          recalled ones. CUT THIS SECOND if running long.
           """
         }
       ]

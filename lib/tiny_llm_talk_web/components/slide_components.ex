@@ -946,27 +946,6 @@ defmodule TinyLlmTalkWeb.SlideComponents do
     """
   end
 
-  def slide(%{slide: %Slide{id: :spot_the_human}} = assigns) do
-    assigns = assign(assigns, activity: Room.activity(:spot_the_human))
-
-    ~H"""
-    <section class="slide slide--tight">
-      <h2 class="slide__title slide__title--small">One of these was written by the grammar</h2>
-      <div class="ask ask--stacked">
-        <.qr size={110} />
-        <.tally
-          tally={Room.tally(@room, :spot_the_human)}
-          answer={@activity.answer}
-          reveal={@step >= 2}
-          wide
-        />
-      </div>
-    </section>
-    """
-  end
-
-  # 8. Training, in one slide -----------------------------------------------
-
   def slide(%{slide: %Slide{id: :training}} = assigns) do
     ~H"""
     <section class="slide">
