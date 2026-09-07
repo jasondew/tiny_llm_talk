@@ -562,7 +562,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
         <.step n={2} step={@step}>
           <dt>input</dt>
           <dd>
-            <.shape rows={@positions} columns={@width} /> one row per position, from a few slides ago
+            <.shape rows={@positions} columns={@width} /> the current context (embeddings + positions)
           </dd>
         </.step>
         <.step n={3} step={@step}>
