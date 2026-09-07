@@ -117,34 +117,34 @@ defmodule TinyLlmTalkWeb.SlideComponents do
     assigns = assign(assigns, parameters: format_count(Model.parameter_count()))
 
     ~H"""
-    <section class="slide">
-      <p class="slide__eyebrow">since 2017</p>
-      <h2 class="slide__title">A transformer is one block, repeated</h2>
-      <ul class="claims">
-        <.step n={1} step={@step}>
-          <li>
-            Attention: each position looks back, scores what it sees, and pulls in what it needs.
-          </li>
-        </.step>
-        <.step n={2} step={@step}>
-          <li>A small MLP: each position thinks about what it pulled in.</li>
-        </.step>
-        <.step n={3} step={@step}>
-          <li>Repeat. The last block hands over a distribution over the next word.</li>
-        </.step>
-        <.step n={4} step={@step}>
-          <li>
-            Every frontier model is one of these. GPT, Gemini, Llama, and DeepSeek say so in
-            their own reports.
-          </li>
-        </.step>
-        <.step n={5} step={@step}>
-          <li>
-            The one on this laptop: one block deep, one head wide, {@parameters} parameters,
-            the Elixir standard library and nothing else.
-          </li>
-        </.step>
-      </ul>
+    <section class="slide slide--tight">
+      <h2 class="slide__title slide__title--small">A transformer is one block, repeated</h2>
+      <.block_diagram repeats="× N" />
+      <.step n={2} step={@step} class="slide__note">
+        Every frontier model is one of these. GPT, Gemini, Llama, and DeepSeek say so in
+        their own reports.
+      </.step>
+      <.step n={3} step={@step} class="slide__note">
+        The one on this laptop: one block deep, one head wide, {@parameters} parameters,
+        the Elixir standard library and nothing else.
+      </.step>
+    </section>
+    """
+  end
+
+  def slide(%{slide: %Slide{id: :parameters}} = assigns) do
+    assigns =
+      assign(assigns,
+        parameters: format_count(Model.parameter_count()),
+        counts: parameter_counts(Model.parameter_breakdown())
+      )
+
+    ~H"""
+    <section class="slide slide--tight">
+      <h2 class="slide__title slide__title--small">
+        {@parameters} floats, every one of them learned
+      </h2>
+      <.block_diagram counts={@counts} repeats="× 1" />
     </section>
     """
   end
@@ -294,10 +294,6 @@ defmodule TinyLlmTalkWeb.SlideComponents do
         </div>
         <.vector_graph id="dot-graph" a={@a} b={@b} agreement={@step >= 3} interactive size={400} />
       </div>
-      <.step n={3} step={@step} class="slide__note">
-        How much a and b agree. Big when they point the same way, near zero when unrelated,
-        negative when opposed.
-      </.step>
     </section>
     """
   end
@@ -345,9 +341,6 @@ defmodule TinyLlmTalkWeb.SlideComponents do
         />
         <output class="dial__value">sharpness {:erlang.float_to_binary(@sharpness, decimals: 1)}</output>
       </form>
-      <p class="slide__note">
-        Sharp commits to the top score. Soft spreads the budget. Either way it sums to one.
-      </p>
     </section>
     """
   end
@@ -423,10 +416,6 @@ defmodule TinyLlmTalkWeb.SlideComponents do
         cell={26}
       />
       <.untrained :if={is_nil(@rows)} what="This grid" />
-      <p class="slide__note">
-        Seven positions in. Seven rows of thirty-two floats out. This grid is what attention
-        actually sees.
-      </p>
     </section>
     """
   end
@@ -530,10 +519,6 @@ defmodule TinyLlmTalkWeb.SlideComponents do
       <.step n={4} step={@step}>
         <.code path="lib/tiny_llm/attention.ex" range={198..200} step={@step} caption={false} />
       </.step>
-      <.step n={4} step={@step} class="slide__note">
-        Each one is the position's row times a learned table. Three matrices, and the fuzzy
-        map is an attention head.
-      </.step>
     </section>
     """
   end
@@ -595,9 +580,6 @@ defmodule TinyLlmTalkWeb.SlideComponents do
           <.untrained :if={is_nil(@weights)} what="This heatmap" />
         </div>
       </div>
-      <.step n={3} step={@step} class="slide__note">
-        The third one is why this scales, and why the thing that came before it did not.
-      </.step>
     </section>
     """
   end
@@ -690,10 +672,6 @@ defmodule TinyLlmTalkWeb.SlideComponents do
         </.step>
       </div>
       <.untrained :if={is_nil(@trace)} what="This walkthrough" />
-      <.step n={4} step={@step} class="slide__note">
-        Multiply every value by its share, add them up, and that blend is what this position
-        carries forward. Click any position; the future is always masked.
-      </.step>
     </section>
     """
   end
@@ -716,10 +694,6 @@ defmodule TinyLlmTalkWeb.SlideComponents do
         cell={44}
       />
       <.untrained :if={is_nil(@weights)} what="This heatmap" />
-      <p class="slide__note">
-        Rows predict, columns are looked at. The upper triangle is empty, exactly as the
-        mask says it must be.
-      </p>
     </section>
     """
   end
@@ -744,10 +718,6 @@ defmodule TinyLlmTalkWeb.SlideComponents do
         need to: it reads the subject's number off <span class="word">chases</span>, which
         already agrees with the head noun.
       </.step>
-      <.step n={3} step={@step} class="slide__note">
-        The point is not that it draws the bracket we imagined. The point is that it is
-        visibly structured rather than flat, and it gets the answer.
-      </.step>
     </section>
     """
   end
@@ -767,14 +737,6 @@ defmodule TinyLlmTalkWeb.SlideComponents do
         highlight={["<start>"]}
       />
       <.untrained :if={is_nil(@weights)} what="This row" />
-      <p class="slide__lede">
-        The first verb has nothing useful behind it, so it dumps almost all of its
-        attention on the start token.
-      </p>
-      <p class="slide__note">
-        Production transformers do exactly this, and it has a name. Fifteen thousand
-        parameters reproduced it unprompted.
-      </p>
     </section>
     """
   end
@@ -809,11 +771,6 @@ defmodule TinyLlmTalkWeb.SlideComponents do
       <.step n={3} step={@step} class="slide__lede">
         The <span class="word">who</span> position has gathered the head noun into itself.
         And the blank attends to <span class="word">who</span>.
-      </.step>
-      <.step n={4} step={@step} class="slide__note">
-        So half of a two-hop route exists, and one block cannot use the second hop, because
-        both hops happen at once. A second block would read <span class="word">who</span>
-        after it had already gathered the subject. That is what depth buys.
       </.step>
     </section>
     """
@@ -887,9 +844,6 @@ defmodule TinyLlmTalkWeb.SlideComponents do
           <div class="stack__layer">32 probabilities</div>
         </.step>
       </div>
-      <.step n={6} step={@step} class="slide__note">
-        Two arrows go around the middle two: the residuals. Everything else you have seen.
-      </.step>
     </section>
     """
   end
@@ -920,9 +874,6 @@ defmodule TinyLlmTalkWeb.SlideComponents do
           </dd>
         </.step>
       </dl>
-      <.step n={3} step={@step} class="slide__note">
-        Half the parameters are in the MLP. None of them are a new idea.
-      </.step>
     </section>
     """
   end
@@ -961,10 +912,6 @@ defmodule TinyLlmTalkWeb.SlideComponents do
         step={@step}
         focus={[:all, 5..5, 11..13, 17..17]}
       />
-      <.step n={4} step={@step} class="slide__note">
-        No state carries between steps. The whole prefix is re-read every time, which is
-        why a model cannot take back something it has already said.
-      </.step>
     </section>
     """
   end
@@ -1063,10 +1010,6 @@ defmodule TinyLlmTalkWeb.SlideComponents do
           wide
         />
       </div>
-      <.step n={2} step={@step} class="slide__note">
-        The other two are the model's, and neither appears anywhere in the two thousand
-        sentences it trained on. New sentences, not recalled ones.
-      </.step>
     </section>
     """
   end
@@ -1091,10 +1034,6 @@ defmodule TinyLlmTalkWeb.SlideComponents do
           <li>Repeat a few hundred times.</li>
         </.step>
       </ol>
-      <.step n={4} step={@step} class="slide__note">
-        The nudges are derived by hand in this repo. There is no autodiff to hide behind,
-        which is why the slide after next exists.
-      </.step>
     </section>
     """
   end
@@ -1132,13 +1071,6 @@ defmodule TinyLlmTalkWeb.SlideComponents do
         step={@step}
         focus={[:all, 2..4, 5..7]}
       />
-      <.step n={2} step={@step} class="slide__note">
-        Nudge one number up, nudge it down, measure the loss both ways. That is a slope.
-      </.step>
-      <.step n={3} step={@step} class="slide__note">
-        Compare it to the slope the derivation claims, for every number in the model.
-        This is what caught the missing transpose.
-      </.step>
     </section>
     """
   end
@@ -1162,10 +1094,6 @@ defmodule TinyLlmTalkWeb.SlideComponents do
       </div>
       <p class="slide__lede">
         The count table is at chance. The only word it sees is the one pointing the wrong way.
-      </p>
-      <p class="slide__note">
-        {@probes} held-out sentences it never trained on, each with a distractor between the
-        subject and the blank.
       </p>
     </section>
     """
@@ -1318,10 +1246,6 @@ defmodule TinyLlmTalkWeb.SlideComponents do
           </ul>
         </.step>
       </div>
-      <.step n={2} step={@step} class="slide__note">
-        Every one of these is the same thing a frontier model does. The difference is
-        thirteen orders of magnitude and a tokenizer.
-      </.step>
     </section>
     """
   end
@@ -1760,6 +1684,61 @@ defmodule TinyLlmTalkWeb.SlideComponents do
     <.probe words={@words} show_marks class="probe--line" />
     """
   end
+
+  # The six stages of the block, in the order the model runs them. The middle
+  # four are the block itself; the ends are the tables on the way in and out.
+  @block_layers [
+    {"embedding + position", nil},
+    {"RMSNorm", "norm"},
+    {"attention", "attention"},
+    {"RMSNorm", "norm"},
+    {"MLP", "mlp"},
+    {"32 probabilities", nil}
+  ]
+
+  # One transformer, as a stack: the block is boxed and marked with how many
+  # times it repeats, and each layer can carry a count of the floats it holds.
+  attr :counts, :list, default: nil, doc: "a formatted count per layer, in order"
+  attr :repeats, :string, default: nil
+
+  defp block_diagram(assigns) do
+    counts = assigns.counts || List.duplicate(nil, length(@block_layers))
+
+    layers =
+      Enum.zip_with(@block_layers, counts, fn {label, kind}, count -> {label, kind, count} end)
+
+    assigns =
+      assign(assigns, first: hd(layers), block: Enum.slice(layers, 1, 4), last: List.last(layers))
+
+    ~H"""
+    <div class="stack stack--diagram">
+      <.block_layer layer={@first} />
+      <div class="stack__block">
+        <span :if={@repeats} class="stack__repeats">{@repeats}</span>
+        <.block_layer :for={layer <- @block} layer={layer} />
+      </div>
+      <.block_layer layer={@last} />
+    </div>
+    """
+  end
+
+  attr :layer, :any, required: true
+
+  defp block_layer(%{layer: {label, kind, count}} = assigns) do
+    assigns = assign(assigns, label: label, kind: kind, count: count)
+
+    ~H"""
+    <div class={["stack__layer", @kind && "stack__layer--#{@kind}"]}>
+      {@label}
+      <span :if={@count} class="stack__count">{@count}</span>
+    </div>
+    """
+  end
+
+  defp parameter_counts(nil), do: nil
+
+  defp parameter_counts(breakdown),
+    do: Enum.map(breakdown, fn {_label, count} -> format_count(count) end)
 
   # The probe, marked up: the subject that decides the answer, and the noun that
   # sits next to the blank pointing the wrong way.

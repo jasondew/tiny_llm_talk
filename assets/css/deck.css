@@ -671,6 +671,57 @@
   font-size: 18px;
 }
 
+.stack__layer {
+  position: relative;
+}
+
+.stack__count {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--ink-dim);
+  font-size: 0.85em;
+}
+
+/* The block itself, boxed, with how many times it repeats beside it. */
+.stack__block {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  width: 600px;
+  box-sizing: border-box;
+  padding: 10px 40px;
+  border: 1px dashed var(--accent);
+  border-radius: 12px;
+}
+
+/* The whole-model diagram, drawn small enough to leave room under it. */
+.stack--diagram {
+  gap: 6px;
+}
+
+.stack--diagram .stack__layer {
+  padding: 8px 14px;
+  font-size: 20px;
+}
+
+.stack--diagram .stack__layer--norm {
+  font-size: 17px;
+}
+
+.stack__repeats {
+  position: absolute;
+  right: -96px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-family: var(--mono);
+  font-size: 26px;
+  color: var(--accent);
+}
+
 .widths {
   display: flex;
   align-items: center;

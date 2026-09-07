@@ -19,6 +19,7 @@ defmodule TinyLlmTalk.DeckTest do
 
     test "motivates the architecture before anything is built, and ends on the sources" do
       assert %{id: :the_architecture, section: 0} = Deck.at(3)
+      assert %{id: :parameters, section: 0} = Deck.at(4)
       assert %{id: :sources, section: 8} = Deck.at(Deck.count())
     end
 

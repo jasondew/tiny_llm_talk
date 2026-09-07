@@ -41,12 +41,26 @@ defmodule TinyLlmTalkWeb.DeckLiveTest do
     assert render(view) =~ "tally__row--answer"
   end
 
-  test "says what a transformer is, and that the frontier models are one", %{conn: conn} do
+  test "draws a transformer as one block, and says the frontier models are one", %{conn: conn} do
     slide = Enum.find(Deck.slides(), &(&1.id == :the_architecture))
     {:ok, _view, html} = live(conn, ~p"/s/#{slide.index}/#{slide.steps}")
 
+    assert html =~ "stack__layer--attention"
+    assert html =~ "stack__layer--mlp"
     assert html =~ "frontier"
     assert html =~ "Gemini"
+    assert html =~ "The one on this laptop"
+    refute html =~ "A small MLP"
+  end
+
+  test "counts the parameters stage by stage, and says they are learned", %{conn: conn} do
+    slide = Enum.find(Deck.slides(), &(&1.id == :parameters))
+    {:ok, _view, html} = live(conn, ~p"/s/#{slide.index}")
+
+    assert html =~ "15,104"
+    assert html =~ "learned"
+    assert html =~ "8,352"
+    assert length(Regex.scan(~r/class="stack__count"/, html)) == 6
   end
 
   test "ends on the sources, with both repos and the paper", %{conn: conn} do

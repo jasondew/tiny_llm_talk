@@ -6,6 +6,24 @@ defmodule TinyLlmTalk.ModelTest do
 
   @probe Model.probe()
 
+  describe "parameter_breakdown/0" do
+    test "names the six stages that hold weights, and they add up to the whole model" do
+      breakdown = Model.parameter_breakdown()
+
+      assert Enum.map(breakdown, &elem(&1, 0)) == [
+               "embedding + position",
+               "RMSNorm",
+               "attention",
+               "RMSNorm",
+               "MLP",
+               "32 probabilities"
+             ]
+
+      assert breakdown |> Enum.map(&elem(&1, 1)) |> Enum.sum() == Model.parameter_count()
+      assert {"attention", 4 * 32 * 32} in breakdown
+    end
+  end
+
   describe "trace/1" do
     test "keeps one row per position at every stage" do
       trace = Model.trace(@probe)

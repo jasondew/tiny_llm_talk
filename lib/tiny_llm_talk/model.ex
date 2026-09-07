@@ -139,7 +139,35 @@ defmodule TinyLlmTalk.Model do
   def parameter_count do
     case params(:transformer) do
       nil -> nil
-      params -> params |> Map.values() |> Enum.map(&(length(&1) * length(hd(&1)))) |> Enum.sum()
+      params -> params |> Map.values() |> Enum.map(&matrix_size/1) |> Enum.sum()
+    end
+  end
+
+  # Which parameter tables each stage of the block holds, in the order the
+  # block runs them, so a slide can say where the floats live.
+  @parameter_stages [
+    {"embedding + position", [:embeddings, :positions]},
+    {"RMSNorm", [:gain1]},
+    {"attention", [:query_weight, :key_weight, :value_weight, :output_weight]},
+    {"RMSNorm", [:gain2]},
+    {"MLP", [:weight1, :bias1, :weight2, :bias2]},
+    {"32 probabilities", [:gain3, :projection]}
+  ]
+
+  @doc """
+  How many floats each stage of the block holds, stage by stage. Adds up to
+  `parameter_count/0`. Nil until there is a checkpoint.
+  """
+  @spec parameter_breakdown() :: [{String.t(), non_neg_integer()}] | nil
+  def parameter_breakdown do
+    case params(:transformer) do
+      nil ->
+        nil
+
+      params ->
+        Enum.map(@parameter_stages, fn {label, names} ->
+          {label, names |> Enum.map(&matrix_size(Map.fetch!(params, &1))) |> Enum.sum()}
+        end)
     end
   end
 
@@ -416,6 +444,8 @@ defmodule TinyLlmTalk.Model do
   end
 
   ## PRIVATE FUNCTIONS
+
+  defp matrix_size(matrix), do: length(matrix) * length(hd(matrix))
 
   defp predictor(:bigram), do: Eval.bigram_predictor(bigram())
 

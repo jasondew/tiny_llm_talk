@@ -20,7 +20,7 @@ defmodule TinyLlmTalk.Deck do
     %Section{
       number: 0,
       title: "Cold open",
-      minutes: 3,
+      minutes: 4,
       lands: "the room has voted, and a transformer is one block repeated",
       slides: [
         %Slide{
@@ -49,11 +49,13 @@ defmodule TinyLlmTalk.Deck do
         %Slide{
           id: :the_architecture,
           title: "What a transformer is",
-          steps: 5,
+          steps: 3,
           notes: """
-          Motivate it before building it. One block, repeated: attention,
-          then a small MLP, then the same again. The frontier models say
-          so in their own reports: GPT-4 is "Transformer-based", Gemini
+          Motivate it before building it. The stack: a word becomes a row,
+          then the block, then probabilities. Inside the dashed box, attention
+          gathers and a small MLP thinks, and the box repeats N times. The
+          frontier models say so in their own reports: GPT-4 is
+          "Transformer-based", Gemini
           "builds on Transformer decoders", DeepSeek-V3 is "still within the
           Transformer framework", Llama 4 is a mixture-of-experts one.
           Anthropic does not publish Claude's. If someone raises Mamba or
@@ -63,6 +65,17 @@ defmodule TinyLlmTalk.Deck do
           wide, pure Elixir standard library with an empty deps list, about
           fifteen thousand parameters, every gradient by hand and checked.
           The repo link is in the footer and stays there.
+          """
+        },
+        %Slide{
+          id: :parameters,
+          title: "Fifteen thousand floats, every one of them learned",
+          notes: """
+          The same stack, with a count on every stage that holds weights.
+          Say what a parameter is: one float in one of these boxes. Two
+          tables on the way in, four square matrices in attention, and the
+          MLP holds more than half. Every one starts random and training
+          moves every one of them; nothing in here is written by hand.
           """
         }
       ]
@@ -166,7 +179,7 @@ defmodule TinyLlmTalk.Deck do
     %Section{
       number: 3,
       title: "Attention, from Map",
-      minutes: 12,
+      minutes: 11,
       lands: "a fuzzy lookup: score every key, budget the scores, blend the values",
       slides: [
         %Slide{
@@ -263,7 +276,9 @@ defmodule TinyLlmTalk.Deck do
           query dots every key, the future gets struck out, the softmax turns
           scores into a budget. Real numbers from the checkpoint. Then click
           dogs, the position predicting the blank: most of its budget goes to
-          who.
+          who. Last step: multiply every value by its share and add them up;
+          that blend is what the position carries forward. Click any
+          position; the future is always masked.
           """
         }
       ]
@@ -286,7 +301,7 @@ defmodule TinyLlmTalk.Deck do
         %Slide{
           id: :read_it_honestly,
           title: "Read it honestly",
-          steps: 3,
+          steps: 2,
           notes: """
           The blank attends most to who, then dogs, then llama. It is not
           looking at llama and it does not need to: chases already agrees with
@@ -307,7 +322,7 @@ defmodule TinyLlmTalk.Deck do
         %Slide{
           id: :half_a_route,
           title: "The model drew the argument for depth",
-          steps: 4,
+          steps: 3,
           notes: """
           The who row gathers llama; on the mirror sentence it gathers dogs.
           The blank attends to who. So half of a two-hop route exists, and one
@@ -354,7 +369,8 @@ defmodule TinyLlmTalk.Deck do
           replace it. RMSNorm: rescale each row to a fixed size so nothing
           blows up. MLP: two weighted sums with a ReLU between, per position,
           32 to 128 to 32, where the model thinks about what it gathered. One
-          sentence each and stop.
+          sentence each and stop. Half the parameters are in the MLP. None of
+          them are a new idea.
           """
         }
       ]
@@ -444,7 +460,9 @@ defmodule TinyLlmTalk.Deck do
           notes: """
           Guess the next word. Measure how surprised you were by the real one.
           Nudge every number in the direction that makes the surprise smaller.
-          Repeat a few hundred times. No chain rule on screen.
+          Repeat a few hundred times. No chain rule on screen. The nudges are
+          derived by hand in this repo, with no autodiff to hide behind, which
+          is why the tests slide exists.
           """
         },
         %Slide{
@@ -531,6 +549,7 @@ defmodule TinyLlmTalk.Deck do
           attention, a causal mask, residuals, RMSNorm, an MLP, cross-entropy,
           hand-written backprop with a finite-difference check, temperature
           sampling. Every one of these is the same thing a frontier model does.
+          The difference is thirteen orders of magnitude and a tokenizer.
           """
         },
         %Slide{
