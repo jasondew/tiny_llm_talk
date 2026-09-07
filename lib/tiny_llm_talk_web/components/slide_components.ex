@@ -1258,8 +1258,6 @@ defmodule TinyLlmTalkWeb.SlideComponents do
             <li>a causal mask</li>
             <li>residuals and RMSNorm</li>
             <li>an MLP</li>
-            <li>cross-entropy</li>
-            <li>backprop, by hand, checked</li>
             <li>temperature sampling</li>
           </ul>
         </.step>

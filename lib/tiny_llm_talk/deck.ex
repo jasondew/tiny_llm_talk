@@ -184,40 +184,6 @@ defmodule TinyLlmTalk.Deck do
       lands: "a fuzzy lookup: score every key, budget the scores, blend the values",
       slides: [
         %Slide{
-          id: :softmax_playground,
-          title: "A softmax turns scores into a budget",
-          notes: """
-          Drag the slider. Five scores in, five shares out, always summing to
-          one. The words are just labels, none of them from the sentence. Sharp means commit to the top score; soft means spread the
-          budget. Say "budget" and "commit"; never say exponential.
-          """
-        },
-        %Slide{
-          id: :learn_the_lookup,
-          title: "Attention: ask, offer, hand over",
-          steps: 4,
-          notes: """
-          Query is what this position is looking for. Key is what it
-          advertises. Value is what it hands over if chosen. Each is the
-          position's row times a learned table. Three matrices; the next
-          slide is the whole head built from them.
-          """
-        },
-        %Slide{
-          id: :attention_code,
-          title: "One head of attention, sixteen lines",
-          steps: 8,
-          notes: """
-          The formula alone on the first step; it is the whole thing: score
-          every key against the query, scale, softmax into a budget (the
-          slider from the last slide), blend the values. One head;
-          frontier models run many side by side. Then the code, quoted from
-          the repo, not simplified. Step through: the three projections, the dot products all at once,
-          the scale, the mask, the softmax, the blend. Let them read; say only
-          what each block is for. The next slides take the formula apart.
-          """
-        },
-        %Slide{
           id: :dot_product,
           title: "A dot product is a similarity score",
           steps: 3,
@@ -225,6 +191,15 @@ defmodule TinyLlmTalk.Deck do
           Two lists, multiply pairwise, add. Big when they point the same way,
           near zero when unrelated, negative when opposed. That is the only
           arithmetic in attention.
+          """
+        },
+        %Slide{
+          id: :softmax_playground,
+          title: "A softmax turns scores into a budget",
+          notes: """
+          Drag the slider. Five scores in, five shares out, always summing to
+          one. The words are just labels, none of them from the sentence. Sharp means commit to the top score; soft means spread the
+          budget. Say "budget" and "commit"; never say exponential.
           """
         },
         %Slide{
@@ -236,6 +211,32 @@ defmodule TinyLlmTalk.Deck do
           Step two: softmax the scores into a budget. Step three: blend the
           values by that budget. Query with goose, which is not in the map, and
           it still answers sensibly. That is the whole trick.
+          """
+        },
+        %Slide{
+          id: :learn_the_lookup,
+          title: "Attention: ask, offer, hand over",
+          steps: 4,
+          notes: """
+          Query is what this position is looking for. Key is what it
+          advertises. Value is what it hands over if chosen. Each is the
+          position's row times a learned table. Three matrices, and the fuzzy
+          map is now an attention head; the next slide is the whole thing.
+          """
+        },
+        %Slide{
+          id: :attention_code,
+          title: "One head of attention, sixteen lines",
+          steps: 8,
+          notes: """
+          The formula alone on the first step; it is the fuzzy map with the
+          learned tables: score every key against the query, scale, softmax
+          into a budget, blend the values. One head; frontier models run
+          many side by side. Then the code, quoted from the repo, not
+          simplified. Step through: the three projections, the dot products
+          all at once, the scale, the mask, the softmax, the blend. Let them
+          read; say only what each block is for. The scale and the mask get
+          their own slide next.
           """
         },
         %Slide{
@@ -540,9 +541,10 @@ defmodule TinyLlmTalk.Deck do
           notes: """
           Not here: autodiff, a tokenizer, a GPU, multi-head, depth,
           dependencies. Here: embeddings, learned positions, scaled dot-product
-          attention, a causal mask, residuals, RMSNorm, an MLP, cross-entropy,
-          hand-written backprop with a finite-difference check, temperature
-          sampling. Every one of these is the same thing a frontier model does.
+          attention, a causal mask, residuals, RMSNorm, an MLP, temperature
+          sampling. The loss and the hand-written gradients are in the repo
+          but not in the talk, so they stay off the list. Every one of these
+          is the same thing a frontier model does.
           The difference is thirteen orders of magnitude and a tokenizer.
           """
         },

@@ -106,6 +106,15 @@ defmodule TinyLlmTalkWeb.DeckLiveTest do
     assert length(Regex.scan(~r/class="code__annotation"/, shown)) == 3
   end
 
+  test "lists what is here without the training internals the talk skips", %{conn: conn} do
+    slide = Enum.find(Deck.slides(), &(&1.id == :what_is_not_here))
+    {:ok, _view, html} = live(conn, ~p"/s/#{slide.index}/2")
+
+    assert html =~ "temperature sampling"
+    refute html =~ "cross-entropy"
+    refute html =~ "backprop"
+  end
+
   test "ends on the sources, with both repos and the paper", %{conn: conn} do
     {:ok, _view, html} = live(conn, ~p"/s/#{Deck.count()}")
 
