@@ -248,7 +248,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
     ~H"""
     <section class="slide">
       <h2 class="slide__title">Vocabulary</h2>
-      <p class="slide__lede">One word is one token is one integer. There is no tokenizer.</p>
+      <p class="slide__lede">Only 32 words</p>
       <div class="word-groups">
         <div :for={group <- @groups} class="word-group">
           <p class="word-group__name">{group.name}</p>
