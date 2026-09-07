@@ -158,11 +158,11 @@ defmodule TinyLlmTalk.Model do
   # block runs them, so a slide can say where the floats live.
   @parameter_stages [
     {"embedding + position", [:embeddings, :positions]},
-    {"RMSNorm", [:gain1]},
+    {"normalization", [:gain1]},
     {"a single head of attention", [:query_weight, :key_weight, :value_weight, :output_weight]},
-    {"RMSNorm", [:gain2]},
-    {"MLP", [:weight1, :bias1, :weight2, :bias2]},
-    {"32 probabilities", [:gain3, :projection]}
+    {"normalization", [:gain2]},
+    {"neural network", [:weight1, :bias1, :weight2, :bias2]},
+    {"output", [:gain3, :projection]}
   ]
 
   @doc """
