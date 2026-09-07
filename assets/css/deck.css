@@ -944,6 +944,18 @@
   color: var(--ink-dim);
 }
 
+.matrix-thumb figcaption {
+  font-size: 15px;
+  text-align: center;
+  line-height: 1.2;
+}
+
+.matrix-thumb__equals {
+  font-size: 22px;
+  line-height: 1;
+  color: var(--accent);
+}
+
 .heatmap--bare .heatmap__row-label {
   display: none;
 }
@@ -958,6 +970,7 @@
   font-family: var(--serif);
   font-size: 20px;
   color: var(--ink-dim);
+  white-space: nowrap;
 }
 
 /* The heatmap's grid with the numbers written in instead of coloured. */

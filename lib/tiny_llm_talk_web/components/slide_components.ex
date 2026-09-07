@@ -629,9 +629,14 @@ defmodule TinyLlmTalkWeb.SlideComponents do
       assign(assigns,
         trace: trace,
         stage: trace && attention_stage(trace, assigns.step),
-        weights:
+        projections:
           params &&
-            [{"Q", params.query_weight}, {"K", params.key_weight}, {"V", params.value_weight}],
+            trace &&
+            [
+              {"Q", params.query_weight, trace.queries},
+              {"K", params.key_weight, trace.keys},
+              {"V", params.value_weight, trace.values}
+            ],
         projections_step: @projections_step,
         scores_step: @scores_step,
         blend_step: @blend_step
@@ -651,22 +656,19 @@ defmodule TinyLlmTalkWeb.SlideComponents do
           focus={[:all, 1..3, 5..8, 9..13, 14..14, 16..16, :all]}
         />
         <.step :if={@trace} n={@projections_step} step={@step} class="two-up__aside">
-          <div :if={@step == @projections_step and @weights} class="aside-figure">
+          <div :if={@step == @projections_step and @projections} class="aside-figure">
             <p class="aside-figure__caption">input, one row per position</p>
             <.strips rows={@trace.input} labels={Model.probe()} cell={8} />
             <p class="aside-figure__caption">
-              W<sub>Q</sub>, W<sub>K</sub>, W<sub>V</sub>, three learned matrices
+              × W<sub>Q</sub>, W<sub>K</sub>, W<sub>V</sub>, three learned matrices
             </p>
             <div class="matrix-row">
-              <figure :for={{letter, matrix} <- @weights} class="matrix-thumb">
-                <.heatmap
-                  values={magnitudes(matrix)}
-                  row_labels={Enum.map(matrix, fn _row -> "" end)}
-                  column_labels={Enum.map(hd(matrix), fn _column -> "" end)}
-                  cell={3}
-                  class="heatmap--compact heatmap--bare"
-                />
+              <figure :for={{letter, weight, projection} <- @projections} class="matrix-thumb">
+                <.thumb matrix={weight} />
                 <figcaption>W<sub>{letter}</sub></figcaption>
+                <span class="matrix-thumb__equals">=</span>
+                <.thumb matrix={projection} />
+                <figcaption>{letter}, {projection_name(letter)}</figcaption>
               </figure>
             </div>
           </div>
@@ -1581,13 +1583,25 @@ defmodule TinyLlmTalkWeb.SlideComponents do
     }
   end
 
+  # The masked cells stay struck out: their weight is exactly zero, and a
+  # printed 0.00 would read as a small number rather than a rule.
   defp attention_stage(trace, _step) do
     %{
-      caption: "weights = softmax(scores), one distribution per row",
-      values: trace.weights,
+      caption: "weights = softmax(scores), row by row",
+      values: keep_masked(trace.weights, trace.masked),
       heat: trace.weights,
       format: :weight
     }
+  end
+
+  defp projection_name("Q"), do: "the queries"
+  defp projection_name("K"), do: "the keys"
+  defp projection_name("V"), do: "the values"
+
+  defp keep_masked(values, masked) do
+    Enum.zip_with(values, masked, fn row, masked_row ->
+      Enum.zip_with(row, masked_row, fn value, mask -> mask && value end)
+    end)
   end
 
   # Heat for a matrix of scores: only a positive score pulls attention, so a
@@ -1657,6 +1671,22 @@ defmodule TinyLlmTalkWeb.SlideComponents do
       column_labels={Enum.map(1..length(hd(@rows)), fn _column -> "" end)}
       cell={@cell}
       class="heatmap--compact heatmap--strips"
+    />
+    """
+  end
+
+  # A matrix as a bare thumbnail: 32 columns at three pixels each, no labels,
+  # so a weight matrix and the rows it produces line up column for column.
+  attr :matrix, :list, required: true
+
+  defp thumb(assigns) do
+    ~H"""
+    <.heatmap
+      values={magnitudes(@matrix)}
+      row_labels={Enum.map(@matrix, fn _row -> "" end)}
+      column_labels={Enum.map(hd(@matrix), fn _column -> "" end)}
+      cell={3}
+      class="heatmap--compact heatmap--bare"
     />
     """
   end

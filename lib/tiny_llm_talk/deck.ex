@@ -257,12 +257,14 @@ defmodule TinyLlmTalk.Deck do
           The formula again, now over the real code, quoted from the repo,
           not simplified, and beside it the real numbers for the sentence
           at each stage. Step through: the three projections, with the
-          input's seven rows and the three learned matrices beside them,
-          thirty-two square each; then the Q K transposed matmul, and the seven by seven scores appear, signed,
+          input's seven rows, the three learned matrices beside them,
+          thirty-two square each, and under each the Q, K or V it makes,
+          seven rows again; then the Q K transposed matmul, and the seven by seven scores appear, signed,
           already divided by root d so the softmax does not saturate as
           vectors grow; the mask, and the future is struck out, every cell
           above the diagonal; the softmax, and the scores become a
-          distribution per row, summing to one; the blend, and the context
+          distribution per row, summing to one, the struck-out cells
+          staying struck out since their weight is exactly zero; the blend, and the context
           appears under it, seven rows of thirty-two again, the input's
           shape. One head; frontier models run many side by side. Say out
           loud: every position at once in one matrix multiply, no loop over
