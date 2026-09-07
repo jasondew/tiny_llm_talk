@@ -622,9 +622,10 @@ defmodule TinyLlmTalkWeb.SlideComponents do
   # the blend produces. Each is the real number from the checkpoint.
   @projections_step 2
   @scores_step 3
-  @mask_step 4
-  @softmax_step 5
-  @blend_step 6
+  @scale_step 4
+  @mask_step 5
+  @softmax_step 6
+  @blend_step 7
 
   def slide(%{slide: %Slide{id: :attention_code}} = assigns) do
     trace = Model.trace(Model.probe())
@@ -658,7 +659,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
           path="lib/tiny_llm/attention.ex"
           range={198..213}
           step={@step}
-          focus={[:all, 1..3, 5..8, 9..13, 14..14, 16..16, :all]}
+          focus={[:all, 1..3, 5..7, 8..8, 9..13, 14..14, 16..16, :all]}
         />
         <.step :if={@trace} n={@projections_step} step={@step} class="two-up__aside">
           <div :if={@step == @projections_step and @projections} class="aside-figure">
@@ -1615,6 +1616,20 @@ defmodule TinyLlmTalkWeb.SlideComponents do
   # What the grid beside the head's code shows at a step: the scores, the
   # scores with the future struck out, or the distribution. One grid, the
   # same cells throughout; only the numbers and the heat behind them change.
+  # The scores before the scale line runs: the checkpoint's are already
+  # divided by root d, so multiply back up.
+  defp attention_stage(trace, step) when step < @scale_step do
+    unscaled =
+      Enum.map(trace.scores, fn row -> Enum.map(row, &(&1 * :math.sqrt(Model.width()))) end)
+
+    %{
+      caption: "scores = Q Kᵀ",
+      values: unscaled,
+      heat: positive_shares(unscaled),
+      format: :signed
+    }
+  end
+
   defp attention_stage(trace, step) when step < @mask_step do
     %{
       caption: "scores = Q Kᵀ / √d",
