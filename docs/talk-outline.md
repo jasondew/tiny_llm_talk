@@ -59,7 +59,7 @@ preview is a control turned on the big screen. The controls are
 - start and start over, for training (section 6)
 - pace, step while paused, and reset, for the writer (sections 1 and 7)
 - the two arrows on the dot product graph, dragged by their tips (section 3)
-- the softmax slider (section 3)
+- the softmax playground's score sliders (section 3)
 - the fuzzy map's query word (section 3)
 - the position in the walkthrough (section 3)
 - next word and restart (section 5)

@@ -122,7 +122,7 @@ they agree because a frame is a pure function of its number and a seed.
 ## The speaker's controls
 
 Some slides have a control the room watches you turn: start and start over on
-the training slide, pace and new paragraph on the writer, the softmax slider,
+the training slide, pace and new paragraph on the writer, the softmax playground's scores,
 the fuzzy map's query word, the position in the walkthrough,
 the next-word button, the temperature dial. They live in the socket's `controls`
 map and travel over the same PubSub topic as the position, so a control turned

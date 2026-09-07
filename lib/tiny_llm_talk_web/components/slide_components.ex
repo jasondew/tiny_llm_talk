@@ -336,15 +336,17 @@ defmodule TinyLlmTalkWeb.SlideComponents do
   end
 
   def slide(%{slide: %Slide{id: :softmax_playground}} = assigns) do
-    temperature = Controls.number(assigns.controls, "softmax_temperature", 1.0)
-    scores = Enum.map(@playground_scores, &elem(&1, 1))
-    distribution = softmax_at(scores, temperature)
+    scores =
+      Enum.map(@playground_scores, fn {word, default} ->
+        {word, Controls.number(assigns.controls, "score_#{word}", default)}
+      end)
+
+    [distribution] = Tensor.softmax([Enum.map(scores, &elem(&1, 1))])
 
     assigns =
       assign(assigns,
-        temperature: temperature,
-        words: Enum.map(@playground_scores, &elem(&1, 0)),
-        scores: @playground_scores,
+        words: Enum.map(scores, &elem(&1, 0)),
+        scores: scores,
         distribution: distribution
       )
 
@@ -352,13 +354,35 @@ defmodule TinyLlmTalkWeb.SlideComponents do
     <section class="slide">
       <p class="slide__eyebrow slide__eyebrow--break">Math break!</p>
       <h2 class="slide__title slide__title--small">A softmax turns scores into a distribution</h2>
+      <p class="formula">
+        softmax(x)<sub>i</sub>
+        = <span class="formula__group">e<sup>x<sub>i</sub></sup></span>
+        / Σ<sub>j</sub>
+        e<sup>x<sub>j</sub></sup>
+      </p>
       <div class="two-up">
         <div>
-          <p class="row-caption">scores in</p>
-          <div class="arithmetic">
-            <p :for={{word, score} <- @scores} class="arithmetic__row">
-              <span>{word}</span> {format_signed(score)}
-            </p>
+          <p class="row-caption">scores in &middot; drag one</p>
+          <div class="score-rows">
+            <form
+              :for={{word, score} <- @scores}
+              id={"score-#{word}"}
+              phx-change="control"
+              class="score-row"
+            >
+              <input type="hidden" name="name" value={"score_#{word}"} />
+              <span class="score-row__word">{word}</span>
+              <input
+                type="range"
+                name="value"
+                min="-3"
+                max="3"
+                step="0.25"
+                value={score}
+                class="dial__range score-row__range"
+              />
+              <output class="score-row__value">{format_signed(score)}</output>
+            </form>
           </div>
         </div>
         <div>
@@ -368,26 +392,9 @@ defmodule TinyLlmTalkWeb.SlideComponents do
           <.bars values={@distribution} words={@words} top={5} highlight={@words} absolute />
         </div>
       </div>
-      <form id="softmax-temperature-dial" phx-change="control" class="dial">
-        <input type="hidden" name="name" value="softmax_temperature" />
-        <input
-          type="range"
-          name="value"
-          min="0"
-          max="4"
-          step="0.1"
-          value={@temperature}
-          class="dial__range"
-        />
-        <output class="dial__value">
-          temperature {:erlang.float_to_binary(@temperature, decimals: 1)}
-        </output>
-      </form>
     </section>
     """
   end
-
-  # 3. Embedding and position -----------------------------------------------
 
   def slide(%{slide: %Slide{id: :a_word_is_a_row}} = assigns) do
     assigns = assign(assigns, row: Model.embedding("dogs"), position: Model.position(6))
@@ -1526,18 +1533,6 @@ defmodule TinyLlmTalkWeb.SlideComponents do
 
         Enum.map(trace.input, fn row -> Enum.map(row, &(abs(&1) / peak)) end)
     end
-  end
-
-  # The softmax at a temperature, with zero as the limit it tends to: all of
-  # the distribution on the top score, so the slider can be dragged to it.
-  defp softmax_at(scores, temperature) when temperature <= 0.0 do
-    top = Enum.max(scores)
-    Enum.map(scores, &if(&1 == top, do: 1.0, else: 0.0))
-  end
-
-  defp softmax_at(scores, temperature) do
-    [distribution] = Tensor.softmax([Enum.map(scores, &(&1 / temperature))])
-    distribution
   end
 
   # What the grid beside the head's code shows at a step: the scores, the

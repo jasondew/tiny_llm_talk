@@ -197,12 +197,14 @@ defmodule TinyLlmTalk.Deck do
           id: :softmax_playground,
           title: "A softmax turns scores into a distribution",
           notes: """
-          Drag the slider. Five scores in, five shares out, always summing to
-          one: that is a distribution, define it once. The words are just
-          labels, none of them from the sentence. Low temperature commits to
-          the top score; zero is all of it on the top score; high temperature
-          spreads the distribution out. Never say exponential. End of the break; the next slide puts both pieces
-          to work.
+          Five scores in, five shares out, always summing to one: that is a
+          distribution, define it once. The words are just labels, none of
+          them from the sentence. Drag a score up and its share grows while
+          every other share shrinks; drag one far below the rest and its
+          share goes to nearly nothing but never to zero. Say the formula
+          once, plainly: e to the score, divided by the sum of all of them;
+          e to anything is positive, which is why the shares are. End of the
+          break; the next slide puts both pieces to work.
           """
         },
         %Slide{

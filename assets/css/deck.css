@@ -663,6 +663,36 @@
   gap: 6px;
 }
 
+/* The softmax playground's scores, one slider each. */
+.score-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.score-row {
+  display: grid;
+  grid-template-columns: 110px 1fr 90px;
+  align-items: center;
+  gap: 16px;
+}
+
+.score-row__word {
+  font-family: var(--sans);
+  font-size: 22px;
+  color: var(--ink-dim);
+}
+
+.score-row__range {
+  height: 22px;
+}
+
+.score-row__value {
+  font-family: var(--mono);
+  font-size: 26px;
+  text-align: right;
+}
+
 .arithmetic {
   display: flex;
   flex-direction: column;
