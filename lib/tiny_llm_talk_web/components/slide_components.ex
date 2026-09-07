@@ -938,7 +938,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
           />
         </div>
         <ul class="examples examples--generated">
-          <li :for={sentence <- Model.sentences(@temperature, 6)}>{Enum.join(sentence, " ")}</li>
+          <li :for={sentence <- Model.sentences(@temperature, 5)}>{Enum.join(sentence, " ")}</li>
         </ul>
       </div>
       <.untrained :if={not Model.trained?(:transformer)} what="These generations" />
