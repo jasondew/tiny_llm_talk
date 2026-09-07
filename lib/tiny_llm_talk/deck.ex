@@ -229,7 +229,7 @@ defmodule TinyLlmTalk.Deck do
         },
         %Slide{
           id: :fuzzy_map,
-          title: "The formula, by hand",
+          title: "A small example, by hand",
           steps: 6,
           notes: """
           The formula from the last slide, on five keys with two-number
