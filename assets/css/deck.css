@@ -792,6 +792,16 @@
   font-size: 17px;
 }
 
+.stack__block-label {
+  position: absolute;
+  left: -150px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-family: var(--serif);
+  font-size: 26px;
+  color: var(--accent);
+}
+
 .stack__repeats {
   position: absolute;
   right: -96px;

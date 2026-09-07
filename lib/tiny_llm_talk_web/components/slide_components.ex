@@ -802,8 +802,22 @@ defmodule TinyLlmTalkWeb.SlideComponents do
     <section class="slide slide--tight">
       <h2 class="slide__title slide__title--small">The transformer in this talk</h2>
       <div class="slide__fill">
-        <.block_diagram repeats="× 1" />
+        <.block_diagram repeats="× 1" label="the block" />
       </div>
+    </section>
+    """
+  end
+
+  @block_path "lib/tiny_llm/block.ex"
+
+  def slide(%{slide: %Slide{id: :block_code}} = assigns) do
+    assigns = assign(assigns, block_path: @block_path)
+
+    ~H"""
+    <section class="slide slide--tight">
+      <p class="slide__eyebrow">the block &middot; lib/tiny_llm/block.ex</p>
+      <h2 class="slide__title slide__title--small">Block.forward</h2>
+      <.code path={@block_path} function={:forward} step={@step} />
     </section>
     """
   end
@@ -812,7 +826,6 @@ defmodule TinyLlmTalkWeb.SlideComponents do
   # is left of it after attention, each lighting the lines it is about. The
   # numbers beside the code are the dogs position, the one predicting the
   # blank, straight from the checkpoint.
-  @block_path "lib/tiny_llm/block.ex"
 
   def slide(%{slide: %Slide{id: :normalization}} = assigns) do
     assigns = assign(assigns, block: block_trace(), block_path: @block_path)
@@ -1451,6 +1464,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
   # One transformer, as a stack: the block is boxed and marked with how many
   # times it repeats.
   attr :repeats, :string, default: nil
+  attr :label, :string, default: nil, doc: "a name for the dashed box, at its left"
 
   defp block_diagram(assigns) do
     layers = @block_layers
@@ -1463,6 +1477,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
       <.block_layer layer={@first} />
       <span class="stack__arrow">&darr;</span>
       <div class="stack__block">
+        <span :if={@label} class="stack__block-label">{@label}</span>
         <span :if={@repeats} class="stack__repeats">{@repeats}</span>
         <%= for {layer, index} <- Enum.with_index(@block) do %>
           <span :if={index > 0} class="stack__arrow">&darr;</span>

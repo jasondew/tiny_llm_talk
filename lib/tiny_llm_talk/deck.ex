@@ -315,10 +315,20 @@ defmodule TinyLlmTalk.Deck do
           id: :lid_off,
           title: "The transformer in this talk",
           notes: """
-          The picture from slide 3 again, with the 1. Attention is done;
-          what is left of the block is the two normalizations and the neural
-          network, and the arrows between them. The next slide names the
-          plumbing.
+          The picture from slide 3 again, with the 1, and the dashed box
+          named: the block. Attention is done; what is left of the block is
+          the two normalizations and the neural network, and the arrows
+          between them. The next slide is the block as code.
+          """
+        },
+        %Slide{
+          id: :block_code,
+          title: "Block.forward",
+          notes: """
+          The whole block is one function, twenty-two lines, and the
+          diagram was drawn from it: norm, attention, add, norm, network,
+          add. Let them read it once whole; the next three slides take the
+          lines that are new one at a time.
           """
         },
         %Slide{
