@@ -676,7 +676,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
             />
           </div>
           <.step n={@blend_step} step={@step} class="aside-figure">
-            <p class="aside-figure__caption">context · weights × V</p>
+            <p class="aside-figure__caption">context = weights × V</p>
             <.heatmap
               values={magnitudes(@trace.context)}
               row_labels={Model.probe()}
@@ -1557,7 +1557,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
   # same cells throughout; only the numbers and the heat behind them change.
   defp attention_stage(trace, step) when step < @mask_step do
     %{
-      caption: "scores · Q Kᵀ / √d",
+      caption: "scores = Q Kᵀ / √d",
       values: trace.scores,
       heat: positive_shares(trace.scores),
       format: :signed
@@ -1566,7 +1566,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
 
   defp attention_stage(trace, step) when step < @softmax_step do
     %{
-      caption: "scores · the future masked",
+      caption: "scores, the future masked",
       values: trace.masked,
       heat: positive_shares(Enum.map(trace.masked, fn row -> Enum.map(row, &(&1 || 0.0)) end)),
       format: :signed
@@ -1575,7 +1575,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
 
   defp attention_stage(trace, _step) do
     %{
-      caption: "weights · softmax, one distribution per row",
+      caption: "weights = softmax(scores), one distribution per row",
       values: trace.weights,
       heat: trace.weights,
       format: :weight
