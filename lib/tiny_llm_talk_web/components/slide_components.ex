@@ -380,7 +380,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
                 type="range"
                 name="value"
                 min="-3"
-                max="2"
+                max="3"
                 step="0.25"
                 value={score}
                 class="dial__range score-row__range"
