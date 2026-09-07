@@ -659,11 +659,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
           range={198..213}
           step={@step}
           focus={[:all, 1..3, 5..8, 9..13, 14..14, 16..16, :all]}
-        >
-          <:annotation line={1}>Q = input × W<sub>Q</sub></:annotation>
-          <:annotation line={2}>K = input × W<sub>K</sub></:annotation>
-          <:annotation line={3}>V = input × W<sub>V</sub></:annotation>
-        </.code>
+        />
         <.step :if={@trace} n={@scores_step} step={@step} class="two-up__aside">
           <div class="aside-figure">
             <p class="aside-figure__caption">{@stage.caption}</p>
