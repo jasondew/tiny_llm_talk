@@ -1447,6 +1447,21 @@
 
 /* Wide definitions, for the plumbing ------------------------------------- */
 
+/* The symbols of a formula down the left, in the formula's face. */
+.definitions--formula {
+  grid-template-columns: 300px 1fr;
+  font-size: 26px;
+}
+
+.definitions--formula dt {
+  font-family: var(--serif);
+}
+
+.definitions--formula dt sub,
+.definitions--formula dt sup {
+  font-size: 0.65em;
+}
+
 .definitions--wide {
   grid-template-columns: 200px 1fr;
   font-size: 26px;

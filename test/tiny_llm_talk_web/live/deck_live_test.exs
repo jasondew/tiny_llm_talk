@@ -134,14 +134,29 @@ defmodule TinyLlmTalkWeb.DeckLiveTest do
     refute render(view) =~ ~s(bars__value">100.0%)
   end
 
-  test "defines query, key and value, then states the formula, with no code", %{conn: conn} do
+  test "puts the formula first, then a line for each of its symbols, with no code", %{conn: conn} do
     slide = Enum.find(Deck.slides(), &(&1.id == :learn_the_lookup))
-    {:ok, _view, html} = live(conn, ~p"/s/#{slide.index}/#{slide.steps}")
+    {:ok, _view, first} = live(conn, ~p"/s/#{slide.index}")
+    {:ok, _view, last} = live(conn, ~p"/s/#{slide.index}/#{slide.steps}")
 
     assert slide.steps == 4
-    assert html =~ "Attention(W<sub>Q</sub>, W<sub>K</sub>, W<sub>V</sub>) = softmax("
-    assert html =~ "√d"
-    refute html =~ "code__line"
+    assert first =~ "Attention(W<sub>Q</sub>, W<sub>K</sub>, W<sub>V</sub>) = softmax("
+    refute first =~ ~r/step--shown[^>]*>\s*<dt/
+
+    for symbol <- [
+          "W<sub>Q</sub>, W<sub>K</sub>, W<sub>V</sub>",
+          "Q = input × W<sub>Q</sub>",
+          "K = input × W<sub>K</sub>",
+          "V = input × W<sub>V</sub>",
+          "Q K<sup>T</sup>",
+          "√d",
+          "softmax"
+        ] do
+      assert last =~ ~r/<dt[^>]*>#{Regex.escape(symbol)}<\/dt>/
+    end
+
+    assert last =~ "what this position is looking for"
+    refute last =~ "code__line"
   end
 
   test "lists what is here without the training internals the talk skips", %{conn: conn} do

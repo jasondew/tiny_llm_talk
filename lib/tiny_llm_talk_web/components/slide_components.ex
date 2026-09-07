@@ -513,29 +513,43 @@ defmodule TinyLlmTalkWeb.SlideComponents do
 
   def slide(%{slide: %Slide{id: :learn_the_lookup}} = assigns) do
     ~H"""
-    <section class="slide">
+    <section class="slide slide--tight">
       <h2 class="slide__title slide__title--small">
         Attention: what to ask, what to offer, what to hand over
       </h2>
-      <dl class="definitions">
-        <.step n={1} step={@step}>
-          <dt>query</dt>
+      <p class="formula">
+        Attention(W<sub>Q</sub>, W<sub>K</sub>, W<sub>V</sub>) = softmax(<span class="formula__group">Q K<sup>T</sup> / √d</span>) V
+      </p>
+      <dl class="definitions definitions--formula">
+        <.step n={2} step={@step}>
+          <dt>W<sub>Q</sub>, W<sub>K</sub>, W<sub>V</sub></dt>
+          <dd>three learned tables, 32 &times; 32 each</dd>
+        </.step>
+        <.step n={3} step={@step}>
+          <dt>Q = input × W<sub>Q</sub></dt>
           <dd>what this position is looking for</dd>
         </.step>
-        <.step n={2} step={@step}>
-          <dt>key</dt>
+        <.step n={3} step={@step}>
+          <dt>K = input × W<sub>K</sub></dt>
           <dd>what this position is advertising</dd>
         </.step>
         <.step n={3} step={@step}>
-          <dt>value</dt>
+          <dt>V = input × W<sub>V</sub></dt>
           <dd>what this position hands over if it gets chosen</dd>
         </.step>
+        <.step n={4} step={@step}>
+          <dt>Q K<sup>T</sup></dt>
+          <dd>every query scored against every key, one dot product each</dd>
+        </.step>
+        <.step n={4} step={@step}>
+          <dt>√d</dt>
+          <dd>d is the width of a row, 32</dd>
+        </.step>
+        <.step n={4} step={@step}>
+          <dt>softmax</dt>
+          <dd>each row of scores becomes a distribution</dd>
+        </.step>
       </dl>
-      <.step n={4} step={@step}>
-        <p class="formula">
-          Attention(W<sub>Q</sub>, W<sub>K</sub>, W<sub>V</sub>) = softmax(<span class="formula__group">Q K<sup>T</sup> / √d</span>) V
-        </p>
-      </.step>
     </section>
     """
   end

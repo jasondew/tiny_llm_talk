@@ -211,11 +211,13 @@ defmodule TinyLlmTalk.Deck do
           title: "Attention: ask, offer, hand over",
           steps: 4,
           notes: """
-          Query is what this position is looking for. Key is what it
-          advertises. Value is what it hands over if chosen. Each is the
-          position's row times a learned table. Last step, the formula: score
-          every key against the query, scale, softmax into a distribution,
-          blend the values. The next slide runs it on a toy map by hand.
+          The formula first, then read it symbol by symbol. Three learned
+          tables. Query is what this position is looking for, key is what it
+          advertises, value is what it hands over if chosen; each is the
+          position's row times a table. Q times K transposed is every dot
+          product at once; divide by root d so the softmax does not saturate;
+          softmax each row into a distribution; blend the values. The next
+          slide runs it on a toy map by hand.
           """
         },
         %Slide{
