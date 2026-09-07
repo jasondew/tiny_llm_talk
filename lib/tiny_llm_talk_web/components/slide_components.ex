@@ -517,7 +517,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
       <h2 class="slide__title slide__title--small">
         Attention: what to ask, what to offer, what to hand over
       </h2>
-      <p class="formula">
+      <p class={["formula", @step == 1 && "formula--hero"]}>
         Attention(W<sub>Q</sub>, W<sub>K</sub>, W<sub>V</sub>) = softmax(<span class="formula__group">Q K<sup>T</sup> / √d</span>) V
       </p>
       <dl class="definitions definitions--formula">
@@ -529,23 +529,23 @@ defmodule TinyLlmTalkWeb.SlideComponents do
           <dt>Q = input × W<sub>Q</sub></dt>
           <dd>what this position is looking for</dd>
         </.step>
-        <.step n={3} step={@step}>
+        <.step n={4} step={@step}>
           <dt>K = input × W<sub>K</sub></dt>
           <dd>what this position is advertising</dd>
         </.step>
-        <.step n={3} step={@step}>
+        <.step n={5} step={@step}>
           <dt>V = input × W<sub>V</sub></dt>
           <dd>what this position hands over if it gets chosen</dd>
         </.step>
-        <.step n={4} step={@step}>
+        <.step n={6} step={@step}>
           <dt>Q K<sup>T</sup></dt>
           <dd>every query scored against every key, one dot product each</dd>
         </.step>
-        <.step n={4} step={@step}>
-          <dt>√d</dt>
-          <dd>d is the width of a row, 32</dd>
+        <.step n={7} step={@step}>
+          <dt>d</dt>
+          <dd>the width of a row, 32</dd>
         </.step>
-        <.step n={4} step={@step}>
+        <.step n={8} step={@step}>
           <dt>softmax</dt>
           <dd>each row of scores becomes a distribution</dd>
         </.step>

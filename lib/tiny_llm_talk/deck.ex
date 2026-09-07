@@ -209,9 +209,10 @@ defmodule TinyLlmTalk.Deck do
         %Slide{
           id: :learn_the_lookup,
           title: "Attention: ask, offer, hand over",
-          steps: 4,
+          steps: 8,
           notes: """
-          The formula first, then read it symbol by symbol. Three learned
+          The formula alone and large first; let them look at it. Then it
+          shrinks to the top and one symbol arrives per step. Three learned
           tables. Query is what this position is looking for, key is what it
           advertises, value is what it hands over if chosen; each is the
           position's row times a table. Q times K transposed is every dot

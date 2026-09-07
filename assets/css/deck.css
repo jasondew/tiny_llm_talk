@@ -667,8 +667,21 @@
   font-size: 28px;
 }
 
+/* A step inside the grid contributes its dt and dd as grid items, so it has
+ * no box of its own and opacity on it does nothing. Hide the children. */
 .definitions .step {
   display: contents;
+}
+
+.definitions .step > dt,
+.definitions .step > dd {
+  opacity: 0;
+  transition: opacity 120ms linear;
+}
+
+.definitions .step--shown > dt,
+.definitions .step--shown > dd {
+  opacity: 1;
 }
 
 .definitions dt {
@@ -1439,6 +1452,22 @@
 .formula sup,
 .formula sub {
   font-size: 0.6em;
+}
+
+/* The formula alone on the first step: larger, and down in the middle of the
+ * slide. On the next step it shrinks back up into its slot over the legend,
+ * which is already laid out underneath it, hidden. */
+.formula--hero {
+  font-size: 48px;
+  white-space: nowrap;
+  transform: translateY(200px);
+}
+
+.formula {
+  transform-origin: left top;
+  transition:
+    font-size 400ms ease,
+    transform 400ms ease;
 }
 
 .formula__group {

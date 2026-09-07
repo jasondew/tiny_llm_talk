@@ -139,9 +139,15 @@ defmodule TinyLlmTalkWeb.DeckLiveTest do
     {:ok, _view, first} = live(conn, ~p"/s/#{slide.index}")
     {:ok, _view, last} = live(conn, ~p"/s/#{slide.index}/#{slide.steps}")
 
-    assert slide.steps == 4
+    assert slide.steps == 8
     assert first =~ "Attention(W<sub>Q</sub>, W<sub>K</sub>, W<sub>V</sub>) = softmax("
+    assert first =~ ~s(class="formula formula--hero")
     refute first =~ ~r/step--shown[^>]*>\s*<dt/
+
+    {:ok, _view, second} = live(conn, ~p"/s/#{slide.index}/2")
+    refute second =~ "formula--hero"
+    assert length(Regex.scan(~r/step--shown[^>]*>\s*<dt/, second)) == 1
+    refute last =~ "√d</dt>"
 
     for symbol <- [
           "W<sub>Q</sub>, W<sub>K</sub>, W<sub>V</sub>",
@@ -149,7 +155,7 @@ defmodule TinyLlmTalkWeb.DeckLiveTest do
           "K = input × W<sub>K</sub>",
           "V = input × W<sub>V</sub>",
           "Q K<sup>T</sup>",
-          "√d",
+          "d",
           "softmax"
         ] do
       assert last =~ ~r/<dt[^>]*>#{Regex.escape(symbol)}<\/dt>/
