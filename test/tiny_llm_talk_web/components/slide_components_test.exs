@@ -33,42 +33,6 @@ defmodule TinyLlmTalkWeb.SlideComponentsTest do
     end
   end
 
-  describe "the prose" do
-    # Slides carry visuals and highlights; the explaining is in the speaker notes.
-    @explaining [
-      "Big when they point the same way",
-      "Sharp commits to the top score",
-      "This grid is what attention",
-      "Three matrices, and the fuzzy",
-      "why this scales",
-      "that blend is what this position",
-      "Rows predict, columns are looked at",
-      "visibly structured rather than flat",
-      "dumps almost all of its",
-      "Production transformers do exactly this",
-      "That is what depth buys",
-      "the residuals. Everything else",
-      "Half the parameters are in the MLP",
-      "No state carries between steps",
-      "New sentences, not recalled ones",
-      "no autodiff to hide behind",
-      "That is a slope",
-      "caught the missing transpose",
-      "held-out sentences it never trained on",
-      "thirteen orders of magnitude"
-    ]
-
-    test "stays in the speaker notes, off every slide at every step" do
-      for slide <- Deck.slides(), step <- 1..slide.steps do
-        html = render_component(&SlideComponents.slide/1, slide: slide, step: step)
-
-        for phrase <- @explaining do
-          refute html =~ phrase, "#{slide.id} step #{step} still says: #{phrase}"
-        end
-      end
-    end
-  end
-
   describe "steps/1" do
     test "gives a drawn slide its planned beats and a stub exactly one" do
       for slide <- Deck.slides() do

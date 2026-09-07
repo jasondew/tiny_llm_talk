@@ -529,7 +529,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
         <.step n={2} step={@step}>
           <dt>input</dt>
           <dd>
-            <.shape rows={@positions} columns={@width} /> one row per position, from the last slide
+            <.shape rows={@positions} columns={@width} /> one row per position, from a few slides ago
           </dd>
         </.step>
         <.step n={3} step={@step}>
@@ -657,7 +657,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
     <section class="slide slide--tight">
       <.sentence_line />
       <h2 class="slide__title slide__title--small">
-        Which word will the blank look at hardest?
+        Which word will the blank attend to the most?
       </h2>
       <div class="ask">
         <.qr size={200} />

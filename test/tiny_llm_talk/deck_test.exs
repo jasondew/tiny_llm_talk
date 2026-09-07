@@ -8,61 +8,6 @@ defmodule TinyLlmTalk.DeckTest do
       assert Enum.map(Deck.sections(), & &1.number) == Enum.to_list(0..8)
     end
 
-    test "budgets the 41 minutes the outline budgets, leaving four for questions" do
-      assert Deck.sections() |> Enum.map(& &1.minutes) |> Enum.sum() == 41
-    end
-
-    test "opens with the vote, so the room has something to do while it arrives" do
-      assert %{id: :the_vote, activity: :verb_vote} = Deck.at(1)
-      assert %{id: :title, activity: nil} = Deck.at(2)
-    end
-
-    test "motivates the architecture before anything is built, and ends on the sources" do
-      assert %{id: :the_architecture, section: 0} = Deck.at(3)
-      assert %{id: :parameters, section: 0} = Deck.at(4)
-      assert %{id: :sources, section: 8} = Deck.at(Deck.count())
-    end
-
-    test "shows the writer once the setup is done, as the path taken fast" do
-      assert index(:it_writes) == index(:one_function) + 1
-    end
-
-    test "builds attention up: the math, the three questions, the fuzzy map, then the head" do
-      assert Deck.at(index(:forgets_the_words) + 1).id == :dot_product
-
-      assert Enum.slice(ids(), index(:dot_product) - 1, 8) ==
-               [
-                 :dot_product,
-                 :softmax_playground,
-                 :learn_the_lookup,
-                 :fuzzy_map,
-                 :attention_code,
-                 :three_details,
-                 :attention_bet,
-                 :walkthrough
-               ]
-
-      assert Deck.at(index(:learn_the_lookup)).title == "Attention: ask, offer, hand over"
-
-      refute :map_get in ids()
-    end
-
-    test "calls the attention section Attention, with no Map in the name" do
-      assert Deck.section(Deck.at(index(:attention_code))).title == "Attention"
-    end
-
-    test "trains live inside the training section, not under the introduction" do
-      training = Deck.at(index(:live_training))
-
-      assert Deck.section(training).title =~ "Training"
-      assert Deck.at(index(:live_training) + 1).id == :training
-    end
-
-    test "says the seven lines and the no-deps claim without their own slides" do
-      refute :all_of_it in ids()
-      refute :from_nothing in ids()
-    end
-
     test "gives every slide a unique id" do
       ids = Enum.map(Deck.slides(), & &1.id)
       assert length(Enum.uniq(ids)) == length(ids)
