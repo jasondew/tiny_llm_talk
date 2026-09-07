@@ -380,7 +380,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
                 type="range"
                 name="value"
                 min="-3"
-                max="3"
+                max="2"
                 step="0.25"
                 value={score}
                 class="dial__range score-row__range"
@@ -1012,7 +1012,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
             type="range"
             name="value"
             min="0"
-            max="3"
+            max="2"
             step="0.05"
             value={@temperature}
             class="dial__range"
@@ -1066,7 +1066,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
           type="range"
           name="value"
           min="0"
-          max="3"
+          max="2"
           step="0.05"
           value={@temperature}
           class="dial__range"
