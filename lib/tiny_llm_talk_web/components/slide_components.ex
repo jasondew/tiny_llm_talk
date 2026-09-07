@@ -826,7 +826,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
     <section class="slide slide--tight">
       <h2 class="slide__title slide__title--small">The transformer in this talk</h2>
       <div class="slide__fill">
-        <.block_diagram repeats="× 1" label="the block" />
+        <.block_diagram repeats="× 1" label="Block" />
       </div>
     </section>
     """
