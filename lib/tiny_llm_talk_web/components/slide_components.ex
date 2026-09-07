@@ -1015,12 +1015,11 @@ defmodule TinyLlmTalkWeb.SlideComponents do
         <.step n={1} step={@step}>
           <p class="slide__eyebrow">not here</p>
           <ul class="claims claims--compact">
-            <li>autodiff</li>
             <li>a tokenizer</li>
             <li>a GPU</li>
             <li>multi-head attention</li>
             <li>depth</li>
-            <li>dependencies</li>
+            <li>KV caching</li>
           </ul>
         </.step>
         <.step n={2} step={@step}>

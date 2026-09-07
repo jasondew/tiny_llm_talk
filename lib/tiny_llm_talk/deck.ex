@@ -449,8 +449,9 @@ defmodule TinyLlmTalk.Deck do
           title: "What is not here, and what is",
           steps: 2,
           notes: """
-          Not here: autodiff, a tokenizer, a GPU, multi-head, depth,
-          dependencies. Here: embeddings, learned positions, scaled dot-product
+          Not here: a tokenizer, a GPU, multi-head, depth, KV caching (the
+          whole prefix is re-read every word; a real model keeps the keys
+          and values it already computed). Here: embeddings, learned positions, scaled dot-product
           attention, a causal mask, residuals, RMSNorm, an MLP, temperature
           sampling. The loss and the hand-written gradients are in the repo
           but not in the talk, so they stay off the list. Every one of these
