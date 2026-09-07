@@ -637,12 +637,13 @@ defmodule TinyLlmTalkWeb.SlideComponents do
   @blend_step 6
 
   def slide(%{slide: %Slide{id: :attention_code}} = assigns) do
+    trace = Model.trace(Model.probe())
+
     assigns =
       assign(assigns,
-        trace: Model.trace(Model.probe()),
+        trace: trace,
+        stage: trace && attention_stage(trace, assigns.step),
         scores_step: @scores_step,
-        mask_step: @mask_step,
-        softmax_step: @softmax_step,
         blend_step: @blend_step
       )
 
@@ -664,28 +665,18 @@ defmodule TinyLlmTalkWeb.SlideComponents do
           <:annotation line={3}>V = input × W<sub>V</sub></:annotation>
         </.code>
         <.step :if={@trace} n={@scores_step} step={@step} class="two-up__aside">
-          <.step :if={@step < @softmax_step} n={@scores_step} step={@step} class="aside-figure">
-            <p class="aside-figure__caption">
-              {if @step < @mask_step, do: "Q Kᵀ / √d", else: "Q Kᵀ / √d, the future masked"}
-            </p>
+          <div class="aside-figure">
+            <p class="aside-figure__caption">{@stage.caption}</p>
             <.score_grid
-              values={if @step < @mask_step, do: @trace.scores, else: @trace.masked}
+              values={@stage.values}
+              heat={@stage.heat}
+              format={@stage.format}
               labels={Model.probe()}
-              cell={44}
-            />
-          </.step>
-          <.step n={@softmax_step} step={@step} class="aside-figure">
-            <p class="aside-figure__caption">softmax, one distribution per row</p>
-            <.heatmap
-              values={@trace.weights}
-              row_labels={Model.probe()}
-              column_labels={Model.probe()}
               cell={36}
-              show_values
             />
-          </.step>
+          </div>
           <.step n={@blend_step} step={@step} class="aside-figure">
-            <p class="aside-figure__caption">× V: the context, 7 × 32</p>
+            <p class="aside-figure__caption">context · weights × V</p>
             <.heatmap
               values={magnitudes(@trace.context)}
               row_labels={Model.probe()}
@@ -1561,11 +1552,50 @@ defmodule TinyLlmTalkWeb.SlideComponents do
     distribution
   end
 
-  # A matrix of signed numbers on the heatmap's grid, so it lines up with the
-  # heatmap that replaces it. A nil is a masked cell, struck out.
+  # What the grid beside the head's code shows at a step: the scores, the
+  # scores with the future struck out, or the distribution. One grid, the
+  # same cells throughout; only the numbers and the heat behind them change.
+  defp attention_stage(trace, step) when step < @mask_step do
+    %{
+      caption: "scores · Q Kᵀ / √d",
+      values: trace.scores,
+      heat: positive_shares(trace.scores),
+      format: :signed
+    }
+  end
+
+  defp attention_stage(trace, step) when step < @softmax_step do
+    %{
+      caption: "scores · the future masked",
+      values: trace.masked,
+      heat: positive_shares(Enum.map(trace.masked, fn row -> Enum.map(row, &(&1 || 0.0)) end)),
+      format: :signed
+    }
+  end
+
+  defp attention_stage(trace, _step) do
+    %{
+      caption: "weights · softmax, one distribution per row",
+      values: trace.weights,
+      heat: trace.weights,
+      format: :weight
+    }
+  end
+
+  # Heat for a matrix of scores: only a positive score pulls attention, so a
+  # negative one is as dark as zero, and the brightest is the largest.
+  defp positive_shares(rows) do
+    peak = rows |> List.flatten() |> Enum.max() |> max(1.0e-9)
+    Enum.map(rows, fn row -> Enum.map(row, &(max(&1, 0.0) / peak)) end)
+  end
+
+  # A matrix with its numbers printed on the heatmap's grid, and the heat
+  # behind each. A nil is a masked cell, struck out.
   attr :values, :list, required: true
+  attr :heat, :list, required: true
   attr :labels, :list, required: true
-  attr :cell, :integer, default: 44
+  attr :format, :atom, default: :signed, values: [:signed, :weight]
+  attr :cell, :integer, default: 40
 
   defp score_grid(assigns) do
     ~H"""
@@ -1575,18 +1605,27 @@ defmodule TinyLlmTalkWeb.SlideComponents do
     >
       <div class="heatmap__corner" />
       <div :for={label <- @labels} class="heatmap__column-label"><span>{label}</span></div>
-      <%= for {row, label} <- Enum.zip(@values, @labels) do %>
+      <%= for {{row, heat_row}, label} <- Enum.zip(Enum.zip(@values, @heat), @labels) do %>
         <div class="heatmap__row-label">{label}</div>
         <div
-          :for={value <- row}
-          class={["heatmap__cell", is_nil(value) && "heatmap__cell--masked"]}
+          :for={{value, heat} <- Enum.zip(row, heat_row)}
+          class={[
+            "heatmap__cell",
+            is_nil(value) && "heatmap__cell--masked",
+            heat > 0.55 && "heatmap__cell--bright"
+          ]}
+          style={"--heat: #{Float.round(heat * 1.0, 3)}"}
         >
-          {if is_nil(value), do: "×", else: format_signed(value)}
+          {grid_number(value, @format)}
         </div>
       <% end %>
     </div>
     """
   end
+
+  defp grid_number(nil, _format), do: "×"
+  defp grid_number(value, :signed), do: format_signed(value)
+  defp grid_number(value, :weight), do: format_weight(value)
 
   # Every value as a share of the largest magnitude, for a heatmap of a
   # matrix whose entries have signs.

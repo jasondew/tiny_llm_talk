@@ -849,8 +849,8 @@
 .two-up__aside {
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  padding-top: 6px;
+  gap: 10px;
+  margin-top: -24px;
 }
 
 /* Row labels only: the columns are the 32 floats, and numbering them said
@@ -893,9 +893,12 @@
 
 /* The heatmap's grid with the numbers written in instead of coloured. */
 .heatmap--numbers .heatmap__cell {
-  background: var(--paper-raised);
   color: var(--ink);
-  font-size: 12px;
+  font-size: 11px;
+}
+
+.heatmap--numbers .heatmap__cell--bright {
+  color: var(--paper);
 }
 
 .heatmap--numbers .heatmap__cell--masked {
