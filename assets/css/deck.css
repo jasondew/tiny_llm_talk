@@ -1392,6 +1392,14 @@
   color: var(--ink-dim);
 }
 
+.parameters__symbol {
+  color: var(--ink-dim);
+}
+
+.parameters__symbol sub {
+  font-size: 0.7em;
+}
+
 .parameters__number {
   text-align: right;
 }

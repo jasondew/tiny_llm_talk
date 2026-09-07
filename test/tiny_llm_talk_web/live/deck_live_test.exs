@@ -66,7 +66,11 @@ defmodule TinyLlmTalkWeb.DeckLiveTest do
     assert html =~ "The model I built"
     assert html =~ "embeddings"
     assert html =~ "positions"
-    assert html =~ "query_weight"
+    assert html =~ ~r/query_weight\s*<span class="parameters__symbol">\s*\(W<sub>Q<\/sub>\)/
+    assert html =~ ~r/key_weight\s*<span class="parameters__symbol">\s*\(W<sub>K<\/sub>\)/
+    assert html =~ ~r/value_weight\s*<span class="parameters__symbol">\s*\(W<sub>V<\/sub>\)/
+    assert html =~ ~r/output_weight\s*<span class="parameters__symbol">\s*\(W<sub>O<\/sub>\)/
+    refute html =~ "embeddings <span"
     assert html =~ "15,104"
     assert html =~ "a single head of attention"
     refute html =~ "The one on this laptop"

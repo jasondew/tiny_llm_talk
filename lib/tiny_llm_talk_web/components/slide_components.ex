@@ -134,7 +134,12 @@ defmodule TinyLlmTalkWeb.SlideComponents do
         <tbody>
           <tr :for={{table, index} <- Enum.with_index(@tables)}>
             <td class="parameters__stage">{stage_label(@tables, index)}</td>
-            <td class="parameters__name">{table.name}</td>
+            <td class="parameters__name">
+              {table.name}
+              <span :if={formula_symbol(table.name)} class="parameters__symbol">
+                (W<sub>{formula_symbol(table.name)}</sub>)
+              </span>
+            </td>
             <td class="parameters__shape">{format_shape(table.shape)}</td>
             <td class="parameters__number">
               <span class="parameters__count">{format_count(table.count)}</span>
@@ -1751,6 +1756,14 @@ defmodule TinyLlmTalkWeb.SlideComponents do
   end
 
   defp format_shape({rows, columns}), do: "#{rows} × #{columns}"
+
+  # The letter the attention formula gives each learned table, W with this
+  # as its subscript. The other tables have no letter in the formula.
+  defp formula_symbol(:query_weight), do: "Q"
+  defp formula_symbol(:key_weight), do: "K"
+  defp formula_symbol(:value_weight), do: "V"
+  defp formula_symbol(:output_weight), do: "O"
+  defp formula_symbol(_name), do: nil
 
   # The probe, marked up: the subject that decides the answer, and the noun that
   # sits next to the blank pointing the wrong way.
