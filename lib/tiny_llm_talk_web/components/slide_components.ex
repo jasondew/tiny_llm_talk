@@ -560,7 +560,9 @@ defmodule TinyLlmTalkWeb.SlideComponents do
         </.step>
         <.step n={8} step={@step}>
           <dt>d</dt>
-          <dd><.shape rows={@width} /> the width of a row</dd>
+          <dd>
+            <.shape rows={@width} /> the width of a key, which here is also the embedding size
+          </dd>
         </.step>
         <.step n={9} step={@step}>
           <dt>softmax</dt>

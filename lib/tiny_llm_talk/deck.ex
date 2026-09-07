@@ -218,8 +218,10 @@ defmodule TinyLlmTalk.Deck do
           what this position is looking for, key is what it advertises, value
           is what it hands over if chosen; each is the input times a matrix,
           so seven by thirty-two again. Q times K transposed is every dot
-          product at once, seven by seven; divide by root d so the softmax
-          does not saturate; softmax each row into a distribution; blend the
+          product at once, seven by seven; divide by root d, the width of a
+          key, so the softmax does not saturate. In the paper that is d_k,
+          not d_model; with one head and no slicing they are the same 32
+          here, and frontier models slice the embedding across heads; softmax each row into a distribution; blend the
           values, and the result is the input's shape, which is what lets
           the residual add it back. The next slide runs it on a toy map by
           hand.

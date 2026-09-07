@@ -184,6 +184,8 @@ defmodule TinyLlmTalkWeb.DeckLiveTest do
     end
 
     assert last =~ "what this position is looking for"
+    assert last =~ "the width of a key, which here is also the embedding size"
+    refute last =~ "the width of a row"
     assert last =~ "three learned matrices"
     refute last =~ "tables"
     refute last =~ "code__line"
