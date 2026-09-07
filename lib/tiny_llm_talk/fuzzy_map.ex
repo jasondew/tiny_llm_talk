@@ -1,14 +1,12 @@
 defmodule TinyLlmTalk.FuzzyMap do
   @moduledoc """
-  Attention, built from the one data structure every engineer in the room
-  already trusts.
+  The attention formula run by hand on a map small enough to read.
 
-  `Map.get/2` finds the one key equal to the query and returns its value. A
-  fuzzy map scores every key against the query, turns the scores into a
+  A fuzzy map scores every key against the query, turns the scores into a
   distribution that sums to one, and returns the blend of every value weighted
-  by that distribution. Make the query, the keys and the values learned, and that is an
-  attention head. Nothing in `TinyLlm.Attention` is missing from this file
-  except the learning.
+  by that distribution. Make the query, the keys and the values learned, and
+  that is an attention head. Nothing in `TinyLlm.Attention` is missing from
+  this file except the learning and the mask.
 
   The toy here is deliberately tiny and hand-authored. Each key is a word with
   a two-number vector, `[how much of an animal it is, how plural it is]`, and
@@ -32,26 +30,22 @@ defmodule TinyLlmTalk.FuzzyMap do
   # Keys are read at sampling time, which is why a softmax over dot products
   # rather than a max: two keys can be close, and the answer is a blend.
   @entries [
-    %{key: "llama", vector: [1.0, -1.0], value: 0.0},
-    %{key: "llamas", vector: [1.0, 1.0], value: 1.0},
-    %{key: "dog", vector: [0.9, -1.0], value: 0.0},
-    %{key: "dogs", vector: [0.9, 1.0], value: 1.0},
+    %{key: "llama", vector: [4.0, -4.0], value: 0.0},
+    %{key: "llamas", vector: [4.0, 4.0], value: 1.0},
+    %{key: "dog", vector: [3.6, -4.0], value: 0.0},
+    %{key: "dogs", vector: [3.6, 4.0], value: 1.0},
     %{key: "the", vector: [0.0, 0.0], value: 0.5}
   ]
 
   # Words the presenter can query with. The first two are in the map, so an
   # exact lookup would work; the rest are not, so it would not.
   @queries [
-    %{word: "llama", vector: [1.0, -1.0]},
-    %{word: "dogs", vector: [0.9, 1.0]},
-    %{word: "goose", vector: [0.8, -1.0]},
-    %{word: "geese", vector: [0.8, 1.0]},
-    %{word: "mice", vector: [0.7, 0.9]}
+    %{word: "llama", vector: [4.0, -4.0]},
+    %{word: "dogs", vector: [3.6, 4.0]},
+    %{word: "goose", vector: [3.2, -4.0]},
+    %{word: "geese", vector: [3.2, 4.0]},
+    %{word: "mice", vector: [2.8, 3.6]}
   ]
-
-  # How sharp the softmax is. Real attention gets this from the learned scale
-  # of its queries and keys; the toy has to pick one so the blend commits.
-  @sharpness 6.0
 
   @spec entries() :: [entry()]
   def entries, do: @entries
@@ -72,15 +66,21 @@ defmodule TinyLlmTalk.FuzzyMap do
   end
 
   @doc """
-  The fuzzy lookup: score every key, softmax the scores, blend the values.
+  The formula by hand: score every key against the query, divide by the
+  square root of the width, softmax, blend the values.
+
+  The scale is the formula's own, root d with d the width of a vector, which
+  is why the vectors are as large as they are: at this width the scale is
+  small, and the numbers have to be big for the softmax to commit.
 
   Returns every intermediate so a slide can reveal them one at a time.
   """
   @spec lookup(String.t()) :: lookup()
   def lookup(word) do
     query = Enum.find(@queries, &(&1.word == word)) || hd(@queries)
+    scale = :math.sqrt(length(query.vector))
     scores = Enum.map(@entries, fn entry -> Tensor.dot(query.vector, entry.vector) end)
-    [weights] = Tensor.softmax([Enum.map(scores, &(&1 * @sharpness))])
+    [weights] = Tensor.softmax([Enum.map(scores, &(&1 / scale))])
 
     rows =
       [@entries, scores, weights]

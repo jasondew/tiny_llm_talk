@@ -223,14 +223,18 @@ defmodule TinyLlmTalk.Deck do
         },
         %Slide{
           id: :fuzzy_map,
-          title: "Now make it fuzzy",
+          title: "The formula, by hand",
           steps: 3,
           notes: """
-          The formula from the last slide, on a map small enough to read.
-          Pick a query word. Step one: score every key with a dot product.
-          Step two: softmax the scores into a distribution. Step three: blend
-          the values by that distribution. Query with goose, which is not in the map, and
-          it still answers sensibly. That is the whole trick.
+          The formula from the last slide, on five keys with two-number
+          vectors, small enough to check by eye. The toy: each key's vector
+          is [how much of an animal, how plural], and each value is how plural
+          that key is, so the blend answers how plural the query is. Pick a
+          query. Step one: Q dot every K. Step two: divide by root d, d is
+          two here, and softmax into a distribution. Step three: weight every
+          V and add. Query with goose or geese, which are not keys, and it
+          still answers sensibly. That is the whole trick, and the next slide
+          is the same thing in sixteen lines.
           """
         },
         %Slide{

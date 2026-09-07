@@ -27,6 +27,16 @@ defmodule TinyLlmTalk.FuzzyMapTest do
     assert top.key == "llama"
   end
 
+  test "scales the scores by the square root of the width, as the formula does" do
+    lookup = FuzzyMap.lookup("geese")
+    [first, second | _rest] = Enum.sort_by(lookup.scores, &(-&1.weight))
+    width = length(lookup.vector)
+
+    assert_in_delta first.weight / second.weight,
+                    :math.exp((first.score - second.score) / :math.sqrt(width)),
+                    1.0e-9
+  end
+
   test "falls back to the first query for a word it does not offer" do
     assert FuzzyMap.lookup("banana").query == hd(FuzzyMap.query_words())
   end

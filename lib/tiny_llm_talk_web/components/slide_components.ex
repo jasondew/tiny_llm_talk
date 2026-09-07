@@ -460,30 +460,33 @@ defmodule TinyLlmTalkWeb.SlideComponents do
       assign(assigns,
         query: lookup.query,
         lookup: lookup,
-        exact: FuzzyMap.exact(lookup.query),
         options: FuzzyMap.query_words()
       )
 
     ~H"""
     <section class="slide slide--tight">
-      <h2 class="slide__title slide__title--small">Now make it fuzzy</h2>
+      <h2 class="slide__title slide__title--small">The formula, by hand</h2>
       <div class="fuzzy-head">
-        <.picker name="query" options={@options} chosen={@query} />
-        <p class="row-caption">
-          <code>Map.get</code>
-          says {if @exact, do: format_weight(@exact), else: "nil"} &middot; query vector {format_vector(
-            @lookup.vector
-          )}
+        <div class="fuzzy-query">
+          <span class="fuzzy-query__label">Q =</span>
+          <.picker name="query" options={@options} chosen={@query} />
+          <span class="fuzzy-query__vector">{format_vector(@lookup.vector)}</span>
+        </div>
+        <p class="fuzzy-formula">
+          softmax(<.formula_term lit={@step == 1}>Q K<sup>T</sup></.formula_term>
+          <.formula_term lit={@step == 2}>/ √d</.formula_term>)
+          <.formula_term lit={@step == 3}>V</.formula_term>
         </p>
       </div>
       <table class="fuzzy">
         <thead>
           <tr>
             <th>key</th>
-            <th>key vector</th>
-            <th>1. score (dot)</th>
-            <th class={@step < 2 && "fuzzy--hidden"}>2. distribution (softmax)</th>
-            <th class={@step < 3 && "fuzzy--hidden"}>3. value &times; weight</th>
+            <th>K</th>
+            <th>Q · K</th>
+            <th class={@step < 2 && "fuzzy--hidden"}>softmax(Q · K / √d)</th>
+            <th>V</th>
+            <th class={@step < 3 && "fuzzy--hidden"}>weight &times; V</th>
           </tr>
         </thead>
         <tbody>
@@ -497,15 +500,18 @@ defmodule TinyLlmTalkWeb.SlideComponents do
               </span>
               {format_weight(row.weight)}
             </td>
+            <td class="fuzzy__number">{format_weight(row.value)}</td>
             <td class={["fuzzy__number", @step < 3 && "fuzzy--hidden"]}>
-              {format_weight(row.value)} &times; {format_weight(row.weight)}
+              {format_weight(row.weight)} &times; {format_weight(row.value)}
             </td>
           </tr>
         </tbody>
       </table>
       <.step n={3} step={@step} class="fuzzy-answer">
-        how plural is <span class="word word--lit">{@query}</span>?
         <span class="fuzzy-answer__value">{format_weight(@lookup.blend)}</span>
+        <span class="fuzzy-answer__gloss">
+          how plural is <span class="word word--lit">{@query}</span>
+        </span>
       </.step>
     </section>
     """
@@ -1818,6 +1824,19 @@ defmodule TinyLlmTalkWeb.SlideComponents do
 
         Enum.map(trace.input, fn row -> Enum.map(row, &(abs(&1) / peak)) end)
     end
+  end
+
+  # One term of the formula over the toy table, lit while its column is the
+  # one being filled in.
+  attr :lit, :boolean, required: true
+  slot :inner_block, required: true
+
+  defp formula_term(assigns) do
+    ~H"""
+    <span class={["fuzzy-formula__term", @lit && "fuzzy-formula__term--lit"]}>{render_slot(
+      @inner_block
+    )}</span>
+    """
   end
 
   defp entry_vector(key) do

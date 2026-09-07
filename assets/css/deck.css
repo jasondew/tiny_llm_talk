@@ -1127,9 +1127,41 @@
   gap: 10px;
 }
 
-.fuzzy-head code {
+.fuzzy-query {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.fuzzy-query__label {
+  font-family: var(--serif);
+  font-size: 30px;
+}
+
+.fuzzy-query__vector {
   font-family: var(--mono);
-  color: var(--accent-cool);
+  font-size: 22px;
+  color: var(--ink-dim);
+}
+
+/* The formula over the table, one term lit at a time as its column fills. */
+.fuzzy-formula {
+  font-family: var(--serif);
+  font-size: 30px;
+  line-height: 1.2;
+  color: var(--ink-dim);
+}
+
+.fuzzy-formula sup {
+  font-size: 0.6em;
+}
+
+.fuzzy-formula__term {
+  transition: color 200ms linear;
+}
+
+.fuzzy-formula__term--lit {
+  color: var(--accent);
 }
 
 .fuzzy {
@@ -1210,9 +1242,14 @@
 }
 
 .fuzzy-answer__value {
-  margin-left: 18px;
   font-family: var(--mono);
   color: var(--accent);
+}
+
+.fuzzy-answer__gloss {
+  margin-left: 18px;
+  font-size: 26px;
+  color: var(--ink-dim);
 }
 
 /* The walkthrough: one position, all the way through --------------------- */

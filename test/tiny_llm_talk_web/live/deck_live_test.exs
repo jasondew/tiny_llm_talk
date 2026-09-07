@@ -165,6 +165,28 @@ defmodule TinyLlmTalkWeb.DeckLiveTest do
     refute last =~ "code__line"
   end
 
+  test "runs the formula by hand on the toy map, one term per step", %{conn: conn} do
+    slide = Enum.find(Deck.slides(), &(&1.id == :fuzzy_map))
+    {:ok, view, first} = live(conn, ~p"/s/#{slide.index}")
+
+    assert slide.steps == 3
+    assert first =~ "The formula, by hand"
+    assert first =~ ~s(fuzzy-query__label">Q =<)
+    assert first =~ ~r/<th[^>]*>\s*Q · K\s*<\/th>/
+    assert first =~ ~r/<th[^>]*>\s*softmax\(Q · K \/ √d\)\s*<\/th>/
+    assert first =~ ~r/<th[^>]*>\s*V\s*<\/th>/
+    refute first =~ "Map.get"
+    refute first =~ "Now make it fuzzy"
+    assert first =~ ~r/fuzzy-formula__term fuzzy-formula__term--lit">Q K<sup[^>]*>T/
+
+    {:ok, _view, last} = live(conn, ~p"/s/#{slide.index}/3")
+    assert last =~ "how plural is"
+    assert last =~ ~s(fuzzy-formula__term fuzzy-formula__term--lit">V<)
+
+    render_click(view, "control", %{"name" => "query", "value" => "goose"})
+    assert render(view) =~ ~s(picker__option picker__option--chosen">goose)
+  end
+
   test "lists what is here without the training internals the talk skips", %{conn: conn} do
     slide = Enum.find(Deck.slides(), &(&1.id == :what_is_not_here))
     {:ok, _view, html} = live(conn, ~p"/s/#{slide.index}/2")
