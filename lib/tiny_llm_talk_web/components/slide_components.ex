@@ -532,7 +532,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
     <section class="slide slide--tight">
       <p class="slide__eyebrow">one head of attention</p>
       <p class="formula">
-        Attention(Q, K, V) = softmax(<span class="formula__group">Q K<sup>T</sup> / √d</span>) V
+        Attention = softmax(<span class="formula__group">Q K<sup>T</sup> / √d</span>) V
       </p>
       <.code
         path="lib/tiny_llm/attention.ex"
