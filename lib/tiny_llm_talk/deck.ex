@@ -1,6 +1,6 @@
 defmodule TinyLlmTalk.Deck do
   @moduledoc """
-  The deck as data: the nine sections of `docs/talk-outline.md`, in order,
+  The deck as data: the eight sections of `docs/talk-outline.md`, in order,
   with every slide the outline names.
 
   Nothing here draws anything. A slide is a title, a note, and a count of
@@ -301,24 +301,6 @@ defmodule TinyLlmTalk.Deck do
     },
     %Section{
       number: 4,
-      title: "Look at what it did",
-      minutes: 3,
-      lands: "the room's own sentences through the same head",
-      slides: [
-        %Slide{
-          id: :audience_sentence,
-          title: "Your sentence",
-          activity: :sentence,
-          notes: """
-          Let a few land, then tap one to put it on the screen with its
-          attention map. Any prefix works; the vocabulary is the only thing
-          they can say. If nobody sends anything, type one yourself.
-          """
-        }
-      ]
-    },
-    %Section{
-      number: 5,
       title: "The rest of the block",
       minutes: 3,
       lands: "residual, RMSNorm, MLP: the plumbing that makes a layer stackable",
@@ -350,7 +332,7 @@ defmodule TinyLlmTalk.Deck do
       ]
     },
     %Section{
-      number: 6,
+      number: 5,
       title: "Back to words",
       minutes: 4,
       lands: "rows become a distribution, the loop, and the knob",
@@ -409,7 +391,7 @@ defmodule TinyLlmTalk.Deck do
       ]
     },
     %Section{
-      number: 7,
+      number: 6,
       title: "Training",
       minutes: 4,
       lands: "it trains live; guess, measure, nudge, repeat; and tests for the math",
@@ -464,7 +446,7 @@ defmodule TinyLlmTalk.Deck do
       ]
     },
     %Section{
-      number: 8,
+      number: 7,
       title: "Did it learn it",
       minutes: 3,
       lands: "only the model beats chance when a distractor gets in the way",

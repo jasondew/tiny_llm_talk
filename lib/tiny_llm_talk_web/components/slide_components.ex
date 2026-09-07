@@ -771,50 +771,6 @@ defmodule TinyLlmTalkWeb.SlideComponents do
 
   # 5. Look at what it did --------------------------------------------------
 
-  def slide(%{slide: %Slide{id: :audience_sentence}} = assigns) do
-    assigns =
-      assign(assigns,
-        submissions: Room.popular(assigns.room, 6),
-        featured: assigns.room.featured,
-        weights: featured_attention(assigns.room)
-      )
-
-    ~H"""
-    <section class="slide slide--tight">
-      <h2 class="slide__title slide__title--small">Your sentence</h2>
-
-      <div :if={is_nil(@featured)} class="ask">
-        <.qr size={200} />
-        <div class="submissions">
-          <p :if={@submissions == []} class="slide__note">Nothing yet. Keep tapping.</p>
-          <button
-            :for={{words, _times} <- @submissions}
-            type="button"
-            phx-click="feature"
-            phx-value-words={Enum.join(words, " ")}
-            class="submissions__item"
-          >{Enum.join(words, " ")}</button>
-        </div>
-      </div>
-
-      <div :if={@featured}>
-        <p class="row-caption">{Enum.join(@featured, " ")}</p>
-        <.heatmap
-          :if={@weights}
-          values={@weights}
-          row_labels={["<start>" | @featured]}
-          column_labels={["<start>" | @featured]}
-          show_values
-          cell={heatmap_cell(@featured)}
-        />
-        <.untrained :if={is_nil(@weights)} what="This heatmap" />
-      </div>
-    </section>
-    """
-  end
-
-  # 6. The rest of the block ------------------------------------------------
-
   def slide(%{slide: %Slide{id: :lid_off}} = assigns) do
     ~H"""
     <section class="slide slide--tight">
@@ -1898,22 +1854,6 @@ defmodule TinyLlmTalkWeb.SlideComponents do
   defp question_label(:attention_bet), do: "where the blank looks"
   defp question_label(:spot_the_human), do: "spot the human"
   defp question_label(:rematch), do: "the geese who see a fox"
-
-  # The audience can only send words from the vocabulary, so any submission
-  # encodes; the context length is the only thing that can bite.
-  defp featured_attention(%Room{featured: nil}), do: nil
-
-  defp featured_attention(%Room{featured: words}) do
-    Model.attention(Enum.take(["<start>" | words], 16))
-  end
-
-  defp heatmap_cell(words) do
-    case length(words) + 1 do
-      size when size <= 8 -> 44
-      size when size <= 11 -> 34
-      _longer -> 26
-    end
-  end
 
   defp format_vector(vector), do: "[" <> Enum.map_join(vector, ", ", &format_signed/1) <> "]"
 
