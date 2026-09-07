@@ -83,6 +83,11 @@
   color: var(--ink-dim);
 }
 
+/* An interlude: the two math slides step out of the attention story. */
+.slide__eyebrow--break {
+  color: var(--accent);
+}
+
 .slide__title {
   font-family: var(--serif);
   font-size: 56px;

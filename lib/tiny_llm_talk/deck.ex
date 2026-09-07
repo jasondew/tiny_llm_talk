@@ -188,7 +188,8 @@ defmodule TinyLlmTalk.Deck do
           title: "A dot product is a similarity score",
           steps: 3,
           notes: """
-          Two lists, multiply pairwise, add. Big when they point the same way,
+          Say "math break" out loud; two slides of arithmetic, then back to
+          the model. Two lists, multiply pairwise, add. Big when they point the same way,
           near zero when unrelated, negative when opposed. That is the only
           arithmetic in attention.
           """
@@ -199,7 +200,8 @@ defmodule TinyLlmTalk.Deck do
           notes: """
           Drag the slider. Five scores in, five shares out, always summing to
           one. The words are just labels, none of them from the sentence. Sharp means commit to the top score; soft means spread the
-          budget. Say "budget" and "commit"; never say exponential.
+          budget. Say "budget" and "commit"; never say exponential. End of
+          the break; the next slide puts both pieces to work.
           """
         },
         %Slide{

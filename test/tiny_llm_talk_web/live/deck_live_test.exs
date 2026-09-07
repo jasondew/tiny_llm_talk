@@ -106,6 +106,19 @@ defmodule TinyLlmTalkWeb.DeckLiveTest do
     assert length(Regex.scan(~r/class="code__annotation"/, shown)) == 3
   end
 
+  test "marks the dot product and softmax slides as a math break, and nothing else", %{conn: conn} do
+    for id <- [:dot_product, :softmax_playground] do
+      slide = Enum.find(Deck.slides(), &(&1.id == id))
+      {:ok, _view, html} = live(conn, ~p"/s/#{slide.index}")
+
+      assert html =~ ~s(<p class="slide__eyebrow slide__eyebrow--break">Math break!</p>)
+    end
+
+    slide = Enum.find(Deck.slides(), &(&1.id == :attention_code))
+    {:ok, _view, html} = live(conn, ~p"/s/#{slide.index}")
+    refute html =~ "Math break!"
+  end
+
   test "lists what is here without the training internals the talk skips", %{conn: conn} do
     slide = Enum.find(Deck.slides(), &(&1.id == :what_is_not_here))
     {:ok, _view, html} = live(conn, ~p"/s/#{slide.index}/2")

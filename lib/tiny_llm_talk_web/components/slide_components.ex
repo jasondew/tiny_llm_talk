@@ -283,6 +283,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
 
     ~H"""
     <section class="slide">
+      <p class="slide__eyebrow slide__eyebrow--break">Math break!</p>
       <h2 class="slide__title">A dot product is a similarity score</h2>
       <div class="two-up two-up--lists dot">
         <div class="dot__arithmetic">
@@ -322,6 +323,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
 
     ~H"""
     <section class="slide">
+      <p class="slide__eyebrow slide__eyebrow--break">Math break!</p>
       <h2 class="slide__title slide__title--small">A softmax turns scores into a budget</h2>
       <div class="two-up">
         <div>
