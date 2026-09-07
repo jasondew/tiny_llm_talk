@@ -840,8 +840,10 @@
 }
 
 /* A listing with a figure beside it: the code takes what the figure leaves. */
+/* The aside has a fixed width so the code box does not change size as the
+ * grid beside it comes and goes between steps. */
 .two-up--code {
-  grid-template-columns: 1fr auto;
+  grid-template-columns: 1fr 380px;
   align-items: start;
   gap: 24px 32px;
 }
