@@ -254,18 +254,18 @@ defmodule TinyLlmTalk.Deck do
           steps: 7,
           notes: """
           The formula again, now over the real code, quoted from the repo,
-          not simplified. When the focus reaches the Q K transposed matmul
-          the head's output for the sentence appears beside it: seven rows,
-          one per position, each a distribution over the positions. One head; frontier models run many side by side. Step
-          through: the three projections, the dot products all at once, the
-          scale (root d, so the softmax does not saturate as vectors grow),
-          the mask, the softmax, the blend. The heatmap starts unmasked,
-          every position seeing the whole sentence, which is cheating; when
-          the focus reaches the mask lines the upper triangle goes dark and
-          the rows still sum to one. Say out loud: every position at once in
-          one matrix multiply, no loop over time, which is why this scales
-          and a recurrent network did not. Let them read; say only what
-          each block is for.
+          not simplified, and beside it the real numbers for the sentence
+          at each stage. Step through: the three projections; then the Q K
+          transposed matmul, and the seven by seven scores appear, signed,
+          already divided by root d so the softmax does not saturate as
+          vectors grow; the mask, and the future is struck out, every cell
+          above the diagonal; the softmax, and the scores become a
+          distribution per row, summing to one; the blend, and the context
+          appears under it, seven rows of thirty-two again, the input's
+          shape. One head; frontier models run many side by side. Say out
+          loud: every position at once in one matrix multiply, no loop over
+          time, which is why this scales and a recurrent network did not.
+          Let them read; say only what each block is for.
           """
         },
         %Slide{

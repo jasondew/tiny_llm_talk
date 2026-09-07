@@ -825,7 +825,34 @@
 }
 
 .two-up__aside {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
   padding-top: 6px;
+}
+
+.aside-figure {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.aside-figure__caption {
+  font-family: var(--serif);
+  font-size: 20px;
+  color: var(--ink-dim);
+}
+
+/* The heatmap's grid with the numbers written in instead of coloured. */
+.heatmap--numbers .heatmap__cell {
+  background: var(--paper-raised);
+  color: var(--ink);
+  font-size: 12px;
+}
+
+.heatmap--numbers .heatmap__cell--masked {
+  color: var(--ink-dim);
+  opacity: 0.4;
 }
 
 /* The bet's reveal: the row the answer was read from, under the tally. */
@@ -1297,8 +1324,18 @@
   width: 100%;
 }
 
+/* A row is a step with no box of its own, so its cells fade in, not it. */
 .walk__row {
   display: contents;
+}
+
+.walk .step > * {
+  opacity: 0;
+  transition: opacity 120ms linear;
+}
+
+.walk .step--shown > * {
+  opacity: 1;
 }
 
 .walk__label {

@@ -588,20 +588,23 @@ defmodule TinyLlmTalkWeb.SlideComponents do
     """
   end
 
-  # The heatmap appears when the code's focus reaches the Q Kᵀ matmul, and
-  # goes dark above the diagonal when the focus reaches the mask.
+  # What stands beside the code as its focus walks down: nothing until the
+  # Q Kᵀ matmul, then the raw scores, the same scores with the future struck
+  # out, the distribution the softmax makes of them, and the context rows
+  # the blend produces. Each is the real number from the checkpoint.
   @scores_step 3
-  @mask_step 5
+  @mask_step 4
+  @softmax_step 5
+  @blend_step 6
 
   def slide(%{slide: %Slide{id: :attention_code}} = assigns) do
     assigns =
       assign(assigns,
+        trace: Model.trace(Model.probe()),
         scores_step: @scores_step,
-        weights:
-          if(assigns.step >= @mask_step,
-            do: Model.attention(Model.probe()),
-            else: Model.unmasked_attention(Model.probe())
-          )
+        mask_step: @mask_step,
+        softmax_step: @softmax_step,
+        blend_step: @blend_step
       )
 
     ~H"""
@@ -621,16 +624,39 @@ defmodule TinyLlmTalkWeb.SlideComponents do
           <:annotation line={2}>K = input × W<sub>K</sub></:annotation>
           <:annotation line={3}>V = input × W<sub>V</sub></:annotation>
         </.code>
-        <.step n={@scores_step} step={@step} class="two-up__aside">
-          <.heatmap
-            :if={@weights}
-            values={@weights}
-            row_labels={Model.probe()}
-            column_labels={Model.probe()}
-            cell={30}
-          />
-          <.untrained :if={is_nil(@weights)} what="This heatmap" />
+        <.step :if={@trace} n={@scores_step} step={@step} class="two-up__aside">
+          <.step :if={@step < @softmax_step} n={@scores_step} step={@step} class="aside-figure">
+            <p class="aside-figure__caption">
+              {if @step < @mask_step, do: "Q Kᵀ / √d", else: "Q Kᵀ / √d, the future masked"}
+            </p>
+            <.score_grid
+              values={if @step < @mask_step, do: @trace.scores, else: @trace.masked}
+              labels={Model.probe()}
+              cell={44}
+            />
+          </.step>
+          <.step n={@softmax_step} step={@step} class="aside-figure">
+            <p class="aside-figure__caption">softmax, one distribution per row</p>
+            <.heatmap
+              values={@trace.weights}
+              row_labels={Model.probe()}
+              column_labels={Model.probe()}
+              cell={36}
+              show_values
+            />
+          </.step>
+          <.step n={@blend_step} step={@step} class="aside-figure">
+            <p class="aside-figure__caption">× V: the context, 7 × 32</p>
+            <.heatmap
+              values={magnitudes(@trace.context)}
+              row_labels={Model.probe()}
+              column_labels={Enum.map(1..Model.width(), fn _column -> "" end)}
+              cell={8}
+              class="heatmap--compact"
+            />
+          </.step>
         </.step>
+        <.untrained :if={is_nil(@trace)} what="This head" />
       </div>
     </section>
     """
@@ -1859,6 +1885,40 @@ defmodule TinyLlmTalkWeb.SlideComponents do
   defp softmax_at(scores, temperature) do
     [distribution] = Tensor.softmax([Enum.map(scores, &(&1 / temperature))])
     distribution
+  end
+
+  # A matrix of signed numbers on the heatmap's grid, so it lines up with the
+  # heatmap that replaces it. A nil is a masked cell, struck out.
+  attr :values, :list, required: true
+  attr :labels, :list, required: true
+  attr :cell, :integer, default: 44
+
+  defp score_grid(assigns) do
+    ~H"""
+    <div
+      class="heatmap heatmap--numbers"
+      style={"--heatmap-cell: #{@cell}px; --heatmap-columns: #{length(@labels)}"}
+    >
+      <div class="heatmap__corner" />
+      <div :for={label <- @labels} class="heatmap__column-label"><span>{label}</span></div>
+      <%= for {row, label} <- Enum.zip(@values, @labels) do %>
+        <div class="heatmap__row-label">{label}</div>
+        <div
+          :for={value <- row}
+          class={["heatmap__cell", is_nil(value) && "heatmap__cell--masked"]}
+        >
+          {if is_nil(value), do: "×", else: format_signed(value)}
+        </div>
+      <% end %>
+    </div>
+    """
+  end
+
+  # Every value as a share of the largest magnitude, for a heatmap of a
+  # matrix whose entries have signs.
+  defp magnitudes(rows) do
+    peak = rows |> List.flatten() |> Enum.map(&abs/1) |> Enum.max()
+    Enum.map(rows, fn row -> Enum.map(row, &(abs(&1) / peak)) end)
   end
 
   # The shape of a matrix, or the size of a plain number, at the start of a
