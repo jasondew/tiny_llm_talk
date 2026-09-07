@@ -502,7 +502,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
             </td>
             <td class="fuzzy__number">{format_weight(row.value)}</td>
             <td class={["fuzzy__number", @step < 3 && "fuzzy--hidden"]}>
-              {format_weight(row.weight)} &times; {format_weight(row.value)}
+              {format_weight(row.weight * row.value)}
             </td>
           </tr>
         </tbody>
