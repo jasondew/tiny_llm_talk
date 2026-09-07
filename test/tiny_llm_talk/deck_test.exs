@@ -27,11 +27,11 @@ defmodule TinyLlmTalk.DeckTest do
       assert index(:it_writes) == index(:one_function) + 1
     end
 
-    test "opens attention with the whole head, then the math the fuzzy map needs" do
-      assert Deck.at(index(:forgets_the_words) + 1).id == :attention_code
+    test "explains softmax, then shows the whole head, then the rest of its math" do
+      assert Deck.at(index(:forgets_the_words) + 1).id == :softmax_playground
 
-      assert Enum.slice(ids(), index(:attention_code) - 1, 4) ==
-               [:attention_code, :dot_product, :softmax_playground, :fuzzy_map]
+      assert Enum.slice(ids(), index(:softmax_playground) - 1, 4) ==
+               [:softmax_playground, :attention_code, :dot_product, :fuzzy_map]
 
       refute :map_get in ids()
     end

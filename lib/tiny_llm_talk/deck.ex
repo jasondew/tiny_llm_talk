@@ -184,13 +184,22 @@ defmodule TinyLlmTalk.Deck do
       lands: "a fuzzy lookup: score every key, budget the scores, blend the values",
       slides: [
         %Slide{
+          id: :softmax_playground,
+          title: "A softmax turns scores into a budget",
+          notes: """
+          Drag the slider. Five scores in, five shares out, always summing to
+          one. The words are just labels, none of them from the sentence. Sharp means commit to the top score; soft means spread the
+          budget. Say "budget" and "commit"; never say exponential.
+          """
+        },
+        %Slide{
           id: :attention_code,
           title: "One head of attention, sixteen lines",
           steps: 8,
           notes: """
-          The destination first, then the walk to it. The formula alone on
-          the first step; it is the whole thing: score every key against the
-          query, scale, softmax into a budget, blend the values. One head;
+          The formula alone on the first step; it is the whole thing: score
+          every key against the query, scale, softmax into a budget (the
+          slider from the last slide), blend the values. One head;
           frontier models run many side by side. Then the code, quoted from
           the repo, not simplified. Step through: the three projections, the dot products all at once,
           the scale, the mask, the softmax, the blend. Let them read; say only
@@ -205,15 +214,6 @@ defmodule TinyLlmTalk.Deck do
           Two lists, multiply pairwise, add. Big when they point the same way,
           near zero when unrelated, negative when opposed. That is the only
           arithmetic in attention.
-          """
-        },
-        %Slide{
-          id: :softmax_playground,
-          title: "A softmax turns scores into a budget",
-          notes: """
-          Drag the slider. Five scores in, five shares out, always summing to
-          one. The words are just labels, none of them from the sentence. Sharp means commit to the top score; soft means spread the
-          budget. Say "budget" and "commit"; never say exponential.
           """
         },
         %Slide{
