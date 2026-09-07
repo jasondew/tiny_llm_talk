@@ -991,131 +991,6 @@ defmodule TinyLlmTalkWeb.SlideComponents do
     """
   end
 
-  def slide(%{slide: %Slide{id: :tests_for_math}} = assigns) do
-    ~H"""
-    <section class="slide">
-      <h2 class="slide__title">Tests for math</h2>
-      <.code
-        path="lib/tiny_llm/grad_check.ex"
-        range={81..87}
-        step={@step}
-        focus={[:all, 2..4, 5..7]}
-      />
-    </section>
-    """
-  end
-
-  # 9. Did it learn it ------------------------------------------------------
-
-  def slide(%{slide: %Slide{id: :the_number}} = assigns) do
-    assigns =
-      assign(assigns,
-        bigram: Model.agreement(:bigram),
-        transformer: Model.agreement(:transformer),
-        probes: length(Model.distractor_probes())
-      )
-
-    ~H"""
-    <section class="slide slide--centred">
-      <h2 class="slide__title">On the sentences where the nearest noun lies</h2>
-      <div class="stat-row">
-        <.stat value={format_percent(@bigram)} label="count table" tone="bad" />
-        <.stat value={format_percent(@transformer)} label="one attention block" tone="good" />
-      </div>
-      <p class="slide__lede">
-        The count table is at chance. The only word it sees is the one pointing the wrong way.
-      </p>
-    </section>
-    """
-  end
-
-  def slide(%{slide: %Slide{id: :rematch}} = assigns) do
-    activity = Room.activity(:rematch)
-
-    assigns =
-      assign(assigns,
-        activity: activity,
-        model_pick: Model.pick(Model.rematch_probe(), activity.options),
-        model_confidence: probability_after(Model.rematch_probe(), activity.answer)
-      )
-
-    ~H"""
-    <section class="slide slide--tight">
-      <.probe
-        words={[
-          "the",
-          {"geese", :subject},
-          "who",
-          "see",
-          "a",
-          {"fox", :distractor},
-          {"____", :blank}
-        ]}
-        show_marks={@step >= 2}
-        class="probe--wide"
-      />
-      <div class="ask">
-        <.qr size={200} />
-        <.tally tally={Room.tally(@room, :rematch)} answer={@activity.answer} reveal={@step >= 2} />
-      </div>
-      <.step n={2} step={@step} class="slide__lede">
-        The model says
-        <span class="word word--lit">{@model_pick || "..."}</span><span :if={@model_confidence}>, with {format_percent(@model_confidence)} on {@activity.answer}</span>.
-        The room says <span class="word word--lit">{Room.majority(@room, :rematch) || "nothing yet"}</span>.
-      </.step>
-    </section>
-    """
-  end
-
-  def slide(%{slide: %Slide{id: :scoreboard}} = assigns) do
-    assigns =
-      assign(assigns,
-        results: Room.results(assigns.room),
-        score: Room.score(assigns.room),
-        model: model_record()
-      )
-
-    ~H"""
-    <section class="slide">
-      <h2 class="slide__title">How the room did</h2>
-      <table :if={@results != []} class="scoreboard">
-        <thead>
-          <tr>
-            <th>question</th>
-            <th>the room said</th>
-            <th>answer</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr :for={{name, result} <- @results}>
-            <td>{question_label(name)}</td>
-            <td class="scoreboard__choice">{result.choice}</td>
-            <td class="scoreboard__answer">{result.answer}</td>
-            <td class={["scoreboard__mark", result.correct? && "scoreboard__mark--right"]}>
-              {if result.correct?, do: "yes", else: "no"}
-            </td>
-          </tr>
-        </tbody>
-      </table>
-      <p :if={@results == []} class="slide__lede">Nobody voted. The room is undefeated.</p>
-      <div class="stat-row">
-        <.stat
-          value={"#{@score.right} of #{@score.asked}"}
-          label="the room, on the questions it answered"
-          tone="good"
-        />
-        <.stat
-          :if={@model}
-          value={"#{@model.right} of #{@model.asked}"}
-          label="the model, on the two verb questions"
-          tone="cool"
-        />
-      </div>
-    </section>
-    """
-  end
-
   def slide(%{slide: %Slide{id: :all_of_it_again}} = assigns) do
     ~H"""
     <section class="slide">
@@ -1272,21 +1147,6 @@ defmodule TinyLlmTalkWeb.SlideComponents do
   end
 
   # Shared pieces -----------------------------------------------------------
-
-  attr :value, :string, required: true
-  attr :label, :string, required: true
-  attr :note, :string, default: nil
-  attr :tone, :string, default: nil
-
-  defp stat(assigns) do
-    ~H"""
-    <div class={["stat", @tone && "stat--#{@tone}"]}>
-      <p class="stat__value">{@value}</p>
-      <p class="stat__label">{@label}</p>
-      <p :if={@note} class="stat__note">{@note}</p>
-    </div>
-    """
-  end
 
   # The model writing a paragraph, with the forward pass for the word being
   # written drawn beside it. Opens the talk and closes it.
@@ -1807,32 +1667,6 @@ defmodule TinyLlmTalkWeb.SlideComponents do
       distribution -> Enum.at(distribution, Vocab.word_to_id(word))
     end
   end
-
-  # How the model does on the two questions that have a grammatical answer,
-  # for the scoreboard's second line. Nil without a checkpoint.
-  defp model_record do
-    questions = [
-      {Model.probe(), Room.activity(:verb_vote)},
-      {Model.rematch_probe(), Room.activity(:rematch)}
-    ]
-
-    picks =
-      Enum.map(questions, fn {probe, activity} ->
-        {Model.pick(probe, activity.options), activity.answer}
-      end)
-
-    if Enum.any?(picks, fn {pick, _answer} -> is_nil(pick) end) do
-      nil
-    else
-      %{right: Enum.count(picks, fn {pick, answer} -> pick == answer end), asked: length(picks)}
-    end
-  end
-
-  defp question_label(:verb_vote), do: "flees, or flee?"
-  defp question_label(:bigram_next), do: "what follows chases"
-  defp question_label(:attention_bet), do: "where the blank looks"
-  defp question_label(:spot_the_human), do: "spot the human"
-  defp question_label(:rematch), do: "the geese who see a fox"
 
   defp format_vector(vector), do: "[" <> Enum.map_join(vector, ", ", &format_signed/1) <> "]"
 

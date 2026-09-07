@@ -1,7 +1,7 @@
 # the llama who chases the dogs
 
-Attention from scratch, in Elixir. Forty-five minutes: thirty-five of talk,
-ten for questions.
+Attention from scratch, in Elixir. Forty-five minutes: thirty-three of talk,
+twelve for questions.
 
 The arc is one sentence going through one forward pass, in the order
 `TinyLlm.Transformer.forward/2` runs it. There is no history and no
@@ -24,8 +24,8 @@ the sentence, the picture of where attention looks, and the score.
 | 3 | Attention | 11 | math break: **dot product** with two arrows to drag and **softmax playground**; then ask/offer/hand over with the formula, **a small example by hand** on a toy map, one head of attention (the formula over sixteen annotated lines, the heatmap beside them going dark when the focus reaches the mask), **bet: where will the blank look**, **the walkthrough**, LLMs are weird | presenter drags, slider, picks; audience bet |
 | 4 | The rest of the block | 3 | lid off, three pieces of plumbing | |
 | 5 | Back to words | 3 | rows become a distribution, the loop, **one word at a time**, **temperature dial** | presenter |
-| 6 | Training | 4 | **training, live** (press start, talk over it), guess / measure / nudge / repeat, the loss replayed, tests for math | presenter start |
-| 7 | Did it learn it | 3 | the number, **rematch: room vs model**, **scoreboard**, this was all of it (the seven lines, walked), what is not here, the sentence again, **it writes** again under the repo link, sources | audience vote |
+| 6 | Training | 3 | **training, live** (press start, talk over it), guess / measure / nudge / repeat, the loss replayed | presenter start |
+| 7 | Did it learn it | 2 | this was all of it (the seven lines, walked), what is not here, the sentence again, **it writes** again under the repo link, sources | |
 
 ## Live training and the writer
 
@@ -46,11 +46,10 @@ pure function of its number (`TinyLlmTalk.Writer`).
 ## The audience
 
 Every vote has a right answer and a reveal step. On reveal every phone says
-whether its owner agreed, and the room's record accumulates for the
-scoreboard. The record is kept in `TinyLlmTalk.Room`.
+whether its owner agreed. The record is kept in `TinyLlmTalk.Room`.
 
-Three audience moments: the vote, the bet, and the rematch. Spot the human
-was the first cut when the deck ran long, and it is gone.
+Two audience moments: the vote and the bet. Spot the human, the rematch and
+the scoreboard were cut when the deck ran long.
 
 ## The speaker
 
@@ -70,4 +69,5 @@ preview is a control turned on the big screen. The controls are
 
 The neural bigram, the entropy floor as a section, PCA, and the
 temperature trade-off chart are in the repo and the Livebook, not on stage.
-They exist so that the two claims made in section 7 are true.
+They exist so that the claims the repo makes about what the model learned
+are true.

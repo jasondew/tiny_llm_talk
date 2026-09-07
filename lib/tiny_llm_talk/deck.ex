@@ -381,8 +381,8 @@ defmodule TinyLlmTalk.Deck do
     %Section{
       number: 6,
       title: "Training",
-      minutes: 4,
-      lands: "it trains live; guess, measure, nudge, repeat; and tests for the math",
+      minutes: 3,
+      lands: "it trains live; guess, measure, nudge, repeat",
       slides: [
         %Slide{
           id: :live_training,
@@ -418,59 +418,15 @@ defmodule TinyLlmTalk.Deck do
           point made: it goes well under the dashed line, which is the
           proof. It is using information the previous word does not carry.
           """
-        },
-        %Slide{
-          id: :tests_for_math,
-          title: "Tests for math",
-          steps: 3,
-          notes: """
-          Every gradient is derived by hand. So how do you know it is right?
-          Nudge each parameter up and down, measure the loss both ways, and
-          compare the slope to what the derivation says. A plausible-looking
-          wrong gradient still trains, slowly. This test is what caught the
-          missing transpose.
-          """
         }
       ]
     },
     %Section{
       number: 7,
       title: "Did it learn it",
-      minutes: 3,
-      lands: "only the model beats chance when a distractor gets in the way",
+      minutes: 2,
+      lands: "the whole thing again, the sentence again, and it writes",
       slides: [
-        %Slide{
-          id: :the_number,
-          title: "On the sentences where the nearest noun lies",
-          notes: """
-          Held-out probes, filtered to the ones with a distractor. The count
-          table is at chance, because the only word it sees is the one pointing
-          the wrong way. The model is not perfect and is not at chance. Do not
-          quote the aggregate; a third of the probes are free for every model.
-          """
-        },
-        %Slide{
-          id: :rematch,
-          title: "Rematch",
-          activity: :rematch,
-          steps: 2,
-          notes: """
-          A fresh sentence the model has never seen, plural subject this time.
-          The room votes, then the model answers. Either way it is a good
-          moment: the room beating the model is a laugh, the model beating the
-          room is a better one.
-          """
-        },
-        %Slide{
-          id: :scoreboard,
-          title: "How the room did",
-          notes: """
-          Every question the room answered, and whether it agreed with the
-          answer. Read it out. Then the model's line on the same two verb
-          questions. Whoever won, the humans had a grammar lesson and the model
-          had fifteen thousand floats.
-          """
-        },
         %Slide{
           id: :all_of_it_again,
           title: "This was all of it",

@@ -77,14 +77,14 @@ defmodule TinyLlmTalkWeb.DeckLiveTest do
 
   describe "the audience activities" do
     test "opens a slide's activity on arrival", %{conn: conn} do
-      slide = Enum.find(Deck.slides(), &(&1.activity == :rematch))
+      slide = Enum.find(Deck.slides(), &(&1.activity == :attention_bet))
       {:ok, _view, _html} = live(conn, ~p"/s/#{slide.index}")
 
-      assert Room.state().activity == :rematch
+      assert Room.state().activity == :attention_bet
     end
 
     test "closes it again on the way out", %{conn: conn} do
-      slide = Enum.find(Deck.slides(), &(&1.activity == :rematch))
+      slide = Enum.find(Deck.slides(), &(&1.activity == :attention_bet))
       {:ok, view, _html} = live(conn, ~p"/s/#{slide.index}/#{slide.steps}")
 
       render_keydown(view, "key", %{"key" => "ArrowRight"})
@@ -93,26 +93,26 @@ defmodule TinyLlmTalkWeb.DeckLiveTest do
     end
 
     test "keeps the votes and reveals the answer on the second step", %{conn: conn} do
-      slide = Enum.find(Deck.slides(), &(&1.activity == :rematch))
+      slide = Enum.find(Deck.slides(), &(&1.activity == :attention_bet))
       {:ok, view, _html} = live(conn, ~p"/s/#{slide.index}")
-      Room.vote(self(), "flee")
+      Room.vote(self(), "who")
       refute Room.state().revealed
 
       render_keydown(view, "key", %{"key" => "ArrowRight"})
 
-      assert Room.state().activity == :rematch
+      assert Room.state().activity == :attention_bet
       assert Room.state().revealed
-      assert Room.tally(Room.state(), :rematch) == [{"flee", 1}, {"flees", 0}]
+      assert {"who", 1} in Room.tally(Room.state(), :attention_bet)
     end
 
     test "records the room's answer once the deck moves on", %{conn: conn} do
-      slide = Enum.find(Deck.slides(), &(&1.activity == :rematch))
+      slide = Enum.find(Deck.slides(), &(&1.activity == :attention_bet))
       {:ok, view, _html} = live(conn, ~p"/s/#{slide.index}/#{slide.steps}")
-      Room.vote(self(), "flee")
+      Room.vote(self(), "who")
 
       render_keydown(view, "key", %{"key" => "ArrowRight"})
 
-      assert [{:rematch, %{correct?: true}}] = Room.results(Room.state())
+      assert [{:attention_bet, %{correct?: true}}] = Room.results(Room.state())
     end
   end
 

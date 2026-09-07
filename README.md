@@ -137,12 +137,9 @@ open `/join` on any device and it shows whatever question the deck is on:
 
 - **section 0** flees, or flee? The first slide, on screen while the room arrives.
 - **section 3** where will the blank look? They bet, then the walkthrough answers.
-- **section 7** a rematch on a sentence the model has never seen, room against
-  model.
 
 Every question with a right answer reveals it on the slide's second step. The
-room does the revealing, so every phone says whether its owner agreed, and the
-room's record accumulates for the scoreboard at the end.
+room does the revealing, so every phone says whether its owner agreed.
 
 `TinyLlmTalk.Room` holds it. Arriving at a slide opens its activity and leaving
 closes it, so there is nothing extra to remember while presenting, and walking
