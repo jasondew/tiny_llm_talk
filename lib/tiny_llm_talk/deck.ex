@@ -275,8 +275,9 @@ defmodule TinyLlmTalk.Deck do
           steps: 2,
           notes: """
           Ask before showing, by voice: llama, dogs, who, chases. Most rooms
-          say llama, because that is the answer to the grammar question. The model says who; the reveal shows the
-          last row of the heatmap from the last slide, the dogs position,
+          say llama, because that is the answer to the grammar question. The weights from the last slide stay on screen
+          to stare at while they answer. The model says who; the reveal
+          shows the last row of that heatmap, the dogs position,
           because the blank has no row: it is predicted from the output of
           the last position given. Say that plainly, it is the question
           someone will ask. Being wrong together is what makes the

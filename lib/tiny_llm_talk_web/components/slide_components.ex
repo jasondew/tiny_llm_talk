@@ -706,9 +706,15 @@ defmodule TinyLlmTalkWeb.SlideComponents do
   end
 
   def slide(%{slide: %Slide{id: :attention_bet}} = assigns) do
+    trace = Model.trace(Model.probe())
     blank_row = blank_attention_row()
 
-    assigns = assign(assigns, blank_row: blank_row, answer: blank_row && top_word(blank_row))
+    assigns =
+      assign(assigns,
+        stage: trace && attention_stage(trace, @softmax_step),
+        blank_row: blank_row,
+        answer: blank_row && top_word(blank_row)
+      )
 
     ~H"""
     <section class="slide slide--tight">
@@ -716,20 +722,32 @@ defmodule TinyLlmTalkWeb.SlideComponents do
       <h2 class="slide__title slide__title--small">
         Which word does the blank attend to the most?
       </h2>
-      <.step :if={@blank_row} n={2} step={@step} class="bet-row">
-        <p class="row-caption">
-          the last row of the heatmap: <span class="word word--lit">dogs</span> predicts the blank
-        </p>
-        <.bars
-          values={@blank_row}
-          words={Model.probe()}
-          top={4}
-          highlight={List.wrap(@answer)}
-          absolute
-          class="bars--compact"
-        />
-      </.step>
-      <.untrained :if={is_nil(@blank_row)} what="This bet" />
+      <div :if={@stage} class="two-up two-up--bet">
+        <div class="aside-figure">
+          <p class="aside-figure__caption">{@stage.caption}</p>
+          <.score_grid
+            values={@stage.values}
+            heat={@stage.heat}
+            format={@stage.format}
+            labels={Model.probe()}
+            cell={36}
+          />
+        </div>
+        <.step :if={@blank_row} n={2} step={@step} class="bet-row">
+          <p class="row-caption">
+            the last row: <span class="word word--lit">dogs</span> predicts the blank
+          </p>
+          <.bars
+            values={@blank_row}
+            words={Model.probe()}
+            top={4}
+            highlight={List.wrap(@answer)}
+            absolute
+            class="bars--compact"
+          />
+        </.step>
+      </div>
+      <.untrained :if={is_nil(@stage)} what="This bet" />
     </section>
     """
   end

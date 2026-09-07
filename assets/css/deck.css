@@ -1076,6 +1076,13 @@
   opacity: 0.4;
 }
 
+/* The bet: the weights to stare at while answering, the reveal beside them. */
+.two-up--bet {
+  grid-template-columns: auto 1fr;
+  align-items: end;
+  gap: 24px 48px;
+}
+
 /* The bet's reveal: the row the answer was read from. */
 .bet-row {
   display: flex;
