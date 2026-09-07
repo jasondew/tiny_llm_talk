@@ -46,6 +46,8 @@ defmodule TinyLlmTalkWeb.DeckLiveTest do
     {:ok, _view, html} = live(conn, ~p"/s/#{slide.index}")
 
     assert slide.steps == 1
+    assert slide.title == "The transformer"
+    assert html =~ ">The transformer</h2>"
     assert html =~ "stack__layer--attention"
     assert html =~ "stack__layer--mlp"
     assert html =~ ">normalization<"

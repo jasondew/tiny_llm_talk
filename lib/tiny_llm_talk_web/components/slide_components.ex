@@ -104,7 +104,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
   def slide(%{slide: %Slide{id: :the_architecture}} = assigns) do
     ~H"""
     <section class="slide slide--tight">
-      <h2 class="slide__title slide__title--small">A transformer is one block, repeated</h2>
+      <h2 class="slide__title slide__title--small">The transformer</h2>
       <div class="slide__fill">
         <.block_diagram repeats="× N" />
       </div>

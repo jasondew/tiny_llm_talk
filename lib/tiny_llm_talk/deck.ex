@@ -48,7 +48,7 @@ defmodule TinyLlmTalk.Deck do
         },
         %Slide{
           id: :the_architecture,
-          title: "What a transformer is",
+          title: "The transformer",
           notes: """
           Motivate it before building it. The stack: a word becomes a row,
           then the block, then probabilities. Inside the dashed box, attention
