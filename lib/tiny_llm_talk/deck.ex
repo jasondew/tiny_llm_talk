@@ -471,17 +471,10 @@ defmodule TinyLlmTalk.Deck do
           title: "It writes",
           ticks: true,
           notes: """
-          The writer again, under the repo link. Leave it running through the
-          questions. Stop talking.
-          """
-        },
-        %Slide{
-          id: :sources,
-          title: "Sources",
-          notes: """
-          Both repos and the paper. Everything quoted about the frontier
-          models came from the reports listed here. Step back one if you
-          would rather have the writer running during questions.
+          The writer again, under the repo link, with both repos and the
+          papers along the bottom where its controls were. Everything quoted
+          about the frontier models came from the reports listed there.
+          Leave it running through the questions. Stop talking.
           """
         }
       ]

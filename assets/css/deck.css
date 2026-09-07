@@ -1747,6 +1747,30 @@
   flex: 0 0 auto;
 }
 
+/* The closing writer ends on the sources instead of its controls. */
+.writer__sources {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  text-align: left;
+  font-size: 14px;
+  line-height: 1.4;
+  color: var(--ink-dim);
+}
+
+.writer__sources code {
+  font-family: var(--mono);
+  color: var(--accent-cool);
+}
+
+.writer__source-label {
+  display: inline-block;
+  width: 64px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-size: 12px;
+}
+
 .writer__pair {
   display: grid;
   grid-template-columns: 1fr 1fr;

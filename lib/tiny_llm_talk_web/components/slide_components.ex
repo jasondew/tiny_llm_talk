@@ -1068,48 +1068,9 @@ defmodule TinyLlmTalkWeb.SlideComponents do
     """
   end
 
-  def slide(%{slide: %Slide{id: :sources}} = assigns) do
-    assigns = assign(assigns, repo: Application.fetch_env!(:tiny_llm_talk, :repo_label))
-
-    ~H"""
-    <section class="slide">
-      <h2 class="slide__title">Sources</h2>
-      <div class="two-up two-up--lists">
-        <div>
-          <p class="slide__eyebrow">code</p>
-          <ul class="claims claims--compact">
-            <li>the model: <code>{@repo}</code></li>
-            <li>this deck: <code>github.com/jasondew/tiny_llm_talk</code></li>
-          </ul>
-        </div>
-        <div>
-          <p class="slide__eyebrow">papers</p>
-          <ul class="claims claims--compact">
-            <li>
-              Vaswani et al., 2017. Attention Is All You Need. <code>arxiv.org/abs/1706.03762</code>
-            </li>
-            <li>OpenAI, 2023. GPT-4 Technical Report. <code>arxiv.org/abs/2303.08774</code></li>
-            <li>
-              Google, 2023. Gemini: A Family of Highly Capable Multimodal Models.
-              <code>arxiv.org/abs/2312.11805</code>
-            </li>
-            <li>
-              DeepSeek, 2024. DeepSeek-V3 Technical Report. <code>arxiv.org/abs/2412.19437</code>
-            </li>
-            <li>
-              Meta, 2025. The Llama 4 herd.
-              <code>ai.meta.com/blog/llama-4-multimodal-intelligence</code>
-            </li>
-          </ul>
-        </div>
-      </div>
-    </section>
-    """
-  end
-
   def slide(%{slide: %Slide{id: :it_writes_again}} = assigns) do
     ~H"""
-    <.writer controls={@controls} frame={@frame} eyebrow="github.com/jasondew/tiny_llm" />
+    <.writer controls={@controls} frame={@frame} eyebrow="github.com/jasondew/tiny_llm" sources />
     """
   end
 
@@ -1140,9 +1101,14 @@ defmodule TinyLlmTalkWeb.SlideComponents do
   attr :frame, :integer, required: true
   attr :eyebrow, :string, default: nil
 
+  attr :sources, :boolean,
+    default: false,
+    doc: "the closing writer: sources where the controls were"
+
   defp writer(assigns) do
     seed = Writer.seed(Controls.shuffles(assigns.controls))
     frame = Writer.frame(seed, assigns.frame)
+    assigns = assign(assigns, repo: Application.fetch_env!(:tiny_llm_talk, :repo_label))
 
     assigns =
       assign(assigns,
@@ -1266,7 +1232,22 @@ defmodule TinyLlmTalkWeb.SlideComponents do
           <p :if={is_nil(@next)} class="writer__pending">&hellip;</p>
         </div>
       </div>
-      <div class="writer__bar">
+      <div :if={@sources} class="writer__bar writer__sources">
+        <p>
+          <span class="writer__source-label">code</span>
+          the model <code>{@repo}</code>
+          &middot; this deck <code>github.com/jasondew/tiny_llm_talk</code>
+        </p>
+        <p>
+          <span class="writer__source-label">papers</span>
+          Vaswani et al. 2017, Attention Is All You Need <code>arxiv.org/abs/1706.03762</code>
+          &middot; GPT-4 <code>arxiv.org/abs/2303.08774</code>
+          &middot; Gemini <code>arxiv.org/abs/2312.11805</code>
+          &middot; DeepSeek-V3 <code>arxiv.org/abs/2412.19437</code>
+          &middot; Llama 4 <code>ai.meta.com/blog/llama-4-multimodal-intelligence</code>
+        </p>
+      </div>
+      <div :if={not @sources} class="writer__bar">
         <p class="writer__count">
           {@parameters} parameters &middot; temperature {Writer.temperature()} &middot; pure Elixir &middot; no library
         </p>
