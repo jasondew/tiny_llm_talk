@@ -12,7 +12,9 @@ defmodule TinyLlmTalk.Writer do
   The phases follow `TinyLlm.Transformer.forward/2` in order: the word
   becomes an integer, the rows attention will read, the queries and keys,
   the attention itself, the values blended by it, the distribution over what
-  comes next, and the pick.
+  comes next, and the pick. The pick joins the sequence the moment it is
+  made, which is the only way a full stop is ever seen: it ends the sentence,
+  so it is never read as input.
 
   Everything here is arithmetic on a list of sentences. What the phases look
   like is the slide's business.
@@ -33,6 +35,7 @@ defmodule TinyLlmTalk.Writer do
   @type frame :: %{
           phase: phase(),
           prefix: [String.t()],
+          sequence: [String.t()],
           chosen: String.t(),
           written: [[String.t()]],
           current: [String.t()],
@@ -70,7 +73,8 @@ defmodule TinyLlmTalk.Writer do
   def finished?(seed, number), do: number >= __MODULE__.length(seed) - 1
 
   @doc """
-  What is on screen at a frame: which phase, the prefix being read, the word
+  What is on screen at a frame: which phase, the prefix being read, the
+  sequence as integers with the pick appended once it is made, the word
   about to be chosen, the sentences already written and the words of the
   current one so far. Frames past the end show the end. Nil until there is a
   checkpoint to write with.
@@ -98,12 +102,15 @@ defmodule TinyLlmTalk.Writer do
     {before, [chosen | _rest]} = Enum.split(sentence, word_index)
     phase = Enum.at(@phases, phase_index)
 
+    picked = if phase == :pick, do: before ++ [chosen], else: before
+
     %{
       phase: phase,
       prefix: ["<start>" | before],
+      sequence: ["<start>" | picked],
       chosen: chosen,
       written: Enum.take(sentences, sentence_index),
-      current: if(phase == :pick, do: before ++ [chosen], else: before),
+      current: picked,
       sentence: sentence_index,
       total: Kernel.length(sentences)
     }

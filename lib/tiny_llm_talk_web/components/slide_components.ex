@@ -1452,7 +1452,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
         frame: frame,
         pace: Controls.choice(assigns.controls, "pace", "normal"),
         parameters: format_count(Model.parameter_count()),
-        size: frame && length(frame.prefix)
+        last_chip: frame && length(frame.sequence) - 1
       )
 
     # A stage shows the word being written only once the wave has reached it.
@@ -1478,8 +1478,8 @@ defmodule TinyLlmTalkWeb.SlideComponents do
           </p>
           <div class="writer__chips">
             <span
-              :for={{word, index} <- Enum.with_index(@frame.prefix)}
-              class={["writer__chip", index == @size - 1 && "writer__chip--lit"]}
+              :for={{word, index} <- Enum.with_index(@frame.sequence)}
+              class={["writer__chip", index == @last_chip && "writer__chip--lit"]}
             >
               <span class="writer__chip-word">{word}</span>
               <span class="writer__chip-id">{Vocab.word_to_id(word)}</span>

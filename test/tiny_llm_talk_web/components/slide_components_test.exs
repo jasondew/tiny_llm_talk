@@ -18,6 +18,21 @@ defmodule TinyLlmTalkWeb.SlideComponentsTest do
     end
   end
 
+  describe "the writer" do
+    test "shows the full stop as a chip once it is picked" do
+      slide = Enum.find(Deck.slides(), &(&1.id == :it_writes))
+      [first | _rest] = TinyLlmTalk.Writer.paragraph(TinyLlmTalk.Writer.seed(0))
+      last_pick = length(first) * length(TinyLlmTalk.Writer.phases()) - 1
+
+      html = render_component(&SlideComponents.slide/1, slide: slide, step: 1, frame: last_pick)
+
+      assert html =~ ~s(<span class="writer__chip-word">.</span>)
+
+      assert html =~
+               ~r/writer__chip writer__chip--lit[^>]*>\s*<span class="writer__chip-word">\.</
+    end
+  end
+
   describe "steps/1" do
     test "gives a drawn slide its planned beats and a stub exactly one" do
       for slide <- Deck.slides() do

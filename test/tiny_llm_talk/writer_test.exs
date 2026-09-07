@@ -48,6 +48,21 @@ defmodule TinyLlmTalk.WriterTest do
     assert Writer.frame(@seed, @per_word - 1).current == [hd(first)]
   end
 
+  test "adds the pick to the sequence on screen, so the full stop is seen" do
+    [first | _rest] = Writer.paragraph(@seed)
+    last_pick = length(first) * @per_word - 1
+
+    assert Writer.frame(@seed, last_pick - 1).sequence == ["<start>" | Enum.drop(first, -1)]
+    assert Writer.frame(@seed, last_pick).sequence == ["<start>" | first]
+    assert Writer.frame(@seed, last_pick + 1).sequence == ["<start>"]
+  end
+
+  test "keeps the last full stop on screen once the paragraph is finished" do
+    last = Writer.length(@seed) - 1
+
+    assert List.last(Writer.frame(@seed, last).sequence) == "."
+  end
+
   test "moves on to the next sentence and keeps the ones written" do
     [first | _rest] = Writer.paragraph(@seed)
     frame = Writer.frame(@seed, length(first) * @per_word)
