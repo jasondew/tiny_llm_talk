@@ -439,7 +439,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
     """
   end
 
-  # 4. Attention, from Map --------------------------------------------------
+  # 4. Attention ------------------------------------------------------------
 
   def slide(%{slide: %Slide{id: :fuzzy_map}} = assigns) do
     query = Controls.choice(assigns.controls, "query", "geese")

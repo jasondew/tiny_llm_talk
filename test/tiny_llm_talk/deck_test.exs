@@ -36,6 +36,10 @@ defmodule TinyLlmTalk.DeckTest do
       refute :map_get in ids()
     end
 
+    test "calls the attention section Attention, with no Map in the name" do
+      assert Deck.section(Deck.at(index(:attention_code))).title == "Attention"
+    end
+
     test "trains live inside the training section, not under the introduction" do
       training = Deck.at(index(:live_training))
 

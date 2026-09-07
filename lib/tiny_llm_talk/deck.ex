@@ -179,7 +179,7 @@ defmodule TinyLlmTalk.Deck do
     },
     %Section{
       number: 3,
-      title: "Attention, from Map",
+      title: "Attention",
       minutes: 11,
       lands: "a fuzzy lookup: score every key, budget the scores, blend the values",
       slides: [
