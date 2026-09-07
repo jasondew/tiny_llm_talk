@@ -26,8 +26,8 @@ defmodule TinyLlmTalkWeb.Controls do
   # rate a browser can paint; a zero-delay loop of full re-renders was enough
   # to take a browser down. Pause has no clock; the speaker advances a frame
   # at a time with the step button.
-  @paces %{"slow" => 1_100, "normal" => 700, "realtime" => 80, "pause" => nil}
-  @default_pace "normal"
+  @paces %{"normal" => 700, "realtime" => 80, "pause" => nil}
+  @default_pace "pause"
 
   @doc "The events a slide may send, so both LiveViews can match on them."
   @spec events() :: [String.t()]
@@ -124,7 +124,7 @@ defmodule TinyLlmTalkWeb.Controls do
   end
 
   @spec paces() :: [String.t()]
-  def paces, do: ~w(slow normal realtime pause)
+  def paces, do: ~w(normal realtime pause)
 
   @doc "Whether the writer is at realtime pace, a word a tick rather than a phase."
   @spec realtime?(map()) :: boolean()

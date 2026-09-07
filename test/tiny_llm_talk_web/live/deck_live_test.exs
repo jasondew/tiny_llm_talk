@@ -133,9 +133,9 @@ defmodule TinyLlmTalkWeb.DeckLiveTest do
       slide = Enum.find(Deck.slides(), &(&1.id == :it_writes))
       {:ok, view, _html} = live(conn, ~p"/s/#{slide.index}")
 
-      view |> element("button[phx-value-choice='slow']") |> render_click()
+      view |> element("button[phx-value-choice='realtime']") |> render_click()
 
-      assert render(view) =~ ~s(picker__option picker__option--chosen">slow)
+      assert render(view) =~ ~s(picker__option picker__option--chosen">realtime)
     end
 
     test "moves the dot product's arrows, and puts them back", %{conn: conn} do
@@ -172,9 +172,15 @@ defmodule TinyLlmTalkWeb.DeckLiveTest do
   end
 
   describe "an animated slide" do
-    test "advances a frame on its own clock and shows a different phase", %{conn: conn} do
+    test "starts paused, and advances a frame on its own clock once set going", %{conn: conn} do
       slide = Enum.find(Deck.slides(), &(&1.id == :it_writes))
       {:ok, view, _html} = live(conn, ~p"/s/#{slide.index}")
+      before = render(view)
+
+      send(view.pid, :frame)
+      assert render(view) == before
+
+      view |> element("button[phx-value-choice='normal']") |> render_click()
       before = render(view)
 
       send(view.pid, :frame)
@@ -191,6 +197,7 @@ defmodule TinyLlmTalkWeb.DeckLiveTest do
     test "keeps ticking on its own clock, and stops when the slide changes", %{conn: conn} do
       slide = Enum.find(Deck.slides(), &(&1.id == :it_writes))
       {:ok, view, _html} = live(conn, ~p"/s/#{slide.index}")
+      view |> element("button[phx-value-choice='normal']") |> render_click()
 
       # Normal pace is 700ms a frame, so 2.3 seconds is at least three frames.
       Process.sleep(2_300)
@@ -222,6 +229,7 @@ defmodule TinyLlmTalkWeb.DeckLiveTest do
     test "lands on every word's pick in realtime, whatever phase it was on", %{conn: conn} do
       slide = Enum.find(Deck.slides(), &(&1.id == :it_writes))
       {:ok, view, _html} = live(conn, ~p"/s/#{slide.index}")
+      view |> element("button[phx-value-choice='normal']") |> render_click()
       send(view.pid, :frame)
       send(view.pid, :frame)
       assert live_stage(render(view)) =~ "3."
@@ -242,12 +250,23 @@ defmodule TinyLlmTalkWeb.DeckLiveTest do
     test "starts over with a new paragraph on shuffle", %{conn: conn} do
       slide = Enum.find(Deck.slides(), &(&1.id == :it_writes))
       {:ok, view, _html} = live(conn, ~p"/s/#{slide.index}")
+      view |> element("button[phx-value-choice='normal']") |> render_click()
       send(view.pid, :frame)
       send(view.pid, :frame)
 
       render_click(view, "shuffle", %{})
 
       assert render(view) =~ "1. words become integers"
+    end
+
+    test "the closing writer runs even with the pace left paused", %{conn: conn} do
+      slide = Enum.find(Deck.slides(), &(&1.id == :it_writes_again))
+      {:ok, view, _html} = live(conn, ~p"/s/#{slide.index}")
+      before = render(view)
+
+      send(view.pid, :frame)
+
+      assert render(view) != before
     end
 
     # The trainer is shared, and another test may have run it, so this checks

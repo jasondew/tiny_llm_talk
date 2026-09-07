@@ -21,6 +21,11 @@ defmodule TinyLlmTalkWeb.Animation do
 
   @writers [:it_writes, :it_writes_again]
 
+  # The closing writer has no controls of its own and runs through the
+  # questions, so a pace left paused on the opening one does not stop it.
+  @runs_regardless [:it_writes_again]
+  @fallback_pace "normal"
+
   @doc "Call after the position changes. Starts the clock if the slide needs one."
   @spec sync(Phoenix.LiveView.Socket.t(), pos_integer() | nil) :: Phoenix.LiveView.Socket.t()
   def sync(socket, previous_index) do
@@ -38,7 +43,7 @@ defmodule TinyLlmTalkWeb.Animation do
     if manual?(socket) do
       assign(socket, ticking: false)
     else
-      socket = assign(socket, frame: advance(socket.assigns.frame, socket.assigns.controls))
+      socket = assign(socket, frame: advance(socket.assigns.frame, pace_controls(socket)))
 
       if socket.assigns.slide.ticks and not finished?(socket) do
         schedule(socket)
@@ -76,7 +81,16 @@ defmodule TinyLlmTalkWeb.Animation do
 
   ## PRIVATE FUNCTIONS
 
-  defp manual?(socket), do: is_nil(Controls.pace(socket.assigns.controls))
+  defp manual?(socket), do: is_nil(Controls.pace(pace_controls(socket)))
+
+  defp pace_controls(%{assigns: %{slide: %{id: id}, controls: controls}})
+       when id in @runs_regardless do
+    if is_nil(Controls.pace(controls)),
+      do: Map.put(controls, "pace", @fallback_pace),
+      else: controls
+  end
+
+  defp pace_controls(%{assigns: %{controls: controls}}), do: controls
 
   # Only the writer knows when it is done. Any other animated slide runs
   # until the deck moves on.
@@ -93,6 +107,6 @@ defmodule TinyLlmTalkWeb.Animation do
   end
 
   defp schedule(socket) do
-    Process.send_after(self(), :frame, Controls.pace(socket.assigns.controls))
+    Process.send_after(self(), :frame, Controls.pace(pace_controls(socket)))
   end
 end

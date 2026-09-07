@@ -1248,9 +1248,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
         </p>
       </div>
       <div :if={not @sources} class="writer__bar">
-        <p class="writer__count">
-          {@parameters} parameters &middot; temperature {Writer.temperature()} &middot; pure Elixir &middot; no library
-        </p>
+        <p class="writer__count">temperature {Writer.temperature()}</p>
         <div class="writer__controls">
           <.picker name="pace" options={Controls.paces()} chosen={@pace} class="picker--small" />
           <button

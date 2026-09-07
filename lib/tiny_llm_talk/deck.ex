@@ -126,7 +126,8 @@ defmodule TinyLlmTalk.Deck do
           title: "It writes",
           ticks: true,
           notes: """
-          The whole path once, fast, before we take it slowly. Left, the
+          Starts paused; press normal when you are ready. The whole path once,
+          fast, before we take it slowly. Left, the
           paragraph. Right, the forward pass for the word being written:
           integers, rows, query and keys, attention, the distribution, the
           pick. Those are the stages the next thirty minutes walk one at a
