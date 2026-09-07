@@ -141,7 +141,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
         <.step n={5} step={@step}>
           <li>
             The one on this laptop: one block deep, one head wide, {@parameters} parameters,
-            the Elixir standard library and nothing else, every gradient by hand and checked.
+            the Elixir standard library and nothing else.
           </li>
         </.step>
       </ul>
