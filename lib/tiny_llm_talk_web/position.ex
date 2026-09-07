@@ -38,10 +38,11 @@ defmodule TinyLlmTalkWeb.Position do
 
   @doc "Handles a keypress by patching to the URL it lands on."
   @spec move(Phoenix.LiveView.Socket.t(), String.t()) :: Phoenix.LiveView.Socket.t()
-  def move(socket, key) do
+  def move(socket, key, skip? \\ false) do
     current = {socket.assigns.slide.index, socket.assigns.step}
+    mover = if skip?, do: &Deck.skip/3, else: &Deck.move/3
 
-    case Deck.move(key, current, &SlideComponents.steps/1) do
+    case mover.(key, current, &SlideComponents.steps/1) do
       ^current -> socket
       {index, step} -> patch(socket, index, step)
     end

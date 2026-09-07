@@ -56,8 +56,8 @@ defmodule TinyLlmTalkWeb.PresenterLive do
     {:noreply, assign(socket, elapsed: 0)}
   end
 
-  def handle_event("key", %{"key" => key}, socket) do
-    {:noreply, Position.move(socket, key)}
+  def handle_event("key", %{"key" => key} = params, socket) do
+    {:noreply, Position.move(socket, key, params["shiftKey"] == true)}
   end
 
   def handle_event(event, params, socket) do

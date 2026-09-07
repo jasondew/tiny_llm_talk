@@ -22,8 +22,9 @@ follows the repo link on a slide has to find that claim intact.
 Either window can hold the clicker; they follow each other over PubSub. Put the
 deck on the projector and the presenter view on the laptop.
 
-Keys: space or the arrows move, `Home` and `End` jump to either end, and in the
-presenter view `t` pauses the clock and `r` resets it.
+Keys: space or the arrows move, shift with an arrow skips a slide's steps and
+moves a whole slide, `Home` and `End` jump to either end, and in the presenter
+view `t` pauses the clock and `r` resets it.
 
 Run it on localhost at the podium. Do not deploy it and do not depend on
 conference wifi.

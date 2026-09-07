@@ -30,6 +30,8 @@ const liveSocket = new LiveSocket("/live", Socket, {
   longPollFallbackMs: 2500,
   params: {_csrf_token: csrfToken},
   hooks: {...colocatedHooks},
+  // Shift with an arrow skips a slide's steps; the server needs to know.
+  metadata: {keydown: (event, _el) => ({shiftKey: event.shiftKey})},
 })
 
 // Show progress bar on live navigation and form submits

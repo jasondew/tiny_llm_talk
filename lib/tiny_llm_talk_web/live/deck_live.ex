@@ -50,8 +50,8 @@ defmodule TinyLlmTalkWeb.DeckLive do
   end
 
   @impl true
-  def handle_event("key", %{"key" => key}, socket) do
-    {:noreply, Position.move(socket, key)}
+  def handle_event("key", %{"key" => key} = params, socket) do
+    {:noreply, Position.move(socket, key, params["shiftKey"] == true)}
   end
 
   def handle_event(event, params, socket) do

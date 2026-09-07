@@ -542,6 +542,22 @@ defmodule TinyLlmTalk.Deck do
   def move("End", _position, steps_of), do: {@count, steps_of.(@count)}
   def move(_key, position, _steps_of), do: position
 
+  @doc """
+  Where a keypress moves the deck with the steps skipped: whole slides, landing
+  on the first step of each. Shift and an arrow, for getting somewhere fast.
+  """
+  @spec skip(String.t(), {pos_integer(), pos_integer()}, (pos_integer() -> pos_integer())) ::
+          {pos_integer(), pos_integer()}
+  def skip(key, position, steps_of \\ &steps/1)
+
+  def skip(key, {index, _step}, _steps_of) when key in @forward_keys,
+    do: {min(index + 1, @count), 1}
+
+  def skip(key, {index, _step}, _steps_of) when key in @backward_keys,
+    do: {max(index - 1, 1), 1}
+
+  def skip(key, position, steps_of), do: move(key, position, steps_of)
+
   ## PRIVATE FUNCTIONS
 
   defp advance(index, step, steps_of) do

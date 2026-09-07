@@ -103,4 +103,21 @@ defmodule TinyLlmTalk.DeckTest do
       assert Deck.move("End", {12, 1}) == {Deck.count(), Deck.at(Deck.count()).steps}
     end
   end
+
+  describe "skip/2" do
+    test "moves a whole slide at a time, landing on the first step" do
+      assert Deck.skip("ArrowRight", {4, 2}) == {5, 1}
+      assert Deck.skip("ArrowLeft", {4, 2}) == {3, 1}
+    end
+
+    test "stays put at both ends" do
+      assert Deck.skip("ArrowLeft", {1, 1}) == {1, 1}
+      assert Deck.skip("ArrowRight", {Deck.count(), 1}) == {Deck.count(), 1}
+    end
+
+    test "still jumps to either end and ignores unknown keys" do
+      assert Deck.skip("End", {4, 1}) == Deck.move("End", {4, 1})
+      assert Deck.skip("q", {4, 2}) == {4, 2}
+    end
+  end
 end
