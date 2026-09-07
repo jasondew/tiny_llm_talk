@@ -338,7 +338,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
           <p class="row-caption">
             distribution out &middot; sums to {format_weight(Enum.sum(@distribution))}
           </p>
-          <.bars values={@distribution} words={@words} top={5} highlight={@words} />
+          <.bars values={@distribution} words={@words} top={5} highlight={@words} absolute />
         </div>
       </div>
       <form id="softmax-temperature-dial" phx-change="control" class="dial">
@@ -1723,7 +1723,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
     assigns = assign(assigns, words: probe_marks() ++ [{"____", :blank}])
 
     ~H"""
-    <.probe words={@words} show_marks class="probe--line" />
+    <.probe words={@words} class="probe--line" />
     """
   end
 

@@ -131,7 +131,18 @@ defmodule TinyLlmTalkWeb.DeckLiveTest do
     assert render(view) =~ ~s(bars__value">100.0%)
 
     render_click(view, "control", %{"name" => "softmax_temperature", "value" => "4.0"})
-    refute render(view) =~ ~s(bars__value">100.0%)
+    spread = render(view)
+    refute spread =~ ~s(bars__value">100.0%)
+    assert spread =~ ~s(style="width: 28.2%")
+    refute spread =~ ~s(style="width: 100.0%")
+  end
+
+  test "keeps the sentence over the row slide plain, with no words marked", %{conn: conn} do
+    slide = Enum.find(Deck.slides(), &(&1.id == :a_word_is_a_row))
+    {:ok, _view, html} = live(conn, ~p"/s/#{slide.index}")
+
+    assert html =~ "probe--line"
+    refute html =~ "probe__word--marked"
   end
 
   test "puts the formula first, then a line for each of its symbols, with no code", %{conn: conn} do

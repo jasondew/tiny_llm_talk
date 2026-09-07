@@ -68,12 +68,20 @@ defmodule TinyLlmTalkWeb.FigureComponents do
   attr :top, :integer, default: 6
   attr :highlight, :list, default: []
   attr :include, :list, default: [], doc: "words shown even when they are not in the top few"
+  attr :absolute, :boolean, default: false, doc: "a full bar is 1.0, not the tallest value"
   attr :class, :string, default: nil
 
   def bars(assigns) do
     assigns =
       assign(assigns,
-        rows: top_rows(assigns.values, assigns.words, assigns.top, assigns.include)
+        rows:
+          top_rows(
+            assigns.values,
+            assigns.words,
+            assigns.top,
+            assigns.include,
+            assigns.absolute
+          )
       )
 
     ~H"""
@@ -502,8 +510,8 @@ defmodule TinyLlmTalkWeb.FigureComponents do
   # The top few, plus any word that must be shown regardless: a draw from the
   # tail of a distribution is still the draw, and a bar chart that hides it
   # looks like it is about some other word.
-  defp top_rows(values, words, count, include) do
-    peak = Enum.max(values)
+  defp top_rows(values, words, count, include, absolute) do
+    peak = if absolute, do: 1.0, else: Enum.max(values)
 
     ranked =
       values |> Enum.zip(words) |> Enum.sort_by(fn {probability, _word} -> -probability end)
