@@ -684,7 +684,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
             />
           </div>
           <.step n={@blend_step} step={@step} class="aside-figure">
-            <p class="aside-figure__caption">context = weights × V</p>
+            <p class="aside-figure__caption">attention = weights × V</p>
             <.heatmap
               values={magnitudes(@trace.context)}
               row_labels={Model.probe()}

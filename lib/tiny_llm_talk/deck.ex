@@ -261,7 +261,7 @@ defmodule TinyLlmTalk.Deck do
           vectors grow; the mask, and the future is struck out, every cell
           above the diagonal; the softmax, and the scores become a
           distribution per row, summing to one, the struck-out cells
-          staying struck out since their weight is exactly zero; the blend, and the context
+          staying struck out since their weight is exactly zero; the blend, and the attention output
           appears under it, seven rows of thirty-two again, the input's
           shape. One head; frontier models run many side by side. Say out
           loud: every position at once in one matrix multiply, no loop over
