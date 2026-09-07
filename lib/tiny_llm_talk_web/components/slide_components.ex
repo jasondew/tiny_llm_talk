@@ -588,13 +588,15 @@ defmodule TinyLlmTalkWeb.SlideComponents do
     """
   end
 
-  # The step on which the code's focus reaches the mask, and the heatmap
-  # beside it goes dark above the diagonal to match.
+  # The heatmap appears when the code's focus reaches the Q Kᵀ matmul, and
+  # goes dark above the diagonal when the focus reaches the mask.
+  @scores_step 3
   @mask_step 5
 
   def slide(%{slide: %Slide{id: :attention_code}} = assigns) do
     assigns =
       assign(assigns,
+        scores_step: @scores_step,
         weights:
           if(assigns.step >= @mask_step,
             do: Model.attention(Model.probe()),
@@ -619,7 +621,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
           <:annotation line={2}>K = input × W<sub>K</sub></:annotation>
           <:annotation line={3}>V = input × W<sub>V</sub></:annotation>
         </.code>
-        <div class="two-up__aside">
+        <.step n={@scores_step} step={@step} class="two-up__aside">
           <.heatmap
             :if={@weights}
             values={@weights}
@@ -628,7 +630,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
             cell={30}
           />
           <.untrained :if={is_nil(@weights)} what="This heatmap" />
-        </div>
+        </.step>
       </div>
     </section>
     """

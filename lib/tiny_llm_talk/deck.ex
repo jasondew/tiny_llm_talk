@@ -254,9 +254,9 @@ defmodule TinyLlmTalk.Deck do
           steps: 7,
           notes: """
           The formula again, now over the real code, quoted from the repo,
-          not simplified, with the head's output for the sentence beside
-          it: seven rows, one per position, each a distribution over the
-          positions. One head; frontier models run many side by side. Step
+          not simplified. When the focus reaches the Q K transposed matmul
+          the head's output for the sentence appears beside it: seven rows,
+          one per position, each a distribution over the positions. One head; frontier models run many side by side. Step
           through: the three projections, the dot products all at once, the
           scale (root d, so the softmax does not saturate as vectors grow),
           the mask, the softmax, the blend. The heatmap starts unmasked,
