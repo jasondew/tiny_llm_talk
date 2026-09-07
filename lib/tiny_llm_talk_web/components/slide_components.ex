@@ -473,9 +473,9 @@ defmodule TinyLlmTalkWeb.SlideComponents do
           <span class="fuzzy-query__vector">{format_vector(@lookup.vector)}</span>
         </div>
         <p class="fuzzy-formula">
-          softmax(<.formula_term lit={@step == 1}>Q K<sup>T</sup></.formula_term>
-          <.formula_term lit={@step == 2}>/ √d</.formula_term>)
-          <.formula_term lit={@step == 3}>V</.formula_term>
+          softmax(<.formula_term lit={@step == 2}>Q K<sup>T</sup></.formula_term>
+          <.formula_term lit={@step == 3}>/ √d</.formula_term>)
+          <.formula_term lit={@step in 4..5}>V</.formula_term>
         </p>
       </div>
       <table class="fuzzy">
@@ -483,31 +483,35 @@ defmodule TinyLlmTalkWeb.SlideComponents do
           <tr>
             <th>key</th>
             <th>K</th>
-            <th>Q · K</th>
-            <th class={@step < 2 && "fuzzy--hidden"}>softmax(Q · K / √d)</th>
-            <th>V</th>
-            <th class={@step < 3 && "fuzzy--hidden"}>weight &times; V</th>
+            <th class={@step < 2 && "fuzzy--hidden"}>Q · K</th>
+            <th class={@step < 3 && "fuzzy--hidden"}>softmax(Q · K / √d)</th>
+            <th class={@step < 4 && "fuzzy--hidden"}>V</th>
+            <th class={@step < 5 && "fuzzy--hidden"}>weight &times; V</th>
           </tr>
         </thead>
         <tbody>
           <tr :for={row <- @lookup.scores}>
             <td class="fuzzy__key">{row.key}</td>
             <td class="fuzzy__vector">{format_vector(entry_vector(row.key))}</td>
-            <td class="fuzzy__number">{format_signed(row.score)}</td>
-            <td class={["fuzzy__weight", @step < 2 && "fuzzy--hidden"]}>
+            <td class={["fuzzy__number", @step < 2 && "fuzzy--hidden"]}>
+              {format_signed(row.score)}
+            </td>
+            <td class={["fuzzy__weight", @step < 3 && "fuzzy--hidden"]}>
               <span class="fuzzy__track">
                 <span class="fuzzy__fill" style={"width: #{round(row.weight * 100)}%"} />
               </span>
               {format_weight(row.weight)}
             </td>
-            <td class="fuzzy__number">{format_weight(row.value)}</td>
-            <td class={["fuzzy__number", @step < 3 && "fuzzy--hidden"]}>
+            <td class={["fuzzy__number", @step < 4 && "fuzzy--hidden"]}>
+              {format_weight(row.value)}
+            </td>
+            <td class={["fuzzy__number", @step < 5 && "fuzzy--hidden"]}>
               {format_weight(row.weight * row.value)}
             </td>
           </tr>
         </tbody>
       </table>
-      <.step n={3} step={@step} class="fuzzy-answer">
+      <.step n={6} step={@step} class="fuzzy-answer">
         <span class="fuzzy-answer__value">{format_weight(@lookup.blend)}</span>
         <span class="fuzzy-answer__gloss">
           how plural is <span class="word word--lit">{@query}</span>
