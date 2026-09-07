@@ -509,7 +509,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
     ~H"""
     <section class="slide">
       <h2 class="slide__title slide__title--small">
-        Then let it learn what to ask, what to offer, and what to hand over
+        Attention: what to ask, what to offer, what to hand over
       </h2>
       <dl class="definitions">
         <.step n={1} step={@step}>

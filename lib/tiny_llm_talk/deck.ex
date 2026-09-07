@@ -193,6 +193,17 @@ defmodule TinyLlmTalk.Deck do
           """
         },
         %Slide{
+          id: :learn_the_lookup,
+          title: "Attention: ask, offer, hand over",
+          steps: 4,
+          notes: """
+          Query is what this position is looking for. Key is what it
+          advertises. Value is what it hands over if chosen. Each is the
+          position's row times a learned table. Three matrices; the next
+          slide is the whole head built from them.
+          """
+        },
+        %Slide{
           id: :attention_code,
           title: "One head of attention, sixteen lines",
           steps: 8,
@@ -225,17 +236,6 @@ defmodule TinyLlmTalk.Deck do
           Step two: softmax the scores into a budget. Step three: blend the
           values by that budget. Query with goose, which is not in the map, and
           it still answers sensibly. That is the whole trick.
-          """
-        },
-        %Slide{
-          id: :learn_the_lookup,
-          title: "Then let it learn what to ask, offer, and hand over",
-          steps: 4,
-          notes: """
-          Query is what this position is looking for. Key is what it
-          advertises. Value is what it hands over if chosen. Each is the
-          position's row times a learned table. Three matrices, and the fuzzy
-          map is now an attention head.
           """
         },
         %Slide{
