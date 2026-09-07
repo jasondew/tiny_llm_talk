@@ -355,7 +355,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
       <p class="slide__eyebrow slide__eyebrow--break">Math break!</p>
       <h2 class="slide__title slide__title--small">A softmax turns scores into a distribution</h2>
       <p class="formula">
-        softmax(x)<sub>i</sub>
+        softmax(x<sub>i</sub>)
         = <span class="formula__group">e<sup>x<sub>i</sub></sup></span>
         / Σ<sub>j</sub>
         e<sup>x<sub>j</sub></sup>
