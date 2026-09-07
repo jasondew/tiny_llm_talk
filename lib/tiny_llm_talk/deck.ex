@@ -235,8 +235,8 @@ defmodule TinyLlmTalk.Deck do
           title: "One head of attention, sixteen lines",
           steps: 7,
           notes: """
-          The formula and the toy, now as the real code, quoted from the
-          repo, not simplified. One head; frontier models run many side by
+          The formula again, now over the real code, quoted from the repo,
+          not simplified. One head; frontier models run many side by
           side. Step through: the three projections, the dot products all at
           once, the scale, the mask, the softmax, the blend. Let them read;
           say only what each block is for. The scale and the mask get their

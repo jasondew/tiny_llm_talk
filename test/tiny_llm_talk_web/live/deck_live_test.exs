@@ -77,14 +77,17 @@ defmodule TinyLlmTalkWeb.DeckLiveTest do
     assert length(Regex.scan(~r/class="parameters__count"/, html)) == 14
   end
 
-  test "shows the head as sixteen annotated lines, with no formula over them", %{conn: conn} do
+  test "shows the head as the formula over sixteen annotated lines", %{conn: conn} do
     slide = Enum.find(Deck.slides(), &(&1.id == :attention_code))
     {:ok, _view, html} = live(conn, ~p"/s/#{slide.index}")
 
     assert slide.steps == 7
     assert html =~ "one head of attention"
-    refute html =~ "softmax("
-    refute html =~ "√d"
+
+    assert html =~
+             ~r/formula">\s*Attention\(W<sub>Q<\/sub>, W<sub>K<\/sub>, W<sub>V<\/sub>\) = softmax\(/
+
+    assert html =~ "√d"
     assert html =~ "lib/tiny_llm/attention.ex"
     shown = html
 
