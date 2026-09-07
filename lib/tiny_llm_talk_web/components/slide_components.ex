@@ -705,8 +705,8 @@ defmodule TinyLlmTalkWeb.SlideComponents do
   def slide(%{slide: %Slide{id: :walkthrough}} = assigns) do
     trace = Model.trace(Model.probe())
     last = length(Model.probe()) - 1
-    # Starts on `who`, which has a future to mask. The last position is where
-    # the slide should end, by a click.
+    # Starts on the last position, the one predicting the blank; `who` and
+    # its masked future are a click away.
     position = assigns.controls |> Controls.number("position", last * 1.0) |> round() |> min(last)
 
     assigns = assign(assigns, trace: trace, position: position, words: Model.probe())
@@ -770,26 +770,6 @@ defmodule TinyLlmTalkWeb.SlideComponents do
   end
 
   # 5. Look at what it did --------------------------------------------------
-
-  def slide(%{slide: %Slide{id: :heatmap}} = assigns) do
-    assigns = assign(assigns, weights: Model.attention(Model.probe()))
-
-    ~H"""
-    <section class="slide">
-      <.sentence_line />
-      <h2 class="slide__title slide__title--small">Every position at once</h2>
-      <.heatmap
-        :if={@weights}
-        values={@weights}
-        row_labels={Model.probe()}
-        column_labels={Model.probe()}
-        show_values
-        cell={44}
-      />
-      <.untrained :if={is_nil(@weights)} what="This heatmap" />
-    </section>
-    """
-  end
 
   def slide(%{slide: %Slide{id: :audience_sentence}} = assigns) do
     assigns =

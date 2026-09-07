@@ -303,20 +303,8 @@ defmodule TinyLlmTalk.Deck do
       number: 4,
       title: "Look at what it did",
       minutes: 3,
-      lands: "every position at once, and the room's own sentences",
+      lands: "the room's own sentences through the same head",
       slides: [
-        %Slide{
-          id: :heatmap,
-          title: "Every position at once",
-          notes: """
-          Rows predict, columns are looked at. The upper triangle is empty,
-          exactly as the mask says it must be. Let them find the bright cells
-          before you name them. Then say the rest yourself: the blank's
-          position leans on who, who leans on llama, so the subject reaches
-          the blank in two hops; and most rows lean on the start token, the
-          sink every trained transformer finds for itself.
-          """
-        },
         %Slide{
           id: :audience_sentence,
           title: "Your sentence",
