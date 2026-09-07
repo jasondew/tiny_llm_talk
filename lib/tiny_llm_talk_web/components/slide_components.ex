@@ -408,13 +408,17 @@ defmodule TinyLlmTalkWeb.SlideComponents do
       <h2 class="slide__title slide__title--small">
         At this point, the model has forgotten it ever saw words
       </h2>
-      <.heatmap
-        :if={@rows}
-        values={@rows}
-        row_labels={Model.probe()}
-        column_labels={Enum.map(0..31, &to_string/1)}
-        cell={26}
-      />
+      <figure :if={@rows} class="figure-centred">
+        <.heatmap
+          values={@rows}
+          row_labels={Model.probe()}
+          column_labels={Enum.map(0..31, &to_string/1)}
+          cell={26}
+        />
+        <figcaption class="figure-centred__caption">
+          the input to attention: 7 positions &times; 32 floats, embedding + position
+        </figcaption>
+      </figure>
       <.untrained :if={is_nil(@rows)} what="This grid" />
     </section>
     """

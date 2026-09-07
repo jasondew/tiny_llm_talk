@@ -541,6 +541,23 @@
 .stat--bad .stat__value { color: var(--ink-dim); }
 .stat--cool .stat__value { color: var(--accent-cool); }
 
+/* A figure that should sit in the middle of the slide rather than stretch
+   across it. A grid with an auto label column swallows the spare width
+   otherwise, which pushes its cells to the right. */
+.figure-centred {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  margin: 0;
+}
+
+.figure-centred__caption {
+  font-family: var(--mono);
+  font-size: 20px;
+  color: var(--ink-dim);
+}
+
 /* Small diagrams --------------------------------------------------------- */
 
 .lookup {

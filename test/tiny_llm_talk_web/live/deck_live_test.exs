@@ -99,6 +99,14 @@ defmodule TinyLlmTalkWeb.DeckLiveTest do
     refute html =~ "Added, not appended"
   end
 
+  test "labels the grid attention sees, centred on its slide", %{conn: conn} do
+    slide = Enum.find(Deck.slides(), &(&1.id == :forgets_the_words))
+    {:ok, _view, html} = live(conn, ~p"/s/#{slide.index}")
+
+    assert html =~ ~r/<figure class="figure-centred">\s*<div[^>]*class="heatmap/
+    assert html =~ "the input to attention"
+  end
+
   test "keeps the one-function slide to the box and its distribution", %{conn: conn} do
     slide = Enum.find(Deck.slides(), &(&1.id == :one_function))
     {:ok, _view, html} = live(conn, ~p"/s/#{slide.index}")
