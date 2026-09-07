@@ -148,26 +148,44 @@ defmodule TinyLlmTalk.Model do
   @parameter_stages [
     {"embedding + position", [:embeddings, :positions]},
     {"RMSNorm", [:gain1]},
-    {"attention", [:query_weight, :key_weight, :value_weight, :output_weight]},
+    {"a single head of attention", [:query_weight, :key_weight, :value_weight, :output_weight]},
     {"RMSNorm", [:gain2]},
     {"MLP", [:weight1, :bias1, :weight2, :bias2]},
     {"32 probabilities", [:gain3, :projection]}
   ]
 
   @doc """
-  How many floats each stage of the block holds, stage by stage. Adds up to
-  `parameter_count/0`. Nil until there is a checkpoint.
+  Every parameter table in the model, in the order the block runs them:
+  which stage it belongs to, its name in the code, its shape, and how many
+  floats it holds. The counts add up to `parameter_count/0`. Nil until there
+  is a checkpoint.
   """
-  @spec parameter_breakdown() :: [{String.t(), non_neg_integer()}] | nil
-  def parameter_breakdown do
+  @spec parameter_tables() ::
+          [
+            %{
+              stage: String.t(),
+              name: atom(),
+              shape: {pos_integer(), pos_integer()},
+              count: pos_integer()
+            }
+          ]
+          | nil
+  def parameter_tables do
     case params(:transformer) do
       nil ->
         nil
 
       params ->
-        Enum.map(@parameter_stages, fn {label, names} ->
-          {label, names |> Enum.map(&matrix_size(Map.fetch!(params, &1))) |> Enum.sum()}
-        end)
+        for {stage, names} <- @parameter_stages, name <- names do
+          matrix = Map.fetch!(params, name)
+
+          %{
+            stage: stage,
+            name: name,
+            shape: {length(matrix), length(hd(matrix))},
+            count: matrix_size(matrix)
+          }
+        end
     end
   end
 

@@ -6,21 +6,16 @@ defmodule TinyLlmTalk.ModelTest do
 
   @probe Model.probe()
 
-  describe "parameter_breakdown/0" do
-    test "names the six stages that hold weights, and they add up to the whole model" do
-      breakdown = Model.parameter_breakdown()
+  describe "parameter_tables/0" do
+    test "lists every table with its stage and shape, adding up to the whole model" do
+      tables = Model.parameter_tables()
 
-      assert Enum.map(breakdown, &elem(&1, 0)) == [
-               "embedding + position",
-               "RMSNorm",
-               "attention",
-               "RMSNorm",
-               "MLP",
-               "32 probabilities"
-             ]
+      assert length(tables) == 14
+      assert hd(tables).name == :embeddings
+      assert tables |> Enum.map(& &1.count) |> Enum.sum() == Model.parameter_count()
 
-      assert breakdown |> Enum.map(&elem(&1, 1)) |> Enum.sum() == Model.parameter_count()
-      assert {"attention", 4 * 32 * 32} in breakdown
+      assert %{stage: "a single head of attention", shape: {32, 32}, count: 1024} =
+               Enum.find(tables, &(&1.name == :query_weight))
     end
   end
 

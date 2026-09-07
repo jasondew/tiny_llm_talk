@@ -53,17 +53,6 @@ defmodule TinyLlmTalkWeb.SlideComponents do
   @hidden_per_cell 4
   @logit_chips 8
 
-  @map_get_snippet """
-  # keys are words. values are one fact about each: is it plural?
-  is_plural = %{"llama" => 0.0, "llamas" => 1.0, "dog" => 0.0, "dogs" => 1.0}
-
-  Map.get(is_plural, "llamas")
-  #=> 1.0
-
-  Map.get(is_plural, "geese")
-  #=> nil
-  """
-
   @doc "Whether this slide has been drawn yet, or is still a stub."
   @spec drawn?(atom()) :: boolean()
   def drawn?(id), do: id in @drawn
@@ -108,26 +97,17 @@ defmodule TinyLlmTalkWeb.SlideComponents do
       <h1 class="slide__statement slide__statement--wide">
         Transformers from Scratch,<br />in Elixir
       </h1>
-      <.probe words={~w(the llama who chases the dogs ____)} class="probe--wide" />
     </section>
     """
   end
 
   def slide(%{slide: %Slide{id: :the_architecture}} = assigns) do
-    assigns = assign(assigns, parameters: format_count(Model.parameter_count()))
-
     ~H"""
     <section class="slide slide--tight">
       <h2 class="slide__title slide__title--small">A transformer is one block, repeated</h2>
-      <.block_diagram repeats="× N" />
-      <.step n={2} step={@step} class="slide__note">
-        Every frontier model is one of these. GPT, Gemini, Llama, and DeepSeek say so in
-        their own reports.
-      </.step>
-      <.step n={3} step={@step} class="slide__note">
-        The one on this laptop: one block deep, one head wide, {@parameters} parameters,
-        the Elixir standard library and nothing else.
-      </.step>
+      <div class="slide__fill">
+        <.block_diagram repeats="× N" />
+      </div>
     </section>
     """
   end
@@ -136,15 +116,39 @@ defmodule TinyLlmTalkWeb.SlideComponents do
     assigns =
       assign(assigns,
         parameters: format_count(Model.parameter_count()),
-        counts: parameter_counts(Model.parameter_breakdown())
+        tables: Model.parameter_tables()
       )
 
     ~H"""
     <section class="slide slide--tight">
-      <h2 class="slide__title slide__title--small">
-        {@parameters} floats, every one of them learned
-      </h2>
-      <.block_diagram counts={@counts} repeats="× 1" />
+      <h2 class="slide__title slide__title--small">The model I built</h2>
+      <table :if={@tables} class="parameters">
+        <thead>
+          <tr>
+            <th>stage</th>
+            <th>parameter</th>
+            <th>shape</th>
+            <th class="parameters__number">floats</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr :for={{table, index} <- Enum.with_index(@tables)}>
+            <td class="parameters__stage">{stage_label(@tables, index)}</td>
+            <td class="parameters__name">{table.name}</td>
+            <td class="parameters__shape">{format_shape(table.shape)}</td>
+            <td class="parameters__number">
+              <span class="parameters__count">{format_count(table.count)}</span>
+            </td>
+          </tr>
+        </tbody>
+        <tfoot>
+          <tr>
+            <td colspan="3">every one of them learned</td>
+            <td class="parameters__number">{@parameters}</td>
+          </tr>
+        </tfoot>
+      </table>
+      <.untrained :if={is_nil(@tables)} what="This table" />
     </section>
     """
   end
@@ -348,41 +352,52 @@ defmodule TinyLlmTalkWeb.SlideComponents do
   # 3. Embedding and position -----------------------------------------------
 
   def slide(%{slide: %Slide{id: :a_word_is_a_row}} = assigns) do
-    assigns = assign(assigns, row: Model.embedding("llama"))
+    assigns = assign(assigns, row: Model.embedding("dogs"))
 
     ~H"""
     <section class="slide slide--tight">
       <.sentence_line />
-      <h2 class="slide__title slide__title--small">A word becomes a row of floats</h2>
-      <div class="lookup">
-        <span class="lookup__word">llama</span>
-        <span class="lookup__arrow">&rarr;</span>
-        <span class="lookup__id">{Vocab.word_to_id("llama")}</span>
-        <span class="lookup__arrow">&rarr;</span>
-        <span class="lookup__row">
-          <.spark :if={@row} values={Enum.map(@row, &abs/1)} />
-          <.untrained :if={is_nil(@row)} what="This row of floats" />
-        </span>
-      </div>
-      <div :if={@row} class="floats floats--all">
-        <span :for={value <- @row} class="floats__value">{format_signed(value)}</span>
-      </div>
       <.step n={2} step={@step}>
-        <.code path="lib/tiny_llm/transformer.ex" range={114..116} step={@step} focus={[1..1, 1..1]} />
+        <h2 class="slide__title slide__title--small">A word becomes a row of floats</h2>
+      </.step>
+      <.step n={2} step={@step}>
+        <div class="lookup">
+          <span class="lookup__word">dogs</span>
+          <span class="lookup__arrow">&rarr;</span>
+          <span class="lookup__id">{Vocab.word_to_id("dogs")}</span>
+          <span class="lookup__arrow">&rarr;</span>
+          <span class="lookup__row">
+            <.spark :if={@row} values={Enum.map(@row, &abs/1)} />
+            <.untrained :if={is_nil(@row)} what="This row of floats" />
+          </span>
+        </div>
+      </.step>
+      <.step :if={@row} n={2} step={@step}>
+        <div class="floats floats--all">
+          <span :for={value <- @row} class="floats__value">{format_signed(value)}</span>
+        </div>
+      </.step>
+      <.step n={3} step={@step}>
+        <.code
+          path="lib/tiny_llm/transformer.ex"
+          range={114..116}
+          step={@step}
+          focus={[1..1, 1..1, 1..1]}
+        />
       </.step>
     </section>
     """
   end
 
   def slide(%{slide: %Slide{id: :positions_added}} = assigns) do
-    assigns = assign(assigns, row: Model.position(2))
+    assigns = assign(assigns, row: Model.position(6))
 
     ~H"""
     <section class="slide slide--tight">
       <.sentence_line />
       <h2 class="slide__title slide__title--small">Position is another row, added on</h2>
       <div class="lookup">
-        <span class="lookup__word">position 2 of 16</span>
+        <span class="lookup__word">position 6 of 16</span>
         <span class="lookup__arrow">&rarr;</span>
         <span class="lookup__row">
           <.spark :if={@row} values={Enum.map(@row, &abs/1)} />
@@ -425,21 +440,6 @@ defmodule TinyLlmTalkWeb.SlideComponents do
   end
 
   # 4. Attention, from Map --------------------------------------------------
-
-  def slide(%{slide: %Slide{id: :map_get}} = assigns) do
-    assigns = assign(assigns, source: @map_get_snippet)
-
-    ~H"""
-    <section class="slide">
-      <h2 class="slide__title">Start with a lookup you already trust</h2>
-      <.snippet source={@source} step={@step} focus={[:all, 7..8]} />
-      <.step n={2} step={@step} class="slide__lede">
-        Map.get finds the one key <span class="word word--lit">equal</span> to the query.
-        Attention is Map.get with equal replaced by <span class="word word--lit">similar</span>.
-      </.step>
-    </section>
-    """
-  end
 
   def slide(%{slide: %Slide{id: :fuzzy_map}} = assigns) do
     query = Controls.choice(assigns.controls, "query", "geese")
@@ -529,8 +529,11 @@ defmodule TinyLlmTalkWeb.SlideComponents do
 
   def slide(%{slide: %Slide{id: :attention_code}} = assigns) do
     ~H"""
-    <section class="slide">
-      <h2 class="slide__title">The whole head</h2>
+    <section class="slide slide--tight">
+      <p class="slide__eyebrow">one head of attention</p>
+      <p class="formula">
+        Attention(Q, K, V) = softmax(<span class="formula__group">Q K<sup>T</sup> / √d</span>) V
+      </p>
       <.code
         path="lib/tiny_llm/attention.ex"
         range={198..213}
@@ -1701,15 +1704,11 @@ defmodule TinyLlmTalkWeb.SlideComponents do
   ]
 
   # One transformer, as a stack: the block is boxed and marked with how many
-  # times it repeats, and each layer can carry a count of the floats it holds.
-  attr :counts, :list, default: nil, doc: "a formatted count per layer, in order"
+  # times it repeats.
   attr :repeats, :string, default: nil
 
   defp block_diagram(assigns) do
-    counts = assigns.counts || List.duplicate(nil, length(@block_layers))
-
-    layers =
-      Enum.zip_with(@block_layers, counts, fn {label, kind}, count -> {label, kind, count} end)
+    layers = @block_layers
 
     assigns =
       assign(assigns, first: hd(layers), block: Enum.slice(layers, 1, 4), last: List.last(layers))
@@ -1733,21 +1732,23 @@ defmodule TinyLlmTalkWeb.SlideComponents do
 
   attr :layer, :any, required: true
 
-  defp block_layer(%{layer: {label, kind, count}} = assigns) do
-    assigns = assign(assigns, label: label, kind: kind, count: count)
+  defp block_layer(%{layer: {label, kind}} = assigns) do
+    assigns = assign(assigns, label: label, kind: kind)
 
     ~H"""
-    <div class={["stack__layer", @kind && "stack__layer--#{@kind}"]}>
-      {@label}
-      <span :if={@count} class="stack__count">{@count}</span>
-    </div>
+    <div class={["stack__layer", @kind && "stack__layer--#{@kind}"]}>{@label}</div>
     """
   end
 
-  defp parameter_counts(nil), do: nil
+  # The stage is named once, on the first table it holds.
+  defp stage_label(tables, 0), do: hd(tables).stage
 
-  defp parameter_counts(breakdown),
-    do: Enum.map(breakdown, fn {_label, count} -> format_count(count) end)
+  defp stage_label(tables, index) do
+    current = Enum.at(tables, index).stage
+    if Enum.at(tables, index - 1).stage == current, do: nil, else: current
+  end
+
+  defp format_shape({rows, columns}), do: "#{rows} × #{columns}"
 
   # The probe, marked up: the subject that decides the answer, and the noun that
   # sits next to the blank pointing the wrong way.

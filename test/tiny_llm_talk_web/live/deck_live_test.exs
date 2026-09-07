@@ -41,27 +41,40 @@ defmodule TinyLlmTalkWeb.DeckLiveTest do
     assert render(view) =~ "tally__row--answer"
   end
 
-  test "draws a transformer as one block, and says the frontier models are one", %{conn: conn} do
+  test "draws a transformer as one block, and nothing else", %{conn: conn} do
     slide = Enum.find(Deck.slides(), &(&1.id == :the_architecture))
-    {:ok, _view, html} = live(conn, ~p"/s/#{slide.index}/#{slide.steps}")
+    {:ok, _view, html} = live(conn, ~p"/s/#{slide.index}")
 
+    assert slide.steps == 1
     assert html =~ "stack__layer--attention"
     assert html =~ "stack__layer--mlp"
     assert length(Regex.scan(~r/class="stack__arrow"/, html)) == 5
-    assert html =~ "frontier"
-    assert html =~ "Gemini"
-    assert html =~ "The one on this laptop"
-    refute html =~ "A small MLP"
+    refute html =~ "Every frontier model"
+    refute html =~ "The one on this laptop"
   end
 
-  test "counts the parameters stage by stage, and says they are learned", %{conn: conn} do
+  test "lists the model's parameter tables, and what this laptop's model is", %{conn: conn} do
     slide = Enum.find(Deck.slides(), &(&1.id == :parameters))
     {:ok, _view, html} = live(conn, ~p"/s/#{slide.index}")
 
+    assert html =~ "The model I built"
+    assert html =~ "embeddings"
+    assert html =~ "positions"
+    assert html =~ "query_weight"
     assert html =~ "15,104"
-    assert html =~ "learned"
-    assert html =~ "8,352"
-    assert length(Regex.scan(~r/class="stack__count"/, html)) == 6
+    assert html =~ "a single head of attention"
+    refute html =~ "The one on this laptop"
+    assert length(Regex.scan(~r/class="parameters__count"/, html)) == 14
+  end
+
+  test "opens attention with the formula, the code, and a single-head note", %{conn: conn} do
+    slide = Enum.find(Deck.slides(), &(&1.id == :attention_code))
+    {:ok, _view, html} = live(conn, ~p"/s/#{slide.index}")
+
+    assert html =~ "one head of attention"
+    assert html =~ "softmax"
+    assert html =~ "√d"
+    assert html =~ "lib/tiny_llm/attention.ex"
   end
 
   test "ends on the sources, with both repos and the paper", %{conn: conn} do
@@ -82,20 +95,28 @@ defmodule TinyLlmTalkWeb.DeckLiveTest do
     refute html =~ "A subject agrees with its verb"
   end
 
-  test "shows every one of the row's 32 floats, and no sentence under them", %{conn: conn} do
+  test "opens the row slide on the sentence alone, then looks dogs up", %{conn: conn} do
     slide = Enum.find(Deck.slides(), &(&1.id == :a_word_is_a_row))
-    {:ok, _view, html} = live(conn, ~p"/s/#{slide.index}")
+    {:ok, view, html} = live(conn, ~p"/s/#{slide.index}")
 
-    assert length(Regex.scan(~r/class="floats__value"/, html)) == 32
     assert html =~ "probe--line"
-    refute html =~ "Looked up from a table"
+    refute html =~ ~r/step--shown[^>]*>\s*<h2[^>]*>\s*A word becomes/
+
+    render_keydown(view, "key", %{"key" => "ArrowRight"})
+    shown = render(view)
+
+    assert shown =~ ~r/step--shown[^>]*>\s*<h2[^>]*>\s*A word becomes/
+    assert shown =~ ~s(<span class="lookup__word">dogs</span>)
+    assert length(Regex.scan(~r/class="floats__value"/, shown)) == 32
+    refute shown =~ "Looked up from a table"
   end
 
-  test "keeps the sentence over the position slide, and the prose off it", %{conn: conn} do
+  test "adds the position of dogs on the position slide, with the prose off it", %{conn: conn} do
     slide = Enum.find(Deck.slides(), &(&1.id == :positions_added))
     {:ok, _view, html} = live(conn, ~p"/s/#{slide.index}/2")
 
     assert html =~ "probe--line"
+    assert html =~ "position 6 of 16"
     refute html =~ "Added, not appended"
   end
 
@@ -119,7 +140,7 @@ defmodule TinyLlmTalkWeb.DeckLiveTest do
 
     assert html =~ "Transformers from Scratch,"
     assert html =~ "in Elixir"
-    assert html =~ "llama"
+    refute html =~ "probe__word"
     assert is_nil(Room.state().activity)
   end
 

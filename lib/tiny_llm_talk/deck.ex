@@ -49,33 +49,33 @@ defmodule TinyLlmTalk.Deck do
         %Slide{
           id: :the_architecture,
           title: "What a transformer is",
-          steps: 3,
           notes: """
           Motivate it before building it. The stack: a word becomes a row,
           then the block, then probabilities. Inside the dashed box, attention
-          gathers and a small MLP thinks, and the box repeats N times. The
-          frontier models say so in their own reports: GPT-4 is
+          gathers and a small MLP thinks, and the box repeats N times. Say,
+          do not show: every frontier model uses these same pieces, and the
+          labs say so in their own reports: GPT-4 is
           "Transformer-based", Gemini
           "builds on Transformer decoders", DeepSeek-V3 is "still within the
           Transformer framework", Llama 4 is a mixture-of-experts one.
           Anthropic does not publish Claude's. If someone raises Mamba or
           Qwen3-Next: those swap most attention layers for a cheaper mixer
           and keep the rest, so the block you are about to read is still in
-          them. Last beat: the one on this laptop is one block deep, one head
-          wide, pure Elixir standard library with an empty deps list, about
-          fifteen thousand parameters, every gradient by hand and checked.
-          The repo link is in the footer and stays there.
+          them. The next slide is the one on this laptop.
           """
         },
         %Slide{
           id: :parameters,
-          title: "Fifteen thousand floats, every one of them learned",
+          title: "The model I built",
           notes: """
-          The same stack, with a count on every stage that holds weights.
-          Say what a parameter is: one float in one of these boxes. Two
-          tables on the way in, four square matrices in attention, and the
-          MLP holds more than half. Every one starts random and training
-          moves every one of them; nothing in here is written by hand.
+          Every parameter table in the model, by stage, with its shape and
+          how many floats it holds. Say what a parameter is: one float in one
+          of these tables. Two tables on the way in, four square matrices in
+          attention, and the MLP holds more than half. Every one starts
+          random and training moves every one of them; nothing in here is
+          written by hand. Say, do not show: one block deep, a single head
+          wide, pure Elixir standard library with an empty deps list. The
+          repo link is in the footer and stays there.
           """
         }
       ]
@@ -143,13 +143,14 @@ defmodule TinyLlmTalk.Deck do
         %Slide{
           id: :a_word_is_a_row,
           title: "A word becomes a row of floats",
-          steps: 2,
+          steps: 3,
           notes: """
-          The sentence stays on top from here to the end of attention. Look
-          the word's integer up in a 32 by 32 table and take the row. The
-          table starts random and the model moves the rows itself. All
-          thirty-two floats are on the slide: this is the real llama row from
-          the checkpoint, not a sketch.
+          The sentence alone first; it stays on top from here to the end of
+          attention. Second step: take dogs, the word next to the blank. Look
+          its integer up in a 32 by 32 table and take the row. The table
+          starts random and the model moves the rows itself. All thirty-two
+          floats are on the slide: this is the real dogs row from the
+          checkpoint, not a sketch. Third step, the line of code that does it.
           """
         },
         %Slide{
@@ -159,7 +160,7 @@ defmodule TinyLlmTalk.Deck do
           notes: """
           Attention on its own is a bag of words. So each position has a
           learned vector of its own, added to the word's row, not appended to
-          it. Same width in, same width out, so nothing downstream has to
+          it. dogs is position six, counting the start token as zero. Same width in, same width out, so nothing downstream has to
           know position exists. Sixteen rows, so the context length is 16:
           say the number, it is the only hard limit in the model, and it can
           never read more words than that at once.
@@ -183,14 +184,17 @@ defmodule TinyLlmTalk.Deck do
       lands: "a fuzzy lookup: score every key, budget the scores, blend the values",
       slides: [
         %Slide{
-          id: :map_get,
-          title: "Start with a lookup you already trust",
-          steps: 2,
+          id: :attention_code,
+          title: "One head of attention, sixteen lines",
+          steps: 7,
           notes: """
-          A map from words to one fact about each: is it plural. Map.get
-          finds the one key equal to the query and hands back its value; ask
-          for geese and it is nil. Say the line: attention is Map.get with
-          equal replaced by similar. The next slide does exactly that.
+          The destination first, then the walk to it. The formula on top is
+          the whole thing: score every key against the query, scale, softmax
+          into a budget, blend the values. One head; frontier models run
+          many side by side. The code is quoted from the repo, not simplified.
+          Step through: the three projections, the dot products all at once,
+          the scale, the mask, the softmax, the blend. Let them read; say only
+          what each block is for. The next slides take the formula apart.
           """
         },
         %Slide{
@@ -232,16 +236,6 @@ defmodule TinyLlmTalk.Deck do
           advertises. Value is what it hands over if chosen. Each is the
           position's row times a learned table. Three matrices, and the fuzzy
           map is now an attention head.
-          """
-        },
-        %Slide{
-          id: :attention_code,
-          title: "The whole head, sixteen lines",
-          steps: 7,
-          notes: """
-          Quoted from the repo, not simplified. Step through: the three
-          projections, the dot products all at once, the scale, the mask, the
-          softmax, the blend. Let them read; say only what each block is for.
           """
         },
         %Slide{
