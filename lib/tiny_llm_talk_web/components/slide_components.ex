@@ -192,16 +192,32 @@ defmodule TinyLlmTalkWeb.SlideComponents do
           </p>
         </div>
       </div>
-      <.loss_chart
-        losses={@losses}
-        knowing_nothing={Model.knowing_nothing()}
-        floor={Model.bigram_floor()}
-        floor_label="the best any one-word model can do"
-        series_label={"held-out loss, one block, seed #{config_seed(@trainer)}"}
-        steps={@steps}
-        width={1088}
-        height={400}
-      />
+      <div class="two-up two-up--training">
+        <ol class="beats beats--numbered beats--compact">
+          <.step n={1} step={@step}>
+            <li>Guess the next word.</li>
+          </.step>
+          <.step n={2} step={@step}>
+            <li>Measure how surprised you were by the real one.</li>
+          </.step>
+          <.step n={3} step={@step}>
+            <li>Nudge every number in the direction that makes the surprise smaller.</li>
+          </.step>
+          <.step n={4} step={@step}>
+            <li>Repeat a few hundred times.</li>
+          </.step>
+        </ol>
+        <.loss_chart
+          losses={@losses}
+          knowing_nothing={Model.knowing_nothing()}
+          floor={Model.bigram_floor()}
+          floor_label="the best any one-word model can do"
+          series_label={"held-out loss, one block, seed #{config_seed(@trainer)}"}
+          steps={@steps}
+          width={640}
+          height={380}
+        />
+      </div>
     </section>
     """
   end
@@ -942,51 +958,6 @@ defmodule TinyLlmTalkWeb.SlideComponents do
         </ul>
       </div>
       <.untrained :if={not Model.trained?(:transformer)} what="These generations" />
-    </section>
-    """
-  end
-
-  def slide(%{slide: %Slide{id: :training}} = assigns) do
-    ~H"""
-    <section class="slide">
-      <h2 class="slide__title">Training, all of it</h2>
-      <ol class="beats beats--numbered">
-        <.step n={1} step={@step}>
-          <li>Guess the next word.</li>
-        </.step>
-        <.step n={2} step={@step}>
-          <li>Measure how surprised you were by the real one.</li>
-        </.step>
-        <.step n={3} step={@step}>
-          <li>Nudge every number in the direction that makes the surprise smaller.</li>
-        </.step>
-        <.step n={4} step={@step}>
-          <li>Repeat a few hundred times.</li>
-        </.step>
-      </ol>
-    </section>
-    """
-  end
-
-  def slide(%{slide: %Slide{id: :loss_falls}} = assigns) do
-    assigns = assign(assigns, losses: Model.losses(:transformer))
-
-    ~H"""
-    <section class="slide">
-      <h2 class="slide__title">Watch it fall</h2>
-      <.loss_chart
-        :if={@losses}
-        losses={@losses}
-        knowing_nothing={Model.knowing_nothing()}
-        floor={Model.bigram_floor()}
-        floor_label="the best any one-word model can do"
-        series_label="held-out loss, one block"
-        line={@step >= 2}
-        draw
-        width={1088}
-        height={400}
-      />
-      <.untrained :if={is_nil(@losses)} what="This loss curve" />
     </section>
     """
   end

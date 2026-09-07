@@ -427,6 +427,17 @@
   counter-increment: beat;
 }
 
+.beats--compact {
+  gap: 18px;
+  font-size: 26px;
+}
+
+.two-up--training {
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 24px 40px;
+}
+
 .beats--numbered li::before {
   content: counter(beat) ". ";
   color: var(--accent);

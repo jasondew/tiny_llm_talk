@@ -387,36 +387,21 @@ defmodule TinyLlmTalk.Deck do
         %Slide{
           id: :live_training,
           title: "Training, live",
+          steps: 4,
           notes: """
           Press start, then talk over it; it takes about seventy seconds.
           Same config and seed as the checkpoint, so the loss it lands on is
           the loss every figure in this deck was drawn from, and the slide
-          says whether it matched. While it draws, name the two lines: it
-          starts at knowing nothing, ln 32, and the dashed line is the best
-          anything can do seeing only the previous word. The next slide says
-          what it is doing; come back to this one to watch it land.
-          """
-        },
-        %Slide{
-          id: :training,
-          title: "Training, all of it",
-          steps: 4,
-          notes: """
-          Guess the next word. Measure how surprised you were by the real one.
-          Nudge every number in the direction that makes the surprise smaller.
-          Repeat a few hundred times. No chain rule on screen. The nudges are
-          derived by hand in this repo, with no autodiff to hide behind, which
-          is why the tests slide exists.
-          """
-        },
-        %Slide{
-          id: :loss_falls,
-          title: "Watch it fall",
-          steps: 2,
-          notes: """
-          The run you just watched, replayed on the second step with the
-          point made: it goes well under the dashed line, which is the
-          proof. It is using information the previous word does not carry.
+          says whether it matched. While it draws, step the four beats
+          beside it: guess the next word; measure how surprised you were by
+          the real one; nudge every number in the direction that makes the
+          surprise smaller; repeat a few hundred times. No chain rule on
+          screen; the nudges are derived by hand in the repo, with no
+          autodiff to hide behind. Name the two lines: it starts at knowing
+          nothing, ln 32, and the dashed line is the best anything can do
+          seeing only the previous word. The point lands when the curve
+          goes well under the dashed line: it is using information the
+          previous word does not carry.
           """
         }
       ]
