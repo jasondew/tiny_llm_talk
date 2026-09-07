@@ -169,6 +169,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
         trainer: trainer,
         losses: Trainer.losses(trainer),
         steps: config.steps,
+        corpus_size: Map.get(config, :training_corpus_size),
         elapsed: elapsed(trainer),
         final: final_loss(trainer)
       )
@@ -197,15 +198,23 @@ defmodule TinyLlmTalkWeb.SlideComponents do
       <div class="two-up two-up--training">
         <ol class="beats beats--numbered beats--compact">
           <.step n={1} step={@step}>
-            <li>Guess the next word.</li>
+            <li>
+              Take a prefix from the corpus, where we know the next word.
+              <span :if={@corpus_size} class="beats__aside">
+                {format_count(@corpus_size)} sentences the grammar wrote
+              </span>
+            </li>
           </.step>
           <.step n={2} step={@step}>
-            <li>Measure how surprised you were by the real one.</li>
+            <li>Run the model: 32 probabilities.</li>
           </.step>
           <.step n={3} step={@step}>
-            <li>Nudge every number in the direction that makes the surprise smaller.</li>
+            <li>Measure how surprised it was by the real word.</li>
           </.step>
           <.step n={4} step={@step}>
+            <li>Nudge every number in the direction that makes the surprise smaller.</li>
+          </.step>
+          <.step n={5} step={@step}>
             <li>Repeat a few hundred times.</li>
           </.step>
         </ol>

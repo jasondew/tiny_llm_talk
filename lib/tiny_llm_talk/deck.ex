@@ -404,15 +404,18 @@ defmodule TinyLlmTalk.Deck do
         %Slide{
           id: :live_training,
           title: "Training, live",
-          steps: 4,
+          steps: 5,
           notes: """
           Press start, then talk over it; it takes about seventy seconds.
           Same config and seed as the checkpoint, so the loss it lands on is
           the loss every figure in this deck was drawn from, and the slide
-          says whether it matched. While it draws, step the four beats
-          beside it: guess the next word; measure how surprised you were by
-          the real one; nudge every number in the direction that makes the
-          surprise smaller; repeat a few hundred times. No chain rule on
+          says whether it matched. While it draws, step the five beats
+          beside it. The corpus is sentences the grammar wrote, two thousand
+          of them, so every prefix comes with the word that really followed.
+          Take a prefix; run the model for its 32 probabilities; measure how
+          surprised it was by the real word; nudge every number in the
+          direction that makes the surprise smaller; repeat a few hundred
+          times. No chain rule on
           screen; the nudges are derived by hand in the repo, with no
           autodiff to hide behind. Name the two lines: it starts at knowing
           nothing, ln 32, and the dashed line is the best anything can do
