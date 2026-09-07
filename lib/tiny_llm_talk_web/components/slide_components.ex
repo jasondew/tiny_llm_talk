@@ -614,7 +614,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
 
   # What stands beside the code as its focus walks down: nothing until the
   # Q Kᵀ matmul, then the raw scores, the same scores with the future struck
-  # out, the distribution the softmax makes of them, and the context rows
+  # out, the distribution the softmax makes of them, and the attention rows
   # the blend produces. Each is the real number from the checkpoint.
   @projections_step 2
   @scores_step 3
@@ -686,7 +686,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
           <.step n={@blend_step} step={@step} class="aside-figure">
             <p class="aside-figure__caption">attention = weights × V</p>
             <.heatmap
-              values={magnitudes(@trace.context)}
+              values={magnitudes(@trace.attention)}
               row_labels={Model.probe()}
               column_labels={Enum.map(1..Model.width(), fn _column -> "" end)}
               cell={8}
@@ -1398,9 +1398,9 @@ defmodule TinyLlmTalkWeb.SlideComponents do
 
   # The query, keys and values as magnitudes on one shared scale, so the room
   # can see they are the same kind of thing as the rows they came from. The
-  # blend is the last row of the context: the values, weighted by attention.
+  # blend is the last row of the attention output: the values, weighted.
   defp query_and_keys(trace) do
-    everything = trace.queries ++ trace.keys ++ trace.values ++ trace.context
+    everything = trace.queries ++ trace.keys ++ trace.values ++ trace.attention
     peak = everything |> List.flatten() |> Enum.map(&abs/1) |> Enum.max()
     scale = fn rows -> Enum.map(rows, fn row -> Enum.map(row, &(abs(&1) / peak)) end) end
 
@@ -1408,7 +1408,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
       queries: scale.(trace.queries),
       keys: scale.(trace.keys),
       values: scale.(trace.values),
-      blend: [List.last(trace.context)] |> scale.() |> hd()
+      blend: [List.last(trace.attention)] |> scale.() |> hd()
     }
   end
 

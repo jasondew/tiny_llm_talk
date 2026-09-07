@@ -24,7 +24,7 @@ defmodule TinyLlmTalk.ModelTest do
       trace = Model.trace(@probe)
       size = length(@probe)
 
-      for stage <- [:input, :queries, :keys, :values, :scores, :masked, :weights, :context] do
+      for stage <- [:input, :queries, :keys, :values, :scores, :masked, :weights, :attention] do
         assert length(Map.fetch!(trace, stage)) == size, "#{stage} has the wrong number of rows"
       end
     end
