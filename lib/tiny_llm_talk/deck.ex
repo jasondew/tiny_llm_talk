@@ -230,17 +230,20 @@ defmodule TinyLlmTalk.Deck do
         %Slide{
           id: :fuzzy_map,
           title: "A small example, by hand",
-          steps: 6,
+          steps: 5,
           notes: """
           The formula from the last slide, on five keys with two-number
           vectors, small enough to check by eye. The toy: each key's vector
           is [how much of an animal, how plural], and each value is how plural
           that key is, so the blend answers how plural the query is. Pick a
-          query; the keys are there from the start. Then one column a step:
-          Q dot every K; divide by root d, d is two here, and softmax into a
-          distribution; the values, 0 for singular and 1 for plural, said
-          in the header; each value times its weight; and last the sum, which
-          is the answer: 1.00, geese is plural, and the map never held it. Query with goose or geese, which are not keys, and it
+          query; the keys and their values, 0 for singular and 1 for plural
+          as the header says, are there from the start. Then one column a
+          step: Q dot every K; divide by root d, d is two here, and softmax
+          into a distribution; each value times its weight, and the whole
+          formula lights up; and last the sum, which is the answer: 1.00,
+          geese is plural, and the map never held it. Then pick sleepy: no
+          animal, no number, every score zero, so the softmax spreads evenly
+          and the answer is 0.50, which is the honest "no idea". Query with goose or geese, which are not keys, and it
           still answers sensibly. That is the whole trick, and the next slide
           is the same thing in sixteen lines.
           """

@@ -40,12 +40,15 @@ defmodule TinyLlmTalk.FuzzyMap do
   ]
 
   # Words the presenter can query with. The first two are in the map, so an
-  # exact lookup would work; the other two are not, so it would not.
+  # exact lookup would work; the next two are not, so it would not. The last
+  # is not even a noun: no animal, no number, so every score is zero, the
+  # softmax spreads evenly, and the blend lands on the middle.
   @queries [
     %{word: "fox", vector: [4.0, -4.0]},
     %{word: "mice", vector: [3.6, 4.0]},
     %{word: "goose", vector: [3.2, -4.0]},
-    %{word: "geese", vector: [3.2, 4.0]}
+    %{word: "geese", vector: [3.2, 4.0]},
+    %{word: "sleepy", vector: [0.0, 0.0]}
   ]
 
   @spec entries() :: [entry()]

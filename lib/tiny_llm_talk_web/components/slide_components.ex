@@ -473,11 +473,13 @@ defmodule TinyLlmTalkWeb.SlideComponents do
           <span class="fuzzy-query__vector">{format_vector(@lookup.vector)}</span>
         </div>
         <p class="fuzzy-formula">
-          <.formula_term lit={@step == 3}>
-            softmax(<.formula_term lit={@step == 2}>Q K<sup>T</sup></.formula_term>
-            / √d)
+          <.formula_term lit={@step >= 4}>
+            <.formula_term lit={@step == 3}>
+              softmax(<.formula_term lit={@step == 2}>Q K<sup>T</sup></.formula_term>
+              / √d)
+            </.formula_term>
+            V
           </.formula_term>
-          <.formula_term lit={@step in 4..5}>V</.formula_term>
         </p>
       </div>
       <table class="fuzzy">
@@ -487,8 +489,8 @@ defmodule TinyLlmTalkWeb.SlideComponents do
             <th>K</th>
             <th class={@step < 2 && "fuzzy--hidden"}>Q · K</th>
             <th class={@step < 3 && "fuzzy--hidden"}>softmax(Q · K / √d) (weight)</th>
-            <th class={@step < 4 && "fuzzy--hidden"}>V (0 := singular, 1 := plural)</th>
-            <th class={@step < 5 && "fuzzy--hidden"}>weight &times; V</th>
+            <th>V (0 := singular, 1 := plural)</th>
+            <th class={@step < 4 && "fuzzy--hidden"}>weight &times; V</th>
           </tr>
         </thead>
         <tbody>
@@ -504,16 +506,14 @@ defmodule TinyLlmTalkWeb.SlideComponents do
               </span>
               {format_weight(row.weight)}
             </td>
+            <td class="fuzzy__number">{format_weight(row.value)}</td>
             <td class={["fuzzy__number", @step < 4 && "fuzzy--hidden"]}>
-              {format_weight(row.value)}
-            </td>
-            <td class={["fuzzy__number", @step < 5 && "fuzzy--hidden"]}>
               {format_weight(row.weight * row.value)}
             </td>
           </tr>
         </tbody>
         <tfoot>
-          <tr class={@step < 6 && "fuzzy--hidden"}>
+          <tr class={@step < 5 && "fuzzy--hidden"}>
             <td colspan="5" class="fuzzy__sum-label">Σ</td>
             <td class="fuzzy__number fuzzy__sum">{format_weight(@lookup.blend)}</td>
           </tr>
