@@ -473,8 +473,10 @@ defmodule TinyLlmTalkWeb.SlideComponents do
           <span class="fuzzy-query__vector">{format_vector(@lookup.vector)}</span>
         </div>
         <p class="fuzzy-formula">
-          softmax(<.formula_term lit={@step == 2}>Q K<sup>T</sup></.formula_term>
-          <.formula_term lit={@step == 3}>/ √d</.formula_term>)
+          <.formula_term lit={@step == 3}>
+            softmax(<.formula_term lit={@step == 2}>Q K<sup>T</sup></.formula_term>
+            / √d)
+          </.formula_term>
           <.formula_term lit={@step in 4..5}>V</.formula_term>
         </p>
       </div>
@@ -484,8 +486,8 @@ defmodule TinyLlmTalkWeb.SlideComponents do
             <th>key</th>
             <th>K</th>
             <th class={@step < 2 && "fuzzy--hidden"}>Q · K</th>
-            <th class={@step < 3 && "fuzzy--hidden"}>softmax(Q · K / √d)</th>
-            <th class={@step < 4 && "fuzzy--hidden"}>V &middot; 0 singular, 1 plural</th>
+            <th class={@step < 3 && "fuzzy--hidden"}>softmax(Q · K / √d) (weight)</th>
+            <th class={@step < 4 && "fuzzy--hidden"}>V (0 := singular, 1 := plural)</th>
             <th class={@step < 5 && "fuzzy--hidden"}>weight &times; V</th>
           </tr>
         </thead>
