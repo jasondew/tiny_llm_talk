@@ -106,7 +106,10 @@ defmodule TinyLlmTalkWeb.SlideComponents do
         {if @step >= 2, do: "The transformer in this talk", else: "The transformer"}
       </h2>
       <div class="slide__fill">
-        <.block_diagram repeats={if @step >= 2, do: "× 1", else: "× N"} />
+        <.block_diagram
+          repeats={if @step >= 2, do: "× 1", else: "× N"}
+          outputs={if @step >= 2, do: "32 probabilities", else: "vocabulary size probabilities"}
+        />
       </div>
     </section>
     """
@@ -1513,12 +1516,18 @@ defmodule TinyLlmTalkWeb.SlideComponents do
   # times it repeats.
   attr :repeats, :string, default: nil
   attr :label, :string, default: nil, doc: "a name for the dashed box, at its left"
+  attr :outputs, :string, default: nil, doc: "what the last layer says, if not this model's 32"
 
   defp block_diagram(assigns) do
     layers = @block_layers
+    {_label, kind} = List.last(layers)
 
     assigns =
-      assign(assigns, first: hd(layers), block: Enum.slice(layers, 1, 4), last: List.last(layers))
+      assign(assigns,
+        first: hd(layers),
+        block: Enum.slice(layers, 1, 4),
+        last: {assigns.outputs || elem(List.last(layers), 0), kind}
+      )
 
     ~H"""
     <div class="stack stack--diagram">
