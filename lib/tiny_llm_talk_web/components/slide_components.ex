@@ -1713,10 +1713,15 @@ defmodule TinyLlmTalkWeb.SlideComponents do
     ~H"""
     <div class="stack stack--diagram">
       <.block_layer layer={@first} />
+      <span class="stack__arrow">&darr;</span>
       <div class="stack__block">
         <span :if={@repeats} class="stack__repeats">{@repeats}</span>
-        <.block_layer :for={layer <- @block} layer={layer} />
+        <%= for {layer, index} <- Enum.with_index(@block) do %>
+          <span :if={index > 0} class="stack__arrow">&darr;</span>
+          <.block_layer layer={layer} />
+        <% end %>
       </div>
+      <span class="stack__arrow">&darr;</span>
       <.block_layer layer={@last} />
     </div>
     """

@@ -700,12 +700,27 @@
 
 /* The whole-model diagram, drawn small enough to leave room under it. */
 .stack--diagram {
-  gap: 6px;
+  gap: 2px;
+}
+
+.stack--diagram .stack__block {
+  gap: 2px;
+  padding: 6px 40px;
 }
 
 .stack--diagram .stack__layer {
-  padding: 8px 14px;
+  padding: 6px 14px;
   font-size: 20px;
+}
+
+/* Data flows down the stack; the arrows say so. */
+.stack__arrow {
+  display: block;
+  width: 100%;
+  text-align: center;
+  font-size: 18px;
+  line-height: 1;
+  color: var(--ink-dim);
 }
 
 .stack--diagram .stack__layer--norm {

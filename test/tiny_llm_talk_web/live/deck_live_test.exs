@@ -47,6 +47,7 @@ defmodule TinyLlmTalkWeb.DeckLiveTest do
 
     assert html =~ "stack__layer--attention"
     assert html =~ "stack__layer--mlp"
+    assert length(Regex.scan(~r/class="stack__arrow"/, html)) == 5
     assert html =~ "frontier"
     assert html =~ "Gemini"
     assert html =~ "The one on this laptop"
