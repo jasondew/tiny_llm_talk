@@ -890,30 +890,26 @@ defmodule TinyLlmTalkWeb.SlideComponents do
       </p>
       <dl class="definitions definitions--formula">
         <.step n={1} step={@step}>
-          <dt>normalization</dt>
-          <dd>every row arrives at the same size, whatever the last stage did to it</dd>
+          <dt>x</dt>
+          <dd>the dogs row, as it arrived</dd>
         </.step>
         <.step n={2} step={@step}>
           <dt>rms(x) = √mean(x²)</dt>
-          <dd>root mean square: square each float, average them, take the root</dd>
+          <dd>root mean square: square each float, average them, take the root · here {@rms}</dd>
         </.step>
         <.step n={3} step={@step}>
-          <dt>x / rms(x)</dt>
-          <dd>the row at size one, direction kept</dd>
-        </.step>
-        <.step n={4} step={@step}>
-          <dt>g</dt>
-          <dd>{@width} learned floats, one per column: the size the model wants back</dd>
+          <dt>x / rms(x) · g</dt>
+          <dd>the row at size one, times {@width} learned floats, one per column</dd>
         </.step>
       </dl>
       <div :if={@block} class="strip-stack strip-stack--tight">
-        <.step n={2} step={@step}>
-          <.strips rows={[@block.input]} labels={["x, the dogs row · rms #{@rms}"]} cell={20} />
+        <.step n={1} step={@step}>
+          <.strips rows={[@block.input]} labels={["x · rms #{@rms}"]} cell={20} />
         </.step>
         <.step n={3} step={@step}>
           <.strips rows={[@scaled]} labels={["x / rms(x) · rms 1.00"]} cell={20} />
         </.step>
-        <.step n={4} step={@step}>
+        <.step n={3} step={@step}>
           <.strips rows={[@block.norm1]} labels={["· g"]} cell={20} />
         </.step>
       </div>

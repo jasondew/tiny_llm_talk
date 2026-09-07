@@ -333,20 +333,20 @@ defmodule TinyLlmTalk.Deck do
         %Slide{
           id: :normalization,
           title: "Normalization",
-          steps: 4,
+          steps: 3,
           notes: """
-          Four steps, one line of the formula each, on the dogs row. First
-          the idea: rows come out of attention at whatever size attention
-          made them, and the next stage wants them all at one size, or the
-          big rows shout and the small ones vanish. Normalization is the
-          fix: rescale every row before handing it on. Second, rms: root
-          mean square. Square every float so signs do not cancel, average
-          the squares, take the square root; one number per row, the row's
-          typical size. The strip shows the dogs row and its rms. Third,
-          divide the row by it: same direction, size one, and the strip
-          shows the same pattern. Fourth, g: thirty-two learned floats,
-          one per column, multiplied in, so the model can choose the size
-          it wants per feature rather than being stuck at one. That is
+          Say the idea first, nothing on the slide for it: rows come out
+          of attention at whatever size attention made them, and the next
+          stage wants them all at one size, or the big rows shout and the
+          small ones vanish. Normalization rescales every row before
+          handing it on. Then three steps on the dogs row. First, x, the
+          row as it arrived, with its rms. Second, rms: root mean square.
+          Square every float so signs do not cancel, average the squares,
+          take the square root; one number per row, the row's typical
+          size. Third, divide the row by it, same direction at size one,
+          then multiply by g, thirty-two learned floats, one per column,
+          so the model can choose the size it wants per feature rather
+          than being stuck at one; the two strips show both. That is
           RMSNorm: no mean subtracted, no bias, which is the difference
           from LayerNorm, and the paper found the recentring buys nothing.
           Say, do not show: this runs twice per block, before attention and
