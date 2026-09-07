@@ -6,14 +6,11 @@ defmodule TinyLlmTalkWeb.DeckLive do
   or a websocket that drops mid-talk comes back on the slide it was on. The
   presenter window drives this view and is driven by it, over one PubSub topic,
   which means either window can hold the clicker.
-
-  This is also the window that runs the room: arriving at a slide opens its
-  activity, and reaching a slide's second step reveals the answer.
   """
 
   use TinyLlmTalkWeb, :live_view
 
-  alias TinyLlmTalk.{Room, Trainer}
+  alias TinyLlmTalk.Trainer
   alias TinyLlmTalkWeb.{Animation, Controls, Position}
   alias TinyLlmTalkWeb.SlideComponents
 
@@ -21,17 +18,12 @@ defmodule TinyLlmTalkWeb.DeckLive do
   def mount(_params, _session, socket) do
     Position.subscribe(socket)
 
-    if connected?(socket) do
-      Room.subscribe()
-      Trainer.subscribe()
-    end
+    if connected?(socket), do: Trainer.subscribe()
 
     {:ok,
      assign(socket,
        controls: %{},
-       room: Room.state(),
        trainer: Trainer.state(),
-       activity: :none,
        frame: 0,
        ticking: false
      ), layout: false}
@@ -44,8 +36,6 @@ defmodule TinyLlmTalkWeb.DeckLive do
     {:noreply,
      socket
      |> Position.apply(params)
-     |> sync_activity()
-     |> sync_reveal()
      |> Animation.sync(previous)}
   end
 
@@ -71,8 +61,6 @@ defmodule TinyLlmTalkWeb.DeckLive do
     {:noreply, Position.follow_controls(socket, controls)}
   end
 
-  def handle_info({:room, room}, socket), do: {:noreply, assign(socket, room: room)}
-
   def handle_info({:trainer, trainer}, socket), do: {:noreply, assign(socket, trainer: trainer)}
 
   def handle_info(:frame, socket), do: {:noreply, Animation.tick(socket)}
@@ -86,7 +74,6 @@ defmodule TinyLlmTalkWeb.DeckLive do
           slide={@slide}
           step={@step}
           controls={@controls}
-          room={@room}
           trainer={@trainer}
           frame={@frame}
         />
@@ -94,33 +81,5 @@ defmodule TinyLlmTalkWeb.DeckLive do
       </div>
     </div>
     """
-  end
-
-  ## PRIVATE FUNCTIONS
-
-  # Arriving at a slide opens its activity and leaving closes it, so there is no
-  # second thing to remember while presenting. Comparing against what is already
-  # open matters: `handle_params` also fires on every reveal step, and opening an
-  # activity clears its votes.
-  defp sync_activity(socket) do
-    wanted = socket.assigns.slide.activity
-
-    if socket.assigns.activity == wanted do
-      socket
-    else
-      Room.open(wanted)
-
-      assign(socket, activity: wanted)
-    end
-  end
-
-  # A question's answer is on its second step, by convention across the deck.
-  # The room does the revealing, so every phone hears about it.
-  defp sync_reveal(%{assigns: %{slide: %{activity: nil}}} = socket), do: socket
-
-  defp sync_reveal(%{assigns: %{slide: slide, step: step}} = socket) do
-    if step >= 2 and not is_nil(Room.activity(slide.activity).answer), do: Room.reveal()
-
-    socket
   end
 end

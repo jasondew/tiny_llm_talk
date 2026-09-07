@@ -12,10 +12,10 @@ defmodule TinyLlmTalkWeb.Controls do
   training tells the trainer. The rest are bookkeeping a slide reads back out.
   """
 
-  alias TinyLlmTalk.{Model, Room, Trainer}
+  alias TinyLlmTalk.{Model, Trainer}
   alias TinyLlmTalkWeb.{Animation, Position}
 
-  @events ~w(control next_word restart feature train retrain shuffle step_frame reset_vectors)
+  @events ~w(control next_word restart train retrain shuffle step_frame reset_vectors)
 
   # A sentence the room watches being written should not run off the slide.
   @longest_generation 12
@@ -64,12 +64,6 @@ defmodule TinyLlmTalkWeb.Controls do
   end
 
   def handle("restart", _params, socket), do: Position.control(socket, "generated", [])
-
-  def handle("feature", %{"words" => words}, socket) do
-    Room.feature(String.split(words, " "))
-
-    socket
-  end
 
   def handle("train", _params, socket) do
     Trainer.start()

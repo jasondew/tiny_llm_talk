@@ -14,7 +14,7 @@ defmodule TinyLlmTalkWeb.PresenterLive do
   use TinyLlmTalkWeb, :live_view
 
   alias TinyLlmTalk.Deck
-  alias TinyLlmTalk.{Room, Slide, Trainer}
+  alias TinyLlmTalk.{Slide, Trainer}
   alias TinyLlmTalkWeb.{Animation, Controls, Position}
   alias TinyLlmTalkWeb.SlideComponents
 
@@ -24,7 +24,6 @@ defmodule TinyLlmTalkWeb.PresenterLive do
 
     if connected?(socket) do
       :timer.send_interval(1_000, :tick)
-      Room.subscribe()
       Trainer.subscribe()
     end
 
@@ -33,7 +32,6 @@ defmodule TinyLlmTalkWeb.PresenterLive do
        elapsed: 0,
        running?: true,
        controls: %{},
-       room: Room.state(),
        trainer: Trainer.state(),
        frame: 0,
        ticking: false
@@ -77,8 +75,6 @@ defmodule TinyLlmTalkWeb.PresenterLive do
     {:noreply, Position.follow_controls(socket, controls)}
   end
 
-  def handle_info({:room, room}, socket), do: {:noreply, assign(socket, room: room)}
-
   def handle_info({:trainer, trainer}, socket), do: {:noreply, assign(socket, trainer: trainer)}
 
   def handle_info(:frame, socket), do: {:noreply, Animation.tick(socket)}
@@ -97,7 +93,6 @@ defmodule TinyLlmTalkWeb.PresenterLive do
               slide={@slide}
               step={@step}
               controls={@controls}
-              room={@room}
               trainer={@trainer}
               frame={@frame}
             />
@@ -117,11 +112,7 @@ defmodule TinyLlmTalkWeb.PresenterLive do
         </p>
         <p class="presenter__lands">must land: {@section.lands}</p>
         <p class="presenter__notes">{Slide.prose(@slide)}</p>
-        <p class="presenter__phones">
-          {Room.participant_count(@room)} phones in the room &middot; room is {@room
-          |> Room.score()
-          |> format_score()} &middot; training {@trainer.status}
-        </p>
+        <p class="presenter__training">training {@trainer.status}</p>
         <p class="presenter__keys">
           space/arrows move &middot; t pauses the clock &middot; r resets it &middot; click the preview to run a demo
         </p>
@@ -149,9 +140,6 @@ defmodule TinyLlmTalkWeb.PresenterLive do
     |> Enum.sum()
     |> then(&"#{&1}:00")
   end
-
-  defp format_score(%{asked: 0}), do: "unasked"
-  defp format_score(%{right: right, asked: asked}), do: "#{right} for #{asked}"
 
   defp format_clock(seconds) do
     minutes = div(seconds, 60)

@@ -42,10 +42,10 @@ defmodule TinyLlmTalk.Code do
   overflows visibly rather than shrinking into an unreadable grey block: quote a
   narrower range instead.
   """
-  @spec font_size(pos_integer(), pos_integer()) :: float()
-  def font_size(line_count, longest_line \\ 1) do
+  @spec font_size(pos_integer(), pos_integer(), pos_integer() | nil) :: float()
+  def font_size(line_count, longest_line \\ 1, width \\ nil) do
     by_height = @available_height / (line_count * @line_height)
-    by_width = @available_width / (max(longest_line, 1) * @glyph_width)
+    by_width = (width || @available_width) / (max(longest_line, 1) * @glyph_width)
 
     by_height
     |> min(by_width)
@@ -90,6 +90,24 @@ defmodule TinyLlmTalk.Code do
     |> Enum.map(fn {html, number} ->
       %{number: number, html: html, lit?: lit?(window, number)}
     end)
+  end
+
+  @doc """
+  The rows with `lines` folded into one unnumbered row of dots.
+
+  The numbers either side keep their real values, so the caption's line range
+  stays true and the room can see something was left out rather than being
+  shown a shorter function than the file holds.
+  """
+  @spec elide([map()], Range.t() | nil) :: [map()]
+  def elide(rows, nil), do: rows
+
+  def elide(rows, first..last//_step) do
+    before = Enum.take_while(rows, &(&1.number < first))
+    after_ = Enum.drop_while(rows, &(&1.number <= last))
+    dots = %{number: nil, html: Phoenix.HTML.raw("  ⋯"), lit?: false}
+
+    before ++ [dots] ++ after_
   end
 
   ## PRIVATE FUNCTIONS

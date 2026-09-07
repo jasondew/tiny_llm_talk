@@ -22,29 +22,26 @@ defmodule TinyLlmTalk.Deck do
       title: "Cold open",
       minutes: 5,
       lands:
-        "the room has voted, a language model is one function, and a transformer is one block repeated",
+        "the room has answered, a language model is one function, and a transformer is one block repeated",
       slides: [
         %Slide{
           id: :the_vote,
           title: "flees, or flee?",
-          activity: :verb_vote,
           steps: 2,
           notes: """
-          On screen while the room arrives. Paste the join link in the chat
-          and let the bars move; do not fill the silence. The second step
-          lights the answer and every phone learns whether it agreed, and the
-          room's record starts here. Everybody knew. Say, do not show: the
-          rule is easy to name, the hard part is knowing which noun is the
-          subject when a plural one sits right next to the blank. That is
-          the talk.
+          On screen while the room arrives. Ask out loud, hands up for each,
+          and do not fill the silence. The second step lights the answer.
+          Everybody knew. Say, do not show: the rule is easy to name, the
+          hard part is knowing which noun is the subject when a plural one
+          sits right next to the blank. That is the talk.
           """
         },
         %Slide{
           id: :title,
           title: "Transformers from Scratch, in Elixir",
           notes: """
-          Say the title once. The sentence under it is the one the whole
-          talk is about, and the room has just voted on it.
+          Say the title once. The sentence before it is the one the whole
+          talk is about, and the room has just answered it.
           """
         },
         %Slide{
@@ -275,11 +272,10 @@ defmodule TinyLlmTalk.Deck do
         %Slide{
           id: :attention_bet,
           title: "Where will the blank look?",
-          activity: :attention_bet,
           steps: 2,
           notes: """
-          Ask before showing. Most rooms say llama, because that is the answer
-          to the grammar question. The model says who; the reveal shows the
+          Ask before showing, by voice: llama, dogs, who, chases. Most rooms
+          say llama, because that is the answer to the grammar question. The model says who; the reveal shows the
           last row of the heatmap from the last slide, the dogs position,
           because the blank has no row: it is predicted from the output of
           the last position given. Say that plainly, it is the question
@@ -322,11 +318,15 @@ defmodule TinyLlmTalk.Deck do
         %Slide{
           id: :block_code,
           title: "Block.forward",
+          steps: 8,
           notes: """
-          The whole block is one function, twenty-two lines, and the
-          diagram was drawn from it: norm, attention, add, norm, network,
-          add. Let them read it once whole; the next three slides take the
-          lines that are new one at a time.
+          The whole block is one function, nine lines of work; the return
+          value, a map of every intermediate for training, is folded away.
+          The flow beside it is the diagram redrawn with the two adds in.
+          Step down it, one line and one box at a time: normalize, attend,
+          add the input back, normalize, the network, add again. The last
+          step shows it whole again. The next three slides take the lines
+          that are new one at a time.
           """
         },
         %Slide{

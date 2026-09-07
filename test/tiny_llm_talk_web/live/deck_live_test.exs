@@ -3,42 +3,14 @@ defmodule TinyLlmTalkWeb.DeckLiveTest do
 
   import Phoenix.LiveViewTest
 
-  alias TinyLlmTalk.{Deck, Room}
+  alias TinyLlmTalk.Deck
   alias TinyLlmTalkWeb.SlideComponents
 
-  setup do
-    Room.reset()
-    :ok
-  end
-
-  test "opens on the vote, with the question already open for the room", %{conn: conn} do
+  test "opens on the sentence", %{conn: conn} do
     {:ok, _view, html} = live(conn, ~p"/")
 
     assert html =~ "llama"
-    assert html =~ "join at"
     assert html =~ Application.fetch_env!(:tiny_llm_talk, :repo_label)
-    assert Room.state().activity == :verb_vote
-  end
-
-  test "moves the opening vote's bars as the room votes", %{conn: conn} do
-    {:ok, view, _html} = live(conn, ~p"/")
-    refute render(view) =~ "1 vote"
-
-    Room.vote(self(), "flees")
-    assert Room.state().votes == %{self() => "flees"}
-
-    assert render(view) =~ "1 vote"
-  end
-
-  test "reveals the opening vote's answer on its second step", %{conn: conn} do
-    {:ok, view, _html} = live(conn, ~p"/")
-    Room.vote(self(), "flees")
-    refute render(view) =~ "tally__row--answer"
-
-    render_keydown(view, "key", %{"key" => "ArrowRight"})
-
-    assert Room.state().revealed
-    assert render(view) =~ "tally__row--answer"
   end
 
   test "puts the position in the address bar so a crash can recover it", %{conn: conn} do
@@ -73,47 +45,6 @@ defmodule TinyLlmTalkWeb.DeckLiveTest do
     end
 
     assert render(view) =~ "#{Deck.count()} / #{Deck.count()}"
-  end
-
-  describe "the audience activities" do
-    test "opens a slide's activity on arrival", %{conn: conn} do
-      slide = Enum.find(Deck.slides(), &(&1.activity == :attention_bet))
-      {:ok, _view, _html} = live(conn, ~p"/s/#{slide.index}")
-
-      assert Room.state().activity == :attention_bet
-    end
-
-    test "closes it again on the way out", %{conn: conn} do
-      slide = Enum.find(Deck.slides(), &(&1.activity == :attention_bet))
-      {:ok, view, _html} = live(conn, ~p"/s/#{slide.index}/#{slide.steps}")
-
-      render_keydown(view, "key", %{"key" => "ArrowRight"})
-
-      assert is_nil(Room.state().activity)
-    end
-
-    test "keeps the votes and reveals the answer on the second step", %{conn: conn} do
-      slide = Enum.find(Deck.slides(), &(&1.activity == :attention_bet))
-      {:ok, view, _html} = live(conn, ~p"/s/#{slide.index}")
-      Room.vote(self(), "who")
-      refute Room.state().revealed
-
-      render_keydown(view, "key", %{"key" => "ArrowRight"})
-
-      assert Room.state().activity == :attention_bet
-      assert Room.state().revealed
-      assert {"who", 1} in Room.tally(Room.state(), :attention_bet)
-    end
-
-    test "records the room's answer once the deck moves on", %{conn: conn} do
-      slide = Enum.find(Deck.slides(), &(&1.activity == :attention_bet))
-      {:ok, view, _html} = live(conn, ~p"/s/#{slide.index}/#{slide.steps}")
-      Room.vote(self(), "who")
-
-      render_keydown(view, "key", %{"key" => "ArrowRight"})
-
-      assert [{:attention_bet, %{correct?: true}}] = Room.results(Room.state())
-    end
   end
 
   describe "the controls" do

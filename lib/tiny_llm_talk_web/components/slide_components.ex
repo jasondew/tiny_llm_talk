@@ -10,9 +10,9 @@ defmodule TinyLlmTalkWeb.SlideComponents do
   than a transcription of them, so a slide cannot quote a number the checkpoint
   does not produce. That is the whole reason the deck is a Phoenix app.
 
-  Slides read two things besides the model: `@controls`, what the speaker has
-  clicked or dragged, and `@room`, what the audience has answered. Both are
-  allowed to be empty, and every slide renders correctly when they are.
+  Slides read one thing besides the model: `@controls`, what the speaker has
+  clicked or dragged. It is allowed to be empty, and every slide renders
+  correctly when it is.
   """
 
   use Phoenix.Component
@@ -21,7 +21,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
   import TinyLlmTalkWeb.FigureComponents
 
   alias TinyLlm.{Tensor, Vocab}
-  alias TinyLlmTalk.{Deck, FuzzyMap, GrammarRules, Model, Room, Slide, Trainer, Writer}
+  alias TinyLlmTalk.{Deck, FuzzyMap, GrammarRules, Model, Slide, Trainer, Writer}
   alias TinyLlmTalkWeb.Controls
 
   # Every slide in the arc is drawn. The test suite renders each one and fails
@@ -71,22 +71,20 @@ defmodule TinyLlmTalkWeb.SlideComponents do
   attr :slide, Slide, required: true
   attr :step, :integer, required: true
   attr :controls, :map, default: %{}
-  attr :room, Room, default: %Room{}
   attr :trainer, :any, default: nil, doc: "the training run, or nil to ask the trainer"
   attr :frame, :integer, default: 0, doc: "the frame an animated slide is on"
 
   # 0. Cold open ------------------------------------------------------------
 
   def slide(%{slide: %Slide{id: :the_vote}} = assigns) do
-    assigns = assign(assigns, activity: Room.activity(:verb_vote))
-
     ~H"""
     <section class="slide slide--tight">
       <.probe words={~w(the llama who chases the dogs ____)} class="probe--wide" />
-      <div class="ask">
-        <.qr size={200} />
-        <.tally tally={Room.tally(@room, :verb_vote)} answer={@activity.answer} reveal={@step >= 2} />
-      </div>
+      <p class="choices">
+        <span class={["choices__word", @step >= 2 && "choices__word--answer"]}>flees</span>
+        <span class="choices__or">or</span>
+        <span class={["choices__word", @step >= 2 && "choices__word--other"]}>flee</span>
+      </p>
     </section>
     """
   end
@@ -700,11 +698,9 @@ defmodule TinyLlmTalkWeb.SlideComponents do
   end
 
   def slide(%{slide: %Slide{id: :attention_bet}} = assigns) do
-    assigns =
-      assign(assigns,
-        activity: Room.activity(:attention_bet),
-        blank_row: blank_attention_row()
-      )
+    blank_row = blank_attention_row()
+
+    assigns = assign(assigns, blank_row: blank_row, answer: blank_row && top_word(blank_row))
 
     ~H"""
     <section class="slide slide--tight">
@@ -712,29 +708,20 @@ defmodule TinyLlmTalkWeb.SlideComponents do
       <h2 class="slide__title slide__title--small">
         Which word does the blank attend to the most?
       </h2>
-      <div class="ask">
-        <.qr size={200} />
-        <div class="ask__stack">
-          <.tally
-            tally={Room.tally(@room, :attention_bet)}
-            answer={@activity.answer}
-            reveal={@step >= 2}
-          />
-          <.step :if={@blank_row} n={2} step={@step} class="bet-row">
-            <p class="row-caption">
-              the last row of the heatmap: <span class="word word--lit">dogs</span> predicts the blank
-            </p>
-            <.bars
-              values={@blank_row}
-              words={Model.probe()}
-              top={4}
-              highlight={List.wrap(@activity.answer)}
-              absolute
-              class="bars--compact"
-            />
-          </.step>
-        </div>
-      </div>
+      <.step :if={@blank_row} n={2} step={@step} class="bet-row">
+        <p class="row-caption">
+          the last row of the heatmap: <span class="word word--lit">dogs</span> predicts the blank
+        </p>
+        <.bars
+          values={@blank_row}
+          words={Model.probe()}
+          top={4}
+          highlight={List.wrap(@answer)}
+          absolute
+          class="bars--compact"
+        />
+      </.step>
+      <.untrained :if={is_nil(@blank_row)} what="This bet" />
     </section>
     """
   end
@@ -821,14 +808,34 @@ defmodule TinyLlmTalkWeb.SlideComponents do
 
   @block_path "lib/tiny_llm/block.ex"
 
+  # The walk down Block.forward: which lines each step lights, and which box
+  # of the flow beside them. The first and last steps show the whole thing.
+  @block_walk [:all, 2..2, 3..3, 4..4, 5..5, 6..8, 9..9, :all]
+  @block_walk_stages [nil, :norm1, :attention, :add1, :norm2, :network, :add2, nil]
+
   def slide(%{slide: %Slide{id: :block_code}} = assigns) do
-    assigns = assign(assigns, block_path: @block_path)
+    assigns =
+      assign(assigns,
+        block_path: @block_path,
+        walk: @block_walk,
+        stage: Enum.at(@block_walk_stages, assigns.step - 1)
+      )
 
     ~H"""
     <section class="slide slide--tight">
       <p class="slide__eyebrow">the block &middot; lib/tiny_llm/block.ex</p>
       <h2 class="slide__title slide__title--small">Block.forward</h2>
-      <.code path={@block_path} function={:forward} step={@step} />
+      <div class="two-up two-up--walk">
+        <.code
+          path={@block_path}
+          function={:forward}
+          elide={10..21}
+          width={760}
+          step={@step}
+          focus={@walk}
+        />
+        <.block_flow stage={@stage} />
+      </div>
     </section>
     """
   end
@@ -1472,6 +1479,36 @@ defmodule TinyLlmTalkWeb.SlideComponents do
     {"32 probabilities", nil}
   ]
 
+  # The block's forward pass as a flow, top to bottom, in the order the code
+  # runs it. With a stage named, that box is lit and the rest wait.
+  @block_flow [
+    {:input, "input", nil},
+    {:norm1, "normalization", "norm"},
+    {:attention, "attention", "attention"},
+    {:add1, "x + attention(x)", "add"},
+    {:norm2, "normalization", "norm"},
+    {:network, "neural network", "mlp"},
+    {:add2, "x + mlp(x)", "add"},
+    {:output, "output", nil}
+  ]
+
+  attr :stage, :atom, default: nil
+
+  defp block_flow(assigns) do
+    assigns = assign(assigns, boxes: @block_flow)
+
+    ~H"""
+    <div class={["flow", @stage && "flow--stepping"]}>
+      <%= for {{id, label, kind}, index} <- Enum.with_index(@boxes) do %>
+        <span :if={index > 0} class="flow__arrow">&darr;</span>
+        <div class={["flow__box", kind && "flow__box--#{kind}", id == @stage && "flow__box--lit"]}>
+          {label}
+        </div>
+      <% end %>
+    </div>
+    """
+  end
+
   # One transformer, as a stack: the block is boxed and marked with how many
   # times it repeats.
   attr :repeats, :string, default: nil
@@ -1592,6 +1629,11 @@ defmodule TinyLlmTalkWeb.SlideComponents do
       heat: trace.weights,
       format: :weight
     }
+  end
+
+  # The word a row of attention weights lands on hardest.
+  defp top_word(row) do
+    Model.probe() |> Enum.zip(row) |> Enum.max_by(&elem(&1, 1)) |> elem(0)
   end
 
   defp projection_name("Q"), do: "the queries"

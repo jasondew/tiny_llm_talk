@@ -16,7 +16,7 @@ follows the repo link on a slide has to find that claim intact.
     mix setup
     mix phx.server
 
-- <http://localhost:4000/> the deck, for the room
+- <http://localhost:4000/> the deck, for the screen
 - <http://localhost:4000/presenter> notes, clock, and what comes next
 
 Either window can hold the clicker; they follow each other over PubSub. Put the
@@ -133,33 +133,10 @@ from the podium; nobody reaches for the big screen's mouse.
 
 ## The audience
 
-The talk is delivered over Zoom, so the audience is already in a browser. They
-open `/join` on any device and it shows whatever question the deck is on:
-
-- **section 0** flees, or flee? The first slide, on screen while the room arrives.
-- **section 3** where will the blank look? They bet, then the walkthrough answers.
-
-Every question with a right answer reveals it on the slide's second step. The
-room does the revealing, so every phone says whether its owner agreed.
-
-`TinyLlmTalk.Room` holds it. Arriving at a slide opens its activity and leaving
-closes it, so there is nothing extra to remember while presenting, and walking
-backwards asks the question again rather than showing a stale answer. Every
-one of those slides renders correctly with nobody in the room.
-
-Because it is a screen share, the join card leads with the URL and keeps the QR
-code small: everyone watching can click a link, and only the people on a
-television reach for a phone. Paste the link in the chat when the first vote
-opens.
-
-This is the part that has to be deployed. The audience is not on your network.
-
-    fly deploy
-
-`JOIN_URL` overrides what the card shows, if the deployed host is not where you
-want people to land. One machine, never scaled to zero and never two: a second
-machine would hold a second room and half the audience would vote into a tally
-nobody sees.
+None on the wire. The opening question and the attention bet are asked out
+loud, hands up, and the second step of each slide lights the answer. The
+phone-in room, its join page and its scoreboard were cut the day before the
+talk: no time left to rehearse them.
 
 ## Still to build
 

@@ -60,6 +60,8 @@ defmodule TinyLlmTalkWeb.DeckComponents do
   attr :focus, :list, default: []
   attr :step, :integer, default: 1
   attr :caption, :boolean, default: true
+  attr :elide, :any, default: nil, doc: "lines of the listing to fold into one row of dots"
+  attr :width, :integer, default: nil, doc: "the pixels the listing has when it shares the slide"
 
   slot :annotation, doc: "a note drawn at the end of one line of the listing" do
     attr :line, :integer, required: true, doc: "the line, counted from 1 within the listing"
@@ -70,7 +72,10 @@ defmodule TinyLlmTalkWeb.DeckComponents do
 
     assigns =
       assign(assigns,
-        rows: Code.focused(quotation.code, assigns.focus, assigns.step),
+        rows:
+          quotation.code
+          |> Code.focused(assigns.focus, assigns.step)
+          |> Code.elide(assigns.elide),
         longest: Code.longest_line(quotation.code),
         location: quotation.location
       )
@@ -79,6 +84,7 @@ defmodule TinyLlmTalkWeb.DeckComponents do
     <.listing
       rows={@rows}
       longest={@longest}
+      width={@width}
       caption={@caption && @location}
       annotations={@annotation}
     />
@@ -108,13 +114,17 @@ defmodule TinyLlmTalkWeb.DeckComponents do
 
   attr :rows, :list, required: true
   attr :longest, :integer, required: true
+  attr :width, :integer, default: nil
   attr :caption, :any, default: nil
   attr :annotations, :list, default: []
 
   defp listing(assigns) do
     ~H"""
     <figure class="code">
-      <pre class={Code.css_class()} style={"font-size: #{Code.font_size(length(@rows), @longest)}px"}><code>
+      <pre
+        class={Code.css_class()}
+        style={"font-size: #{Code.font_size(length(@rows), @longest, @width)}px"}
+      ><code>
         <span
           :for={row <- @rows}
           class={["code__line", not row.lit? && "code__line--dim"]}
@@ -161,60 +171,6 @@ defmodule TinyLlmTalkWeb.DeckComponents do
   end
 
   @doc """
-  How to join, over a screen share.
-
-  The URL leads, because everyone watching is already in a browser and a link is
-  one paste in the chat. The code is small and secondary: it is only there for
-  the people watching on a television or a second monitor, who reach for a phone
-  instead. In a room those weightings would be the other way round.
-  """
-  attr :size, :integer, default: 150
-
-  def qr(assigns) do
-    assigns = assign(assigns, url: join_url(), svg: qr_svg(assigns.size))
-
-    ~H"""
-    <div class="join-card">
-      <div class="join-card__words">
-        <p class="join-card__label">join at</p>
-        <p class="join-card__url">{display_url(@url)}</p>
-        <p class="join-card__aside">also in the chat</p>
-      </div>
-      <div class="join-card__code">{@svg}</div>
-    </div>
-    """
-  end
-
-  @doc """
-  A live vote, as bars in the order the activity lists its options, so nothing
-  reorders under the audience while they are still voting.
-  """
-  attr :tally, :list, required: true
-  attr :answer, :string, default: nil
-  attr :reveal, :boolean, default: false
-  attr :wide, :boolean, default: false, doc: "labels are sentences, not words"
-
-  def tally(assigns) do
-    assigns = assign(assigns, total: assigns.tally |> Enum.map(&elem(&1, 1)) |> Enum.sum())
-
-    ~H"""
-    <div class={["tally", @wide && "tally--wide"]}>
-      <div
-        :for={{option, count} <- @tally}
-        class={["tally__row", (@reveal and option == @answer) && "tally__row--answer"]}
-      >
-        <span class="tally__label">{option}</span>
-        <span class="tally__track">
-          <span class="tally__fill" style={"width: #{share(count, @total)}%"} />
-        </span>
-        <span class="tally__count">{count}</span>
-      </div>
-      <p class="tally__total">{@total} {if @total == 1, do: "vote", else: "votes"}</p>
-    </div>
-    """
-  end
-
-  @doc """
   A row of choices the speaker clicks through, on either window. The chosen one
   is lit; the rest wait.
   """
@@ -239,21 +195,6 @@ defmodule TinyLlmTalkWeb.DeckComponents do
   end
 
   ## PRIVATE FUNCTIONS
-
-  defp join_url, do: Application.fetch_env!(:tiny_llm_talk, :join_url)
-
-  # Nobody types a scheme. Show what a person would actually key in.
-  defp display_url(url), do: String.replace(url, ~r{^https?://}, "")
-
-  defp qr_svg(size) do
-    join_url()
-    |> EQRCode.encode()
-    |> EQRCode.svg(width: size, color: "#000000", background_color: "#FFFFFF")
-    |> Phoenix.HTML.raw()
-  end
-
-  defp share(_count, 0), do: 0
-  defp share(count, total), do: Float.round(count / total * 100, 1)
 
   defp quote_source(%{function: name, path: path}) when is_atom(name) and not is_nil(name) do
     Source.function(path, name)

@@ -13,10 +13,7 @@ import Config
 config :tiny_llm_talk,
   source_root: "../tiny_llm",
   repo_url: "https://github.com/jasondew/tiny_llm",
-  repo_label: "github.com/jasondew/tiny_llm",
-  # What the QR code on the join slide points a phone at. In production this is
-  # the deployed host; nothing about the deck depends on it resolving.
-  join_url: "http://localhost:4000/join"
+  repo_label: "github.com/jasondew/tiny_llm"
 
 config :tiny_llm_talk,
   generators: [timestamp_type: :utc_datetime]

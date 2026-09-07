@@ -11,7 +11,7 @@ defmodule TinyLlmTalk.Slide do
   """
 
   @enforce_keys [:id, :title]
-  defstruct [:id, :title, :section, :index, :activity, notes: "", steps: 1, ticks: false]
+  defstruct [:id, :title, :section, :index, notes: "", steps: 1, ticks: false]
 
   @type t :: %__MODULE__{
           id: atom(),
@@ -20,7 +20,6 @@ defmodule TinyLlmTalk.Slide do
           index: pos_integer() | nil,
           notes: String.t(),
           steps: pos_integer(),
-          activity: atom() | nil,
           ticks: boolean()
         }
 
