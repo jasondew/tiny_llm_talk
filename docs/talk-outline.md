@@ -21,7 +21,7 @@ the sentence, the picture of where attention looks, and the score.
 | 0 | Cold open | 4 | **vote: flees, or flee** (the sentence and the join link, on screen while the room arrives), title, what a transformer is (one block, drawn; every frontier model uses the same pieces), the model I built (every parameter table, by stage, with its shape and count) | audience vote |
 | 1 | Words become numbers | 4 | 32 words, the grammar, one function, **it writes** (the writer: the whole path once, fast) | presenter pace |
 | 2 | Embedding and position | 3 | a word is a row, position is added, the model forgets it saw words | |
-| 3 | Attention | 11 | math break: **dot product** with two arrows to drag and **softmax playground**; then **fuzzy map**, ask/offer/hand over, one head of attention (the formula over the code, sixteen lines), three details with a **mask toggle**, **bet: where will the blank look**, **the walkthrough** | presenter drags, slider, picks; audience bet |
+| 3 | Attention | 11 | math break: **dot product** with two arrows to drag and **softmax playground**; then ask/offer/hand over with the formula, **fuzzy map**, one head of attention (sixteen lines, annotated), three details with a **mask toggle**, **bet: where will the blank look**, **the walkthrough** | presenter drags, slider, picks; audience bet |
 | 4 | Look at what it did | 5 | heatmap, read it honestly, the sink, half a route, **your sentence** | audience builds sentences |
 | 5 | The rest of the block | 3 | lid off, three pieces of plumbing | |
 | 6 | Back to words | 4 | rows become a distribution, the loop, **one word at a time**, **temperature dial**, **vote: spot the human** | presenter, audience vote |

@@ -32,7 +32,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
   # two that matter are lit; the rest are dimmed to make the point that this
   # is all there is.
 
-  # The four scores the softmax playground turns into a budget.
+  # The five scores the softmax playground turns into a distribution.
   # Words from the vocabulary but not from the sentence, so the room does not
   # read the playground as attention over the probe. They are only labels.
   @playground_scores [
@@ -309,22 +309,22 @@ defmodule TinyLlmTalkWeb.SlideComponents do
   end
 
   def slide(%{slide: %Slide{id: :softmax_playground}} = assigns) do
-    sharpness = Controls.number(assigns.controls, "sharpness", 1.0)
+    temperature = Controls.number(assigns.controls, "softmax_temperature", 1.0)
     scores = Enum.map(@playground_scores, &elem(&1, 1))
-    [budget] = Tensor.softmax([Enum.map(scores, &(&1 * sharpness))])
+    [distribution] = Tensor.softmax([Enum.map(scores, &(&1 / temperature))])
 
     assigns =
       assign(assigns,
-        sharpness: sharpness,
+        temperature: temperature,
         words: Enum.map(@playground_scores, &elem(&1, 0)),
         scores: @playground_scores,
-        budget: budget
+        distribution: distribution
       )
 
     ~H"""
     <section class="slide">
       <p class="slide__eyebrow slide__eyebrow--break">Math break!</p>
-      <h2 class="slide__title slide__title--small">A softmax turns scores into a budget</h2>
+      <h2 class="slide__title slide__title--small">A softmax turns scores into a distribution</h2>
       <div class="two-up">
         <div>
           <p class="row-caption">scores in</p>
@@ -335,22 +335,26 @@ defmodule TinyLlmTalkWeb.SlideComponents do
           </div>
         </div>
         <div>
-          <p class="row-caption">budget out &middot; sums to {format_weight(Enum.sum(@budget))}</p>
-          <.bars values={@budget} words={@words} top={5} highlight={@words} />
+          <p class="row-caption">
+            distribution out &middot; sums to {format_weight(Enum.sum(@distribution))}
+          </p>
+          <.bars values={@distribution} words={@words} top={5} highlight={@words} />
         </div>
       </div>
-      <form id="sharpness-dial" phx-change="control" class="dial">
-        <input type="hidden" name="name" value="sharpness" />
+      <form id="softmax-temperature-dial" phx-change="control" class="dial">
+        <input type="hidden" name="name" value="softmax_temperature" />
         <input
           type="range"
           name="value"
           min="0.1"
           max="4"
           step="0.1"
-          value={@sharpness}
+          value={@temperature}
           class="dial__range"
         />
-        <output class="dial__value">sharpness {:erlang.float_to_binary(@sharpness, decimals: 1)}</output>
+        <output class="dial__value">
+          temperature {:erlang.float_to_binary(@temperature, decimals: 1)}
+        </output>
       </form>
     </section>
     """
@@ -478,8 +482,8 @@ defmodule TinyLlmTalkWeb.SlideComponents do
             <th>key</th>
             <th>key vector</th>
             <th>1. score (dot)</th>
-            <th class={@step < 2 && "fuzzy--hidden"}>2. budget (softmax)</th>
-            <th class={@step < 3 && "fuzzy--hidden"}>3. value &times; budget</th>
+            <th class={@step < 2 && "fuzzy--hidden"}>2. distribution (softmax)</th>
+            <th class={@step < 3 && "fuzzy--hidden"}>3. value &times; weight</th>
           </tr>
         </thead>
         <tbody>
@@ -487,7 +491,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
             <td class="fuzzy__key">{row.key}</td>
             <td class="fuzzy__vector">{format_vector(entry_vector(row.key))}</td>
             <td class="fuzzy__number">{format_signed(row.score)}</td>
-            <td class={["fuzzy__budget", @step < 2 && "fuzzy--hidden"]}>
+            <td class={["fuzzy__weight", @step < 2 && "fuzzy--hidden"]}>
               <span class="fuzzy__track">
                 <span class="fuzzy__fill" style={"width: #{round(row.weight * 100)}%"} />
               </span>
@@ -528,7 +532,9 @@ defmodule TinyLlmTalkWeb.SlideComponents do
         </.step>
       </dl>
       <.step n={4} step={@step}>
-        <.code path="lib/tiny_llm/attention.ex" range={198..200} step={@step} caption={false} />
+        <p class="formula">
+          Attention(W<sub>Q</sub>, W<sub>K</sub>, W<sub>V</sub>) = softmax(<span class="formula__group">Q K<sup>T</sup> / √d</span>) V
+        </p>
       </.step>
     </section>
     """
@@ -538,21 +544,16 @@ defmodule TinyLlmTalkWeb.SlideComponents do
     ~H"""
     <section class="slide slide--tight">
       <p class="slide__eyebrow">one head of attention</p>
-      <p class="formula">
-        Attention(W<sub>Q</sub>, W<sub>K</sub>, W<sub>V</sub>) = softmax(<span class="formula__group">Q K<sup>T</sup> / √d</span>) V
-      </p>
-      <.step n={2} step={@step}>
-        <.code
-          path="lib/tiny_llm/attention.ex"
-          range={198..213}
-          step={@step}
-          focus={[:all, :all, 1..3, 5..8, 9..13, 14..14, 16..16, :all]}
-        >
-          <:annotation line={1}>Q = input × W<sub>Q</sub></:annotation>
-          <:annotation line={2}>K = input × W<sub>K</sub></:annotation>
-          <:annotation line={3}>V = input × W<sub>V</sub></:annotation>
-        </.code>
-      </.step>
+      <.code
+        path="lib/tiny_llm/attention.ex"
+        range={198..213}
+        step={@step}
+        focus={[:all, 1..3, 5..8, 9..13, 14..14, 16..16, :all]}
+      >
+        <:annotation line={1}>Q = input × W<sub>Q</sub></:annotation>
+        <:annotation line={2}>K = input × W<sub>K</sub></:annotation>
+        <:annotation line={3}>V = input × W<sub>V</sub></:annotation>
+      </.code>
     </section>
     """
   end

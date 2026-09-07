@@ -9,7 +9,7 @@ defmodule TinyLlmTalk.FuzzyMapTest do
     assert is_nil(FuzzyMap.exact("goose"))
   end
 
-  test "the weights are a budget that sums to one" do
+  test "the weights are a distribution that sums to one" do
     lookup = FuzzyMap.lookup("geese")
 
     assert_in_delta lookup.scores |> Enum.map(& &1.weight) |> Enum.sum(), 1.0, 1.0e-9
@@ -20,7 +20,7 @@ defmodule TinyLlmTalk.FuzzyMapTest do
     assert FuzzyMap.lookup("goose").blend < 0.2
   end
 
-  test "an exact key gets most of the budget" do
+  test "an exact key gets most of the distribution" do
     lookup = FuzzyMap.lookup("llama")
     top = Enum.max_by(lookup.scores, & &1.weight)
 

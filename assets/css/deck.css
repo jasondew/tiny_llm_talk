@@ -1164,7 +1164,7 @@
   color: var(--ink-dim);
 }
 
-.fuzzy__budget {
+.fuzzy__weight {
   font-family: var(--mono);
   color: var(--accent);
 }

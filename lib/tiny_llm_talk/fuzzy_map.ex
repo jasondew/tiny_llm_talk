@@ -4,9 +4,9 @@ defmodule TinyLlmTalk.FuzzyMap do
   already trusts.
 
   `Map.get/2` finds the one key equal to the query and returns its value. A
-  fuzzy map scores every key against the query, turns the scores into a budget
-  that sums to one, and returns the blend of every value weighted by that
-  budget. Make the query, the keys and the values learned, and that is an
+  fuzzy map scores every key against the query, turns the scores into a
+  distribution that sums to one, and returns the blend of every value weighted
+  by that distribution. Make the query, the keys and the values learned, and that is an
   attention head. Nothing in `TinyLlm.Attention` is missing from this file
   except the learning.
 

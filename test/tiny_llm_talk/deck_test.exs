@@ -27,15 +27,15 @@ defmodule TinyLlmTalk.DeckTest do
       assert index(:it_writes) == index(:one_function) + 1
     end
 
-    test "builds attention up: the math, the fuzzy map, the learned tables, then the head" do
+    test "builds attention up: the math, the three questions, the fuzzy map, then the head" do
       assert Deck.at(index(:forgets_the_words) + 1).id == :dot_product
 
       assert Enum.slice(ids(), index(:dot_product) - 1, 8) ==
                [
                  :dot_product,
                  :softmax_playground,
-                 :fuzzy_map,
                  :learn_the_lookup,
+                 :fuzzy_map,
                  :attention_code,
                  :three_details,
                  :attention_bet,

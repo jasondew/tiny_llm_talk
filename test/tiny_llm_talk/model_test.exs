@@ -37,7 +37,7 @@ defmodule TinyLlmTalk.ModelTest do
       end
     end
 
-    test "weights are a budget over the past that sums to one" do
+    test "weights are a distribution over the past that sums to one" do
       trace = Model.trace(@probe)
 
       for {row, query} <- Enum.with_index(trace.weights) do

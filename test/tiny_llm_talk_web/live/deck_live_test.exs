@@ -77,22 +77,16 @@ defmodule TinyLlmTalkWeb.DeckLiveTest do
     assert length(Regex.scan(~r/class="parameters__count"/, html)) == 14
   end
 
-  test "opens attention with the formula, the code, and a single-head note", %{conn: conn} do
+  test "shows the head as sixteen annotated lines, with no formula over them", %{conn: conn} do
     slide = Enum.find(Deck.slides(), &(&1.id == :attention_code))
-    {:ok, view, html} = live(conn, ~p"/s/#{slide.index}")
+    {:ok, _view, html} = live(conn, ~p"/s/#{slide.index}")
 
-    assert slide.steps == 8
+    assert slide.steps == 7
     assert html =~ "one head of attention"
-    assert html =~ "Attention(W<sub>Q</sub>, W<sub>K</sub>, W<sub>V</sub>) = softmax("
-    refute html =~ "Attention(Q, K, V)"
-    assert html =~ "√d"
-    refute html =~ ~r/step--shown[^>]*>\s*<[^>]*class="code/
-
-    render_keydown(view, "key", %{"key" => "ArrowRight"})
-    shown = render(view)
-
-    assert shown =~ ~r/step--shown[^>]*>\s*<[^>]*class="code/
-    assert shown =~ "lib/tiny_llm/attention.ex"
+    refute html =~ "softmax("
+    refute html =~ "√d"
+    assert html =~ "lib/tiny_llm/attention.ex"
+    shown = html
 
     assert shown =~
              ~r/code__number">1<\/span>.*?<span class="code__annotation">\s*Q = input × W<sub[^>]*>Q<\/sub>\s*<\/span>/
@@ -117,6 +111,34 @@ defmodule TinyLlmTalkWeb.DeckLiveTest do
     slide = Enum.find(Deck.slides(), &(&1.id == :attention_code))
     {:ok, _view, html} = live(conn, ~p"/s/#{slide.index}")
     refute html =~ "Math break!"
+  end
+
+  test "turns scores into a distribution with a temperature that divides", %{conn: conn} do
+    slide = Enum.find(Deck.slides(), &(&1.id == :softmax_playground))
+    {:ok, view, html} = live(conn, ~p"/s/#{slide.index}")
+
+    assert html =~ "A softmax turns scores into a distribution"
+    assert html =~ "distribution out"
+    assert html =~ "temperature 1.0"
+    assert html =~ ~s(name="name" value="softmax_temperature")
+    refute html =~ "sharpness"
+    refute html =~ "budget"
+
+    render_click(view, "control", %{"name" => "softmax_temperature", "value" => "0.1"})
+    assert render(view) =~ ~s(bars__value">100.0%)
+
+    render_click(view, "control", %{"name" => "softmax_temperature", "value" => "4.0"})
+    refute render(view) =~ ~s(bars__value">100.0%)
+  end
+
+  test "defines query, key and value, then states the formula, with no code", %{conn: conn} do
+    slide = Enum.find(Deck.slides(), &(&1.id == :learn_the_lookup))
+    {:ok, _view, html} = live(conn, ~p"/s/#{slide.index}/#{slide.steps}")
+
+    assert slide.steps == 4
+    assert html =~ "Attention(W<sub>Q</sub>, W<sub>K</sub>, W<sub>V</sub>) = softmax("
+    assert html =~ "√d"
+    refute html =~ "code__line"
   end
 
   test "lists what is here without the training internals the talk skips", %{conn: conn} do

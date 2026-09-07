@@ -181,7 +181,7 @@ defmodule TinyLlmTalk.Deck do
       number: 3,
       title: "Attention",
       minutes: 11,
-      lands: "a fuzzy lookup: score every key, budget the scores, blend the values",
+      lands: "a fuzzy lookup: score every key, softmax the scores, blend the values",
       slides: [
         %Slide{
           id: :dot_product,
@@ -196,23 +196,14 @@ defmodule TinyLlmTalk.Deck do
         },
         %Slide{
           id: :softmax_playground,
-          title: "A softmax turns scores into a budget",
+          title: "A softmax turns scores into a distribution",
           notes: """
           Drag the slider. Five scores in, five shares out, always summing to
-          one. The words are just labels, none of them from the sentence. Sharp means commit to the top score; soft means spread the
-          budget. Say "budget" and "commit"; never say exponential. End of
-          the break; the next slide puts both pieces to work.
-          """
-        },
-        %Slide{
-          id: :fuzzy_map,
-          title: "Now make it fuzzy",
-          steps: 3,
-          notes: """
-          Pick a query word. Step one: score every key with a dot product.
-          Step two: softmax the scores into a budget. Step three: blend the
-          values by that budget. Query with goose, which is not in the map, and
-          it still answers sensibly. That is the whole trick.
+          one: that is a distribution, define it once. The words are just
+          labels, none of them from the sentence. Low temperature commits to
+          the top score; high temperature spreads the distribution out. Never
+          say exponential. End of the break; the next slide puts both pieces
+          to work.
           """
         },
         %Slide{
@@ -222,23 +213,34 @@ defmodule TinyLlmTalk.Deck do
           notes: """
           Query is what this position is looking for. Key is what it
           advertises. Value is what it hands over if chosen. Each is the
-          position's row times a learned table. Three matrices, and the fuzzy
-          map is now an attention head; the next slide is the whole thing.
+          position's row times a learned table. Last step, the formula: score
+          every key against the query, scale, softmax into a distribution,
+          blend the values. The next slide runs it on a toy map by hand.
+          """
+        },
+        %Slide{
+          id: :fuzzy_map,
+          title: "Now make it fuzzy",
+          steps: 3,
+          notes: """
+          The formula from the last slide, on a map small enough to read.
+          Pick a query word. Step one: score every key with a dot product.
+          Step two: softmax the scores into a distribution. Step three: blend
+          the values by that distribution. Query with goose, which is not in the map, and
+          it still answers sensibly. That is the whole trick.
           """
         },
         %Slide{
           id: :attention_code,
           title: "One head of attention, sixteen lines",
-          steps: 8,
+          steps: 7,
           notes: """
-          The formula alone on the first step; it is the fuzzy map with the
-          learned tables: score every key against the query, scale, softmax
-          into a budget, blend the values. One head; frontier models run
-          many side by side. Then the code, quoted from the repo, not
-          simplified. Step through: the three projections, the dot products
-          all at once, the scale, the mask, the softmax, the blend. Let them
-          read; say only what each block is for. The scale and the mask get
-          their own slide next.
+          The formula and the toy, now as the real code, quoted from the
+          repo, not simplified. One head; frontier models run many side by
+          side. Step through: the three projections, the dot products all at
+          once, the scale, the mask, the softmax, the blend. Let them read;
+          say only what each block is for. The scale and the mask get their
+          own slide next.
           """
         },
         %Slide{
@@ -271,8 +273,9 @@ defmodule TinyLlmTalk.Deck do
           notes: """
           Starts on who, so the mask has something to hide. Step through: its
           query dots every key, the future gets struck out, the softmax turns
-          scores into a budget. Real numbers from the checkpoint. Then click
-          dogs, the position predicting the blank: most of its budget goes to
+          scores into a distribution. Real numbers from the checkpoint. Then
+          click dogs, the position predicting the blank: most of its weight
+          goes to
           who. Last step: multiply every value by its share and add them up;
           that blend is what the position carries forward. Click any
           position; the future is always masked.
@@ -383,7 +386,7 @@ defmodule TinyLlmTalk.Deck do
           title: "Thirty-two floats become thirty-two probabilities",
           notes: """
           One more weighted sum takes the last row from 32 wide to 32 scores,
-          one per word, and the same softmax turns them into a budget. Bars for
+          one per word, and the same softmax turns them into a distribution. Bars for
           the probe: flees is the top of all thirty-two.
           """
         },
