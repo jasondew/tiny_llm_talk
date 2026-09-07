@@ -108,7 +108,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
       <div class="slide__fill">
         <.block_diagram
           repeats={if @step >= 2, do: "× 1", else: "× N"}
-          outputs={if @step >= 2, do: "32 probabilities", else: "vocabulary size probabilities"}
+          outputs={if @step >= 2, do: "32 probabilities", else: "one probability per word"}
         />
       </div>
     </section>
