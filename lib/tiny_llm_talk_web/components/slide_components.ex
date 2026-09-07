@@ -555,6 +555,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
 
     ~H"""
     <section class="slide slide--tight">
+      <.sentence_line />
       <p class={["formula", "formula--heading", @step == 1 && "formula--hero"]}>
         Attention(W<sub>Q</sub>, W<sub>K</sub>, W<sub>V</sub>) = softmax(<span class="formula__group">Q K<sup>T</sup> / √d</span>) V
       </p>
