@@ -1,7 +1,7 @@
 # the llama who chases the dogs
 
-Attention from scratch, in Elixir. Forty-five minutes: forty-one of talk,
-four for questions.
+Attention from scratch, in Elixir. Forty-five minutes: thirty-nine of talk,
+six for questions.
 
 The arc is one sentence going through one forward pass, in the order
 `TinyLlm.Transformer.forward/2` runs it. There is no history and no
@@ -22,7 +22,7 @@ the sentence, the picture of where attention looks, and the score.
 | 1 | Words become numbers | 4 | 32 words, the grammar, one function, **it writes** (the writer: the whole path once, fast) | presenter pace |
 | 2 | Embedding and position | 3 | a word is a row, position is added, the model forgets it saw words | |
 | 3 | Attention | 11 | math break: **dot product** with two arrows to drag and **softmax playground**; then ask/offer/hand over with the formula, **a small example by hand** on a toy map, one head of attention (the formula over sixteen annotated lines, the heatmap beside them going dark when the focus reaches the mask), **bet: where will the blank look**, **the walkthrough** | presenter drags, slider, picks; audience bet |
-| 4 | Look at what it did | 5 | heatmap, read it honestly, the sink, half a route, **your sentence** | audience builds sentences |
+| 4 | Look at what it did | 3 | heatmap, **your sentence** | audience builds sentences |
 | 5 | The rest of the block | 3 | lid off, three pieces of plumbing | |
 | 6 | Back to words | 4 | rows become a distribution, the loop, **one word at a time**, **temperature dial**, **vote: spot the human** | presenter, audience vote |
 | 7 | Training | 4 | **training, live** (press start, talk over it), guess / measure / nudge / repeat, the loss replayed, tests for math | presenter start |
@@ -50,7 +50,7 @@ Every vote has a right answer and a reveal step. On reveal every phone says
 whether its owner agreed, and the room's record accumulates for the
 scoreboard. The record is kept in `TinyLlmTalk.Room`.
 
-Five audience moments is a lot for forty-one minutes. If rehearsal says so,
+Five audience moments is a lot for thirty-nine minutes. If rehearsal says so,
 cut **spot the human** first; it is marked in its speaker notes.
 
 ## The speaker

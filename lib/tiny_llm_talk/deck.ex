@@ -286,16 +286,15 @@ defmodule TinyLlmTalk.Deck do
         %Slide{
           id: :walkthrough,
           title: "One position, all the way through",
-          steps: 4,
           notes: """
-          Starts on who, so the mask has something to hide. Step through: its
-          query dots every key, the future gets struck out, the softmax turns
-          scores into a distribution. Real numbers from the checkpoint. Then
-          click dogs, the position predicting the blank: most of its weight
-          goes to
-          who. Last step: multiply every value by its share and add them up;
-          that blend is what the position carries forward. Click any
-          position; the future is always masked.
+          Starts on who, so the mask has something to hide, and the whole
+          row is there at once: its query dots every key, the future is
+          struck out, the softmax turns scores into a distribution. Real
+          numbers from the checkpoint. Then click dogs, the position
+          predicting the blank: most of its weight goes to who. Say, do not
+          show: who in turn attends to llama, so the blank reaches the
+          subject in two hops, through the word that stands for it. Click
+          any position; the future is always masked.
           """
         }
       ]
@@ -303,8 +302,8 @@ defmodule TinyLlmTalk.Deck do
     %Section{
       number: 4,
       title: "Look at what it did",
-      minutes: 5,
-      lands: "the sink, who gathers the subject, and half a route it cannot finish",
+      minutes: 3,
+      lands: "every position at once, and the room's own sentences",
       slides: [
         %Slide{
           id: :heatmap,
@@ -312,40 +311,10 @@ defmodule TinyLlmTalk.Deck do
           notes: """
           Rows predict, columns are looked at. The upper triangle is empty,
           exactly as the mask says it must be. Let them find the bright cells
-          before you name them.
-          """
-        },
-        %Slide{
-          id: :read_it_honestly,
-          title: "Read it honestly",
-          steps: 2,
-          notes: """
-          The blank attends most to who, then dogs, then llama. It is not
-          looking at llama and it does not need to: chases already agrees with
-          the head noun. The point is that the pattern is structured rather
-          than flat, and it gets the answer.
-          """
-        },
-        %Slide{
-          id: :attention_sink,
-          title: "It found the attention sink by itself",
-          notes: """
-          The first verb has nothing useful behind it, so it dumps its
-          attention on start. Production transformers do exactly this and it
-          has a name. Fifteen thousand parameters reproduced it unprompted.
-          One slide, one laugh, move on.
-          """
-        },
-        %Slide{
-          id: :half_a_route,
-          title: "The model drew the argument for depth",
-          steps: 3,
-          notes: """
-          The who row gathers llama; on the mirror sentence it gathers dogs.
-          The blank attends to who. So half of a two-hop route exists, and one
-          block cannot use the second hop, because both hops happen at once. A
-          second block would read who after it had gathered the subject. That
-          is what depth buys, drawn by the model.
+          before you name them. Then say the rest yourself: the blank's
+          position leans on who, who leans on llama, so the subject reaches
+          the blank in two hops; and most rows lean on the start token, the
+          sink every trained transformer finds for itself.
           """
         },
         %Slide{

@@ -735,7 +735,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
         <span class="walk__label">keys</span>
         <span :for={_index <- 0..(length(@words) - 1)} class="walk__cell walk__cell--key">k</span>
 
-        <.step n={2} step={@step} class="walk__row">
+        <div class="walk__row">
           <span class="walk__label">q &middot; k / &radic;d</span>
           <span
             :for={score <- Enum.at(@trace.scores, @position)}
@@ -743,17 +743,17 @@ defmodule TinyLlmTalkWeb.SlideComponents do
           >
             {format_signed(score)}
           </span>
-        </.step>
+        </div>
 
-        <.step n={3} step={@step} class="walk__row">
+        <div class="walk__row">
           <span class="walk__label">mask the future</span>
           <span
             :for={score <- Enum.at(@trace.masked, @position)}
             class={["walk__cell walk__cell--number", is_nil(score) && "walk__cell--masked"]}
           >{if score, do: format_signed(score), else: "-1e9"}</span>
-        </.step>
+        </div>
 
-        <.step n={4} step={@step} class="walk__row">
+        <div class="walk__row">
           <span class="walk__label">softmax</span>
           <span
             :for={weight <- Enum.at(@trace.weights, @position)}
@@ -762,7 +762,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
             <span class="walk__fill" style={"height: #{round(weight * 100)}%"} />
             <span class="walk__percent">{format_percent(weight)}</span>
           </span>
-        </.step>
+        </div>
       </div>
       <.untrained :if={is_nil(@trace)} what="This walkthrough" />
     </section>
@@ -787,84 +787,6 @@ defmodule TinyLlmTalkWeb.SlideComponents do
         cell={44}
       />
       <.untrained :if={is_nil(@weights)} what="This heatmap" />
-    </section>
-    """
-  end
-
-  def slide(%{slide: %Slide{id: :read_it_honestly}} = assigns) do
-    assigns = assign(assigns, weights: blank_row())
-
-    ~H"""
-    <section class="slide">
-      <.sentence_line />
-      <h2 class="slide__title">Read it honestly</h2>
-      <.bars
-        :if={@weights}
-        values={@weights}
-        words={Model.probe()}
-        top={4}
-        highlight={~w(who dogs llama)}
-      />
-      <.untrained :if={is_nil(@weights)} what="These weights" />
-      <.step n={2} step={@step} class="slide__lede">
-        It is not looking at <span class="word word--subject">llama</span>. And it does not
-        need to: it reads the subject's number off <span class="word">chases</span>, which
-        already agrees with the head noun.
-      </.step>
-    </section>
-    """
-  end
-
-  def slide(%{slide: %Slide{id: :attention_sink}} = assigns) do
-    assigns = assign(assigns, weights: row_for("chases"))
-
-    ~H"""
-    <section class="slide">
-      <.sentence_line />
-      <h2 class="slide__title">It found the attention sink by itself</h2>
-      <.bars
-        :if={@weights}
-        values={@weights}
-        words={Model.probe()}
-        top={3}
-        highlight={["<start>"]}
-      />
-      <.untrained :if={is_nil(@weights)} what="This row" />
-    </section>
-    """
-  end
-
-  def slide(%{slide: %Slide{id: :half_a_route}} = assigns) do
-    assigns =
-      assign(assigns,
-        who: row_for("who"),
-        mirror: mirror_row_for("who")
-      )
-
-    ~H"""
-    <section class="slide">
-      <h2 class="slide__title">The model drew the argument for depth</h2>
-      <div class="two-up">
-        <.step n={1} step={@step}>
-          <p class="row-caption">the llama who chases the dogs</p>
-          <.bars :if={@who} values={@who} words={Model.probe()} top={3} highlight={~w(llama)} />
-        </.step>
-        <.step n={2} step={@step}>
-          <p class="row-caption">the dogs who chase the llama</p>
-          <.bars
-            :if={@mirror}
-            values={@mirror}
-            words={Model.mirror_probe()}
-            top={3}
-            highlight={~w(dogs)}
-          />
-        </.step>
-      </div>
-      <.untrained :if={is_nil(@who)} what="These rows" />
-      <.step n={3} step={@step} class="slide__lede">
-        The <span class="word">who</span> position has gathered the head noun into itself.
-        And the blank attends to <span class="word">who</span>.
-      </.step>
     </section>
     """
   end
@@ -1955,28 +1877,12 @@ defmodule TinyLlmTalkWeb.SlideComponents do
     FuzzyMap.entries() |> Enum.find(&(&1.key == key)) |> Map.fetch!(:vector)
   end
 
-  defp blank_row, do: row_for(List.last(Model.probe()))
-
   # The attention row of the position predicting the blank: where it looks,
   # as a distribution over the sentence so far. Nil before a checkpoint.
   defp blank_attention_row do
     case Model.attention(Model.probe()) do
       nil -> nil
       weights -> List.last(weights)
-    end
-  end
-
-  defp row_for(word) do
-    case Model.attention(Model.probe()) do
-      nil -> nil
-      weights -> Enum.at(weights, Enum.find_index(Model.probe(), &(&1 == word)))
-    end
-  end
-
-  defp mirror_row_for(word) do
-    case Model.attention(Model.mirror_probe()) do
-      nil -> nil
-      weights -> Enum.at(weights, Enum.find_index(Model.mirror_probe(), &(&1 == word)))
     end
   end
 
