@@ -1410,7 +1410,8 @@
   line-height: 1.2;
 }
 
-.formula sup {
+.formula sup,
+.formula sub {
   font-size: 0.6em;
 }
 

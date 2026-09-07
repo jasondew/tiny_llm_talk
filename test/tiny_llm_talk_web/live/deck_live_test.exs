@@ -78,7 +78,7 @@ defmodule TinyLlmTalkWeb.DeckLiveTest do
     {:ok, _view, html} = live(conn, ~p"/s/#{slide.index}")
 
     assert html =~ "one head of attention"
-    assert html =~ ~r/Attention = softmax\(/
+    assert html =~ "Attention(W<sub>Q</sub>, W<sub>K</sub>, W<sub>V</sub>) = softmax("
     refute html =~ "Attention(Q, K, V)"
     assert html =~ "√d"
     assert html =~ "lib/tiny_llm/attention.ex"
