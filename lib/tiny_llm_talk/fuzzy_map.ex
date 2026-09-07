@@ -29,22 +29,23 @@ defmodule TinyLlmTalk.FuzzyMap do
 
   # Keys are read at sampling time, which is why a softmax over dot products
   # rather than a max: two keys can be close, and the answer is a blend.
+  # Nouns from the vocabulary but none from the sentence, so the room does not
+  # read the toy as attention over the probe; the next slide is that.
   @entries [
-    %{key: "llama", vector: [4.0, -4.0], value: 0.0},
-    %{key: "llamas", vector: [4.0, 4.0], value: 1.0},
-    %{key: "dog", vector: [3.6, -4.0], value: 0.0},
-    %{key: "dogs", vector: [3.6, 4.0], value: 1.0},
+    %{key: "fox", vector: [4.0, -4.0], value: 0.0},
+    %{key: "foxes", vector: [4.0, 4.0], value: 1.0},
+    %{key: "mouse", vector: [3.6, -4.0], value: 0.0},
+    %{key: "mice", vector: [3.6, 4.0], value: 1.0},
     %{key: "the", vector: [0.0, 0.0], value: 0.5}
   ]
 
   # Words the presenter can query with. The first two are in the map, so an
-  # exact lookup would work; the rest are not, so it would not.
+  # exact lookup would work; the other two are not, so it would not.
   @queries [
-    %{word: "llama", vector: [4.0, -4.0]},
-    %{word: "dogs", vector: [3.6, 4.0]},
+    %{word: "fox", vector: [4.0, -4.0]},
+    %{word: "mice", vector: [3.6, 4.0]},
     %{word: "goose", vector: [3.2, -4.0]},
-    %{word: "geese", vector: [3.2, 4.0]},
-    %{word: "mice", vector: [2.8, 3.6]}
+    %{word: "geese", vector: [3.2, 4.0]}
   ]
 
   @spec entries() :: [entry()]

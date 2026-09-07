@@ -4,8 +4,8 @@ defmodule TinyLlmTalk.FuzzyMapTest do
   alias TinyLlmTalk.FuzzyMap
 
   test "an exact lookup works for a key in the map and not otherwise" do
-    assert FuzzyMap.exact("llama") == 0.0
-    assert FuzzyMap.exact("llamas") == 1.0
+    assert FuzzyMap.exact("fox") == 0.0
+    assert FuzzyMap.exact("foxes") == 1.0
     assert is_nil(FuzzyMap.exact("goose"))
   end
 
@@ -21,10 +21,10 @@ defmodule TinyLlmTalk.FuzzyMapTest do
   end
 
   test "an exact key gets most of the distribution" do
-    lookup = FuzzyMap.lookup("llama")
+    lookup = FuzzyMap.lookup("fox")
     top = Enum.max_by(lookup.scores, & &1.weight)
 
-    assert top.key == "llama"
+    assert top.key == "fox"
   end
 
   test "scales the scores by the square root of the width, as the formula does" do
