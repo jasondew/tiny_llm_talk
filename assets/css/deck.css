@@ -817,6 +817,34 @@
   align-items: start;
 }
 
+/* A listing with a figure beside it: the code takes what the figure leaves. */
+.two-up--code {
+  grid-template-columns: 1fr auto;
+  align-items: start;
+  gap: 24px 32px;
+}
+
+.two-up__aside {
+  padding-top: 6px;
+}
+
+/* The bet's reveal: the row the answer was read from, under the tally. */
+.ask__stack {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.bet-row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.bars--compact .bars__row {
+  font-size: 22px;
+}
+
 /* The grammar's rules, one alternative a row, the arrow and bars lined up. */
 .bnf {
   display: grid;

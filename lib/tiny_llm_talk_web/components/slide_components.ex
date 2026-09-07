@@ -582,34 +582,15 @@ defmodule TinyLlmTalkWeb.SlideComponents do
     """
   end
 
-  def slide(%{slide: %Slide{id: :attention_code}} = assigns) do
-    ~H"""
-    <section class="slide slide--tight">
-      <p class="slide__eyebrow">one head of attention</p>
-      <p class="formula">
-        Attention(W<sub>Q</sub>, W<sub>K</sub>, W<sub>V</sub>) = softmax(<span class="formula__group">Q K<sup>T</sup> / √d</span>) V
-      </p>
-      <.code
-        path="lib/tiny_llm/attention.ex"
-        range={198..213}
-        step={@step}
-        focus={[:all, 1..3, 5..8, 9..13, 14..14, 16..16, :all]}
-      >
-        <:annotation line={1}>Q = input × W<sub>Q</sub></:annotation>
-        <:annotation line={2}>K = input × W<sub>K</sub></:annotation>
-        <:annotation line={3}>V = input × W<sub>V</sub></:annotation>
-      </.code>
-    </section>
-    """
-  end
+  # The step on which the code's focus reaches the mask, and the heatmap
+  # beside it goes dark above the diagonal to match.
+  @mask_step 5
 
-  def slide(%{slide: %Slide{id: :three_details}} = assigns) do
-    # The heatmap leaks into the future until the masking line arrives, then
-    # the upper triangle goes dark with it.
+  def slide(%{slide: %Slide{id: :attention_code}} = assigns) do
     assigns =
       assign(assigns,
         weights:
-          if(assigns.step >= 2,
+          if(assigns.step >= @mask_step,
             do: Model.attention(Model.probe()),
             else: Model.unmasked_attention(Model.probe())
           )
@@ -617,27 +598,28 @@ defmodule TinyLlmTalkWeb.SlideComponents do
 
     ~H"""
     <section class="slide slide--tight">
-      <.sentence_line />
-      <h2 class="slide__title slide__title--small">Three details do all the work</h2>
-      <div class="two-up two-up--lists">
-        <ol class="beats beats--numbered">
-          <.step n={1} step={@step}>
-            <li>Divide by the square root of the width, so the softmax does not saturate.</li>
-          </.step>
-          <.step n={2} step={@step}>
-            <li>Mask the future before the softmax, so the rows still sum to one.</li>
-          </.step>
-          <.step n={3} step={@step}>
-            <li>Every position at once, in one matrix multiply. No loop over time.</li>
-          </.step>
-        </ol>
-        <div>
+      <p class="slide__eyebrow">one head of attention</p>
+      <p class="formula">
+        Attention(W<sub>Q</sub>, W<sub>K</sub>, W<sub>V</sub>) = softmax(<span class="formula__group">Q K<sup>T</sup> / √d</span>) V
+      </p>
+      <div class="two-up two-up--code">
+        <.code
+          path="lib/tiny_llm/attention.ex"
+          range={198..213}
+          step={@step}
+          focus={[:all, 1..3, 5..8, 9..13, 14..14, 16..16, :all]}
+        >
+          <:annotation line={1}>Q = input × W<sub>Q</sub></:annotation>
+          <:annotation line={2}>K = input × W<sub>K</sub></:annotation>
+          <:annotation line={3}>V = input × W<sub>V</sub></:annotation>
+        </.code>
+        <div class="two-up__aside">
           <.heatmap
             :if={@weights}
             values={@weights}
             row_labels={Model.probe()}
             column_labels={Model.probe()}
-            cell={34}
+            cell={30}
           />
           <.untrained :if={is_nil(@weights)} what="This heatmap" />
         </div>
@@ -647,26 +629,41 @@ defmodule TinyLlmTalkWeb.SlideComponents do
   end
 
   def slide(%{slide: %Slide{id: :attention_bet}} = assigns) do
-    assigns = assign(assigns, activity: Room.activity(:attention_bet))
+    assigns =
+      assign(assigns,
+        activity: Room.activity(:attention_bet),
+        blank_row: blank_attention_row()
+      )
 
     ~H"""
     <section class="slide slide--tight">
       <.sentence_line />
       <h2 class="slide__title slide__title--small">
-        Which word will the blank attend to the most?
+        Which word does the blank attend to the most?
       </h2>
       <div class="ask">
         <.qr size={200} />
-        <.tally
-          tally={Room.tally(@room, :attention_bet)}
-          answer={@activity.answer}
-          reveal={@step >= 2}
-        />
+        <div class="ask__stack">
+          <.tally
+            tally={Room.tally(@room, :attention_bet)}
+            answer={@activity.answer}
+            reveal={@step >= 2}
+          />
+          <.step :if={@blank_row} n={2} step={@step} class="bet-row">
+            <p class="row-caption">
+              the last row of the heatmap: <span class="word word--lit">dogs</span> predicts the blank
+            </p>
+            <.bars
+              values={@blank_row}
+              words={Model.probe()}
+              top={4}
+              highlight={List.wrap(@activity.answer)}
+              absolute
+              class="bars--compact"
+            />
+          </.step>
+        </div>
       </div>
-      <p :if={@step >= 2 and @activity.answer} class="slide__note">
-        It is <span class="word word--lit">{@activity.answer}</span>. Nobody guesses that,
-        including me, the first time.
-      </p>
     </section>
     """
   end
@@ -1891,6 +1888,15 @@ defmodule TinyLlmTalkWeb.SlideComponents do
   end
 
   defp blank_row, do: row_for(List.last(Model.probe()))
+
+  # The attention row of the position predicting the blank: where it looks,
+  # as a distribution over the sentence so far. Nil before a checkpoint.
+  defp blank_attention_row do
+    case Model.attention(Model.probe()) do
+      nil -> nil
+      weights -> List.last(weights)
+    end
+  end
 
   defp row_for(word) do
     case Model.attention(Model.probe()) do

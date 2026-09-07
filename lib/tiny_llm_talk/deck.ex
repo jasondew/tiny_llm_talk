@@ -249,26 +249,18 @@ defmodule TinyLlmTalk.Deck do
           steps: 7,
           notes: """
           The formula again, now over the real code, quoted from the repo,
-          not simplified. One head; frontier models run many side by
-          side. Step through: the three projections, the dot products all at
-          once, the scale, the mask, the softmax, the blend. Let them read;
-          say only what each block is for. The scale and the mask get their
-          own slide next.
-          """
-        },
-        %Slide{
-          id: :three_details,
-          title: "Three details do all the work",
-          steps: 3,
-          notes: """
-          The heatmap starts unmasked: every position can see the whole
-          sentence, including the words after it, which is cheating. Divide
-          by the square root of the width so the softmax does not saturate
-          as vectors grow. Second step: mask the future before the softmax
-          so the rows still sum to one, and watch the upper triangle go
-          dark. And every position runs at once in one matrix multiply, no
-          loop over time, which is why this scales and a recurrent network
-          did not.
+          not simplified, with the head's output for the sentence beside
+          it: seven rows, one per position, each a distribution over the
+          positions. One head; frontier models run many side by side. Step
+          through: the three projections, the dot products all at once, the
+          scale (root d, so the softmax does not saturate as vectors grow),
+          the mask, the softmax, the blend. The heatmap starts unmasked,
+          every position seeing the whole sentence, which is cheating; when
+          the focus reaches the mask lines the upper triangle goes dark and
+          the rows still sum to one. Say out loud: every position at once in
+          one matrix multiply, no loop over time, which is why this scales
+          and a recurrent network did not. Let them read; say only what
+          each block is for.
           """
         },
         %Slide{
@@ -278,8 +270,12 @@ defmodule TinyLlmTalk.Deck do
           steps: 2,
           notes: """
           Ask before showing. Most rooms say llama, because that is the answer
-          to the grammar question. The model says who. Being wrong together is
-          what makes the walkthrough land.
+          to the grammar question. The model says who; the reveal shows the
+          last row of the heatmap from the last slide, the dogs position,
+          because the blank has no row: it is predicted from the output of
+          the last position given. Say that plainly, it is the question
+          someone will ask. Being wrong together is what makes the
+          walkthrough land.
           """
         },
         %Slide{
