@@ -104,9 +104,11 @@ defmodule TinyLlmTalkWeb.SlideComponents do
   def slide(%{slide: %Slide{id: :the_architecture}} = assigns) do
     ~H"""
     <section class="slide slide--tight">
-      <h2 class="slide__title slide__title--small">The transformer</h2>
+      <h2 class="slide__title slide__title--small">
+        {if @step >= 2, do: "The transformer in this talk", else: "The transformer"}
+      </h2>
       <div class="slide__fill">
-        <.block_diagram repeats="× N" />
+        <.block_diagram repeats={if @step >= 2, do: "× 1", else: "× N"} />
       </div>
     </section>
     """
@@ -790,26 +792,9 @@ defmodule TinyLlmTalkWeb.SlideComponents do
   def slide(%{slide: %Slide{id: :lid_off}} = assigns) do
     ~H"""
     <section class="slide slide--tight">
-      <h2 class="slide__title slide__title--small">The box, with its lid off</h2>
-      <div class="stack">
-        <.step n={1} step={@step}>
-          <div class="stack__layer">embedding + position</div>
-        </.step>
-        <.step n={2} step={@step}>
-          <div class="stack__layer stack__layer--norm">RMSNorm</div>
-        </.step>
-        <.step n={3} step={@step}>
-          <div class="stack__layer stack__layer--attention">attention &mdash; gather</div>
-        </.step>
-        <.step n={4} step={@step}>
-          <div class="stack__layer stack__layer--norm">RMSNorm</div>
-        </.step>
-        <.step n={5} step={@step}>
-          <div class="stack__layer stack__layer--mlp">MLP &mdash; think</div>
-        </.step>
-        <.step n={6} step={@step}>
-          <div class="stack__layer">32 probabilities</div>
-        </.step>
+      <h2 class="slide__title slide__title--small">The transformer in this talk</h2>
+      <div class="slide__fill">
+        <.block_diagram repeats="× 1" />
       </div>
     </section>
     """

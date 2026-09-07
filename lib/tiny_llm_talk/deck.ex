@@ -49,12 +49,15 @@ defmodule TinyLlmTalk.Deck do
         %Slide{
           id: :the_architecture,
           title: "The transformer",
+          steps: 2,
           notes: """
           Motivate it before building it. The stack: a word becomes a row,
           then the block, then probabilities. Inside the dashed box, attention
-          gathers and a small MLP thinks, and the box repeats N times. Say,
-          do not show: every frontier model uses these same pieces, and the
-          labs say so in their own reports: GPT-4 is
+          gathers and a small MLP thinks, and the box repeats N times. Second
+          step: N becomes 1, and the title says so; this is the one on this
+          laptop, one block deep. Say, do not show: every frontier model uses
+          these same pieces, and the labs say so in their own reports: GPT-4
+          is
           "Transformer-based", Gemini
           "builds on Transformer decoders", DeepSeek-V3 is "still within the
           Transformer framework", Llama 4 is a mixture-of-experts one.
@@ -307,13 +310,12 @@ defmodule TinyLlmTalk.Deck do
       slides: [
         %Slide{
           id: :lid_off,
-          title: "The box, with its lid off",
-          steps: 6,
+          title: "The transformer in this talk",
           notes: """
-          Embedding plus position, then attention, then the MLP, then out.
-          Two arrows go around the middle: the residuals. Two small boxes: the
-          norms. Everything on this slide except three words you have already
-          seen.
+          The picture from slide 3 again, with the 1. Attention is done;
+          what is left of the block is the two normalizations and the neural
+          network, and the arrows between them. The next slide names the
+          plumbing.
           """
         },
         %Slide{
