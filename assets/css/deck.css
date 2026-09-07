@@ -889,7 +889,7 @@
 /* The aside has a fixed width so the code box does not change size as the
  * grid beside it comes and goes between steps. */
 .two-up--code {
-  grid-template-columns: 1fr 380px;
+  grid-template-columns: 1fr 400px;
   align-items: start;
   gap: 24px 32px;
 }
@@ -925,6 +925,27 @@
 
 .dial--inline .dial__value {
   font-size: 26px;
+}
+
+/* Three square matrices side by side, as thumbnails with a letter each. */
+.matrix-row {
+  display: flex;
+  gap: 8px;
+}
+
+.matrix-thumb {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  margin: 0;
+  font-family: var(--serif);
+  font-size: 18px;
+  color: var(--ink-dim);
+}
+
+.heatmap--bare .heatmap__row-label {
+  display: none;
 }
 
 .aside-figure {

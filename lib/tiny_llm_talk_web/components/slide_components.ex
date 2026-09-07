@@ -615,6 +615,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
   # Q Kᵀ matmul, then the raw scores, the same scores with the future struck
   # out, the distribution the softmax makes of them, and the context rows
   # the blend produces. Each is the real number from the checkpoint.
+  @projections_step 2
   @scores_step 3
   @mask_step 4
   @softmax_step 5
@@ -622,11 +623,16 @@ defmodule TinyLlmTalkWeb.SlideComponents do
 
   def slide(%{slide: %Slide{id: :attention_code}} = assigns) do
     trace = Model.trace(Model.probe())
+    params = Model.params(:transformer)
 
     assigns =
       assign(assigns,
         trace: trace,
         stage: trace && attention_stage(trace, assigns.step),
+        weights:
+          params &&
+            [{"Q", params.query_weight}, {"K", params.key_weight}, {"V", params.value_weight}],
+        projections_step: @projections_step,
         scores_step: @scores_step,
         blend_step: @blend_step
       )
@@ -644,8 +650,27 @@ defmodule TinyLlmTalkWeb.SlideComponents do
           step={@step}
           focus={[:all, 1..3, 5..8, 9..13, 14..14, 16..16, :all]}
         />
-        <.step :if={@trace} n={@scores_step} step={@step} class="two-up__aside">
-          <div class="aside-figure">
+        <.step :if={@trace} n={@projections_step} step={@step} class="two-up__aside">
+          <div :if={@step == @projections_step and @weights} class="aside-figure">
+            <p class="aside-figure__caption">input, one row per position</p>
+            <.strips rows={@trace.input} labels={Model.probe()} cell={8} />
+            <p class="aside-figure__caption">
+              W<sub>Q</sub>, W<sub>K</sub>, W<sub>V</sub>, three learned matrices
+            </p>
+            <div class="matrix-row">
+              <figure :for={{letter, matrix} <- @weights} class="matrix-thumb">
+                <.heatmap
+                  values={magnitudes(matrix)}
+                  row_labels={Enum.map(matrix, fn _row -> "" end)}
+                  column_labels={Enum.map(hd(matrix), fn _column -> "" end)}
+                  cell={3}
+                  class="heatmap--compact heatmap--bare"
+                />
+                <figcaption>W<sub>{letter}</sub></figcaption>
+              </figure>
+            </div>
+          </div>
+          <div :if={@step >= @scores_step} class="aside-figure">
             <p class="aside-figure__caption">{@stage.caption}</p>
             <.score_grid
               values={@stage.values}
