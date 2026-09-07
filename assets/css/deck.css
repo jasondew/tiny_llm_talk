@@ -239,6 +239,19 @@
   user-select: none;
 }
 
+/* A note at the right-hand end of a line, in the formula's face rather than
+ * the code's, so it reads as a comment from the talk and not from the file. */
+.code__annotation {
+  float: right;
+  padding-left: 2em;
+  font-family: var(--serif);
+  color: var(--accent);
+}
+
+.code__annotation sub {
+  font-size: 0.7em;
+}
+
 .code__caption {
   font-family: var(--mono);
   font-size: 18px;

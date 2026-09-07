@@ -61,6 +61,10 @@ defmodule TinyLlmTalkWeb.DeckComponents do
   attr :step, :integer, default: 1
   attr :caption, :boolean, default: true
 
+  slot :annotation, doc: "a note drawn at the end of one line of the listing" do
+    attr :line, :integer, required: true, doc: "the line, counted from 1 within the listing"
+  end
+
   def code(assigns) do
     quotation = quote_source(assigns)
 
@@ -72,7 +76,12 @@ defmodule TinyLlmTalkWeb.DeckComponents do
       )
 
     ~H"""
-    <.listing rows={@rows} longest={@longest} caption={@caption && @location} />
+    <.listing
+      rows={@rows}
+      longest={@longest}
+      caption={@caption && @location}
+      annotations={@annotation}
+    />
     """
   end
 
@@ -100,6 +109,7 @@ defmodule TinyLlmTalkWeb.DeckComponents do
   attr :rows, :list, required: true
   attr :longest, :integer, required: true
   attr :caption, :any, default: nil
+  attr :annotations, :list, default: []
 
   defp listing(assigns) do
     ~H"""
@@ -108,11 +118,18 @@ defmodule TinyLlmTalkWeb.DeckComponents do
         <span
           :for={row <- @rows}
           class={["code__line", not row.lit? && "code__line--dim"]}
-        ><span class="code__number">{row.number}</span>{row.html}</span>
+        ><span class="code__number">{row.number}</span>{row.html}<span
+            :for={annotation <- annotations_for(@annotations, row.number)}
+            class="code__annotation"
+          >{render_slot(annotation)}</span></span>
       </code></pre>
       <figcaption :if={@caption} class="code__caption">{@caption}</figcaption>
     </figure>
     """
+  end
+
+  defp annotations_for(annotations, line) do
+    Enum.filter(annotations, &(&1.line == line))
   end
 
   @doc """

@@ -93,6 +93,17 @@ defmodule TinyLlmTalkWeb.DeckLiveTest do
 
     assert shown =~ ~r/step--shown[^>]*>\s*<[^>]*class="code/
     assert shown =~ "lib/tiny_llm/attention.ex"
+
+    assert shown =~
+             ~r/code__number">1<\/span>.*?<span class="code__annotation">\s*Q = input × W<sub[^>]*>Q<\/sub>\s*<\/span>/
+
+    assert shown =~
+             ~r/code__number">2<\/span>.*?<span class="code__annotation">\s*K = input × W<sub[^>]*>K<\/sub>\s*<\/span>/
+
+    assert shown =~
+             ~r/code__number">3<\/span>.*?<span class="code__annotation">\s*V = input × W<sub[^>]*>V<\/sub>\s*<\/span>/
+
+    assert length(Regex.scan(~r/class="code__annotation"/, shown)) == 3
   end
 
   test "ends on the sources, with both repos and the paper", %{conn: conn} do
