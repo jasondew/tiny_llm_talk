@@ -20,8 +20,9 @@ defmodule TinyLlmTalk.Deck do
     %Section{
       number: 0,
       title: "Cold open",
-      minutes: 4,
-      lands: "the room has voted, and a transformer is one block repeated",
+      minutes: 5,
+      lands:
+        "the room has voted, a language model is one function, and a transformer is one block repeated",
       slides: [
         %Slide{
           id: :the_vote,
@@ -44,6 +45,17 @@ defmodule TinyLlmTalk.Deck do
           notes: """
           Say the title once. The sentence under it is the one the whole
           talk is about, and the room has just voted on it.
+          """
+        },
+        %Slide{
+          id: :one_function,
+          title: "A language model is one function",
+          notes: """
+          Input: the words so far. Output: 32 probabilities. State the frame
+          here and never let go of it. Everything we build today goes inside
+          the box. Say once: the simplest thing that fits in the box is a
+          count table over adjacent pairs, and it fails exactly where the
+          nearest noun lies. That is the baseline section 8 beats.
           """
         },
         %Slide{
@@ -86,18 +98,9 @@ defmodule TinyLlmTalk.Deck do
     %Section{
       number: 1,
       title: "Words become numbers",
-      minutes: 4,
-      lands: "32 words, a grammar we own, one function, and the whole path once, fast",
+      minutes: 3,
+      lands: "a grammar we own, 32 words, and the whole path once, fast",
       slides: [
-        %Slide{
-          id: :vocabulary,
-          title: "Thirty-two words",
-          notes: """
-          One word is one token is one integer; there is no tokenizer. Point at
-          start and at the period: sequences begin with one and end with the
-          other. Every word is lowercase, including the title.
-          """
-        },
         %Slide{
           id: :grammar,
           title: "A grammar we own",
@@ -111,14 +114,12 @@ defmodule TinyLlmTalk.Deck do
           """
         },
         %Slide{
-          id: :one_function,
-          title: "A language model is one function",
+          id: :vocabulary,
+          title: "Thirty-two words",
           notes: """
-          Input: the words so far. Output: 32 probabilities. State the frame
-          here and never let go of it. Everything we build today goes inside
-          the box. Say once: the simplest thing that fits in the box is a
-          count table over adjacent pairs, and it fails exactly where the
-          nearest noun lies. That is the baseline section 8 beats.
+          One word is one token is one integer; there is no tokenizer. Point at
+          start and at the period: sequences begin with one and end with the
+          other. Every word is lowercase, including the title.
           """
         },
         %Slide{
