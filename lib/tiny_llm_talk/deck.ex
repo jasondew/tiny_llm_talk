@@ -20,7 +20,7 @@ defmodule TinyLlmTalk.Deck do
     %Section{
       number: 0,
       title: "Cold open",
-      minutes: 5,
+      minutes: 4,
       lands:
         "the room has answered, a language model is one function, and a transformer is one block repeated",
       slides: [
@@ -73,21 +73,7 @@ defmodule TinyLlmTalk.Deck do
           Anthropic does not publish Claude's. If someone raises Mamba or
           Qwen3-Next: those swap most attention layers for a cheaper mixer
           and keep the rest, so the block you are about to read is still in
-          them. The next slide is the one on this laptop.
-          """
-        },
-        %Slide{
-          id: :parameters,
-          title: "The model I built",
-          notes: """
-          Every parameter table in the model, by stage, with its shape and
-          how many floats it holds. Say what a parameter is: one float in one
-          of these tables. Two tables on the way in, four square matrices in
-          attention, and the MLP holds more than half. Every one starts
-          random and training moves every one of them; nothing in here is
-          written by hand. Say, do not show: one block deep, a single head
-          wide, pure Elixir standard library with an empty deps list. The
-          repo link is in the footer and stays there.
+          them. The next three slides are the one on this laptop.
           """
         }
       ]
@@ -95,12 +81,21 @@ defmodule TinyLlmTalk.Deck do
     %Section{
       number: 1,
       title: "Words become numbers",
-      minutes: 3,
-      lands: "a grammar we own, 32 words, and the whole path once, fast",
+      minutes: 4,
+      lands: "32 words, a grammar we own, every parameter, and the whole path once, fast",
       slides: [
         %Slide{
+          id: :vocabulary,
+          title: "Vocabulary",
+          notes: """
+          One word is one token is one integer; there is no tokenizer. Point at
+          start and at the period: sequences begin with one and end with the
+          other. Every word is lowercase, including the title.
+          """
+        },
+        %Slide{
           id: :grammar,
-          title: "A grammar we own",
+          title: "Grammar",
           notes: """
           The rules on the left are quoted from the grammar module's own
           docs; four sentences it wrote on the right, one per structure.
@@ -111,12 +106,17 @@ defmodule TinyLlmTalk.Deck do
           """
         },
         %Slide{
-          id: :vocabulary,
-          title: "Thirty-two words",
+          id: :parameters,
+          title: "Parameters",
           notes: """
-          One word is one token is one integer; there is no tokenizer. Point at
-          start and at the period: sequences begin with one and end with the
-          other. Every word is lowercase, including the title.
+          Every parameter table in the model, by stage, with its shape and
+          how many floats it holds. Say what a parameter is: one float in one
+          of these tables. Two tables on the way in, four square matrices in
+          attention, and the MLP holds more than half. Every one starts
+          random and training moves every one of them; nothing in here is
+          written by hand. Say, do not show: one block deep, a single head
+          wide, pure Elixir standard library with an empty deps list. The
+          repo link is in the footer and stays there.
           """
         },
         %Slide{

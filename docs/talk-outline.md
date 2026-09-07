@@ -18,8 +18,8 @@ the sentence, the picture of where attention looks, and the score.
 
 | # | section | min | slides | interactive |
 | --- | --- | --- | --- | --- |
-| 0 | Cold open | 5 | **flees, or flee** (the sentence, on screen while the room arrives; asked out loud), title, a language model is one function, the transformer (one block, drawn, × N then × 1), the model I built (every parameter table, by stage, with its shape and count) | asked out loud |
-| 1 | Words become numbers | 3 | the grammar, 32 words, **it writes** (the writer: the whole path once, fast) | presenter pace |
+| 0 | Cold open | 4 | **flees, or flee** (the sentence, on screen while the room arrives; asked out loud), title, a language model is one function, the transformer (one block, drawn, × N then × 1) | asked out loud |
+| 1 | Words become numbers | 4 | vocabulary (32 words), grammar, parameters (every table, by stage, with its shape and count), **it writes** (the writer: the whole path once, fast) | presenter pace |
 | 2 | Embedding and position | 3 | each word is a row and its position is added on, the model forgets it saw words | |
 | 3 | Attention | 11 | math break: **dot product** with two arrows to drag and **softmax playground**; then ask/offer/hand over with the formula, **a small example by hand** on a toy map, one head of attention (the formula over sixteen annotated lines, the heatmap beside them going dark when the focus reaches the mask), **where will the blank look** (asked out loud), **the walkthrough**, LLMs are weird | presenter drags, slider, picks |
 | 4 | The rest of the block | 4 | the transformer in this talk (the block diagram again, × 1, the box named), Block.forward stepped down its nine lines with the flow lit beside it, normalization, the neural network, the residual, each over the block's code with the dogs row beside it | |

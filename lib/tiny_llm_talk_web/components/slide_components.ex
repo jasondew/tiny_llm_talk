@@ -124,7 +124,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
 
     ~H"""
     <section class="slide slide--tight">
-      <h2 class="slide__title slide__title--small">The model I built</h2>
+      <h2 class="slide__title slide__title--small">Parameters</h2>
       <table :if={@tables} class="parameters">
         <thead>
           <tr>
@@ -247,7 +247,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
 
     ~H"""
     <section class="slide">
-      <h2 class="slide__title">Thirty-two words</h2>
+      <h2 class="slide__title">Vocabulary</h2>
       <p class="slide__lede">One word is one token is one integer. There is no tokenizer.</p>
       <div class="word-groups">
         <div :for={group <- @groups} class="word-group">
@@ -268,7 +268,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
 
     ~H"""
     <section class="slide">
-      <h2 class="slide__title">A grammar we own</h2>
+      <h2 class="slide__title">Grammar</h2>
       <div class="bnf">
         <%= for {name, alternatives} <- @rules, {alternative, index} <- Enum.with_index(alternatives) do %>
           <span class="bnf__name">{if index == 0, do: name}</span>
