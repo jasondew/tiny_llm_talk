@@ -476,8 +476,9 @@ defmodule TinyLlmTalkWeb.SlideComponents do
         <.heatmap
           values={@rows}
           row_labels={Model.probe()}
-          column_labels={Enum.map(0..31, &to_string/1)}
+          column_labels={Enum.map(0..31, fn _column -> "" end)}
           cell={26}
+          class="heatmap--no-columns"
         />
         <figcaption class="figure-centred__caption">
           the input to attention: 7 positions &times; 32 floats, embedding + position

@@ -850,6 +850,13 @@
   padding-top: 6px;
 }
 
+/* Row labels only: the columns are the 32 floats, and numbering them said
+ * nothing. */
+.heatmap--no-columns .heatmap__corner,
+.heatmap--no-columns .heatmap__column-label {
+  display: none;
+}
+
 .heatmap--strips .heatmap__row-label {
   font-size: 16px;
   color: var(--ink);
