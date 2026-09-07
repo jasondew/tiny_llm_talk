@@ -201,24 +201,28 @@ defmodule TinyLlmTalk.Deck do
           Drag the slider. Five scores in, five shares out, always summing to
           one: that is a distribution, define it once. The words are just
           labels, none of them from the sentence. Low temperature commits to
-          the top score; high temperature spreads the distribution out. Never
-          say exponential. End of the break; the next slide puts both pieces
+          the top score; zero is all of it on the top score; high temperature
+          spreads the distribution out. Never say exponential. End of the break; the next slide puts both pieces
           to work.
           """
         },
         %Slide{
           id: :learn_the_lookup,
           title: "Attention: ask, offer, hand over",
-          steps: 8,
+          steps: 10,
           notes: """
           The formula alone and large first; let them look at it. Then it
-          shrinks to the top and one symbol arrives per step. Three learned
-          tables. Query is what this position is looking for, key is what it
-          advertises, value is what it hands over if chosen; each is the
-          position's row times a table. Q times K transposed is every dot
-          product at once; divide by root d so the softmax does not saturate;
-          softmax each row into a distribution; blend the values. The next
-          slide runs it on a toy map by hand.
+          shrinks to the top and stands as the title, and one symbol arrives
+          per step, each with its shape. The input is the grid from the last slide, seven rows of
+          thirty-two. Three learned matrices, thirty-two square. Query is
+          what this position is looking for, key is what it advertises, value
+          is what it hands over if chosen; each is the input times a matrix,
+          so seven by thirty-two again. Q times K transposed is every dot
+          product at once, seven by seven; divide by root d so the softmax
+          does not saturate; softmax each row into a distribution; blend the
+          values, and the result is the input's shape, which is what lets
+          the residual add it back. The next slide runs it on a toy map by
+          hand.
           """
         },
         %Slide{

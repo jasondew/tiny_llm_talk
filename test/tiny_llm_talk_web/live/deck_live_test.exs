@@ -124,11 +124,18 @@ defmodule TinyLlmTalkWeb.DeckLiveTest do
     assert html =~ "distribution out"
     assert html =~ "temperature 1.0"
     assert html =~ ~s(name="name" value="softmax_temperature")
+    assert html =~ ~s(min="0")
     refute html =~ "sharpness"
     refute html =~ "budget"
 
     render_click(view, "control", %{"name" => "softmax_temperature", "value" => "0.1"})
     assert render(view) =~ ~s(bars__value">100.0%)
+
+    render_click(view, "control", %{"name" => "softmax_temperature", "value" => "0"})
+    frozen = render(view)
+    assert frozen =~ "temperature 0.0"
+    assert frozen =~ ~s(bars__value">100.0%)
+    assert frozen =~ "sums to 1.00"
 
     render_click(view, "control", %{"name" => "softmax_temperature", "value" => "4.0"})
     spread = render(view)
@@ -150,9 +157,10 @@ defmodule TinyLlmTalkWeb.DeckLiveTest do
     {:ok, _view, first} = live(conn, ~p"/s/#{slide.index}")
     {:ok, _view, last} = live(conn, ~p"/s/#{slide.index}/#{slide.steps}")
 
-    assert slide.steps == 8
+    assert slide.steps == 10
     assert first =~ "Attention(W<sub>Q</sub>, W<sub>K</sub>, W<sub>V</sub>) = softmax("
-    assert first =~ ~s(class="formula formula--hero")
+    assert first =~ ~s(class="formula formula--heading formula--hero")
+    refute first =~ "slide__title"
     refute first =~ ~r/step--shown[^>]*>\s*<dt/
 
     {:ok, _view, second} = live(conn, ~p"/s/#{slide.index}/2")
@@ -160,19 +168,24 @@ defmodule TinyLlmTalkWeb.DeckLiveTest do
     assert length(Regex.scan(~r/step--shown[^>]*>\s*<dt/, second)) == 1
     refute last =~ "√d</dt>"
 
-    for symbol <- [
-          "W<sub>Q</sub>, W<sub>K</sub>, W<sub>V</sub>",
-          "Q = input × W<sub>Q</sub>",
-          "K = input × W<sub>K</sub>",
-          "V = input × W<sub>V</sub>",
-          "Q K<sup>T</sup>",
-          "d",
-          "softmax"
+    for {symbol, shape} <- [
+          {"input", "7 × 32"},
+          {"W<sub>Q</sub>, W<sub>K</sub>, W<sub>V</sub>", "32 × 32"},
+          {"Q = input × W<sub>Q</sub>", "7 × 32"},
+          {"K = input × W<sub>K</sub>", "7 × 32"},
+          {"V = input × W<sub>V</sub>", "7 × 32"},
+          {"Q K<sup>T</sup>", "7 × 7"},
+          {"d", "32"},
+          {"softmax", "7 × 7"},
+          {"Attention", "7 × 32"}
         ] do
-      assert last =~ ~r/<dt[^>]*>#{Regex.escape(symbol)}<\/dt>/
+      assert last =~
+               ~r/<dt[^>]*>#{Regex.escape(symbol)}<\/dt>\s*<dd[^>]*>\s*<span[^>]*class="definitions__shape">#{shape}<\/span>/
     end
 
     assert last =~ "what this position is looking for"
+    assert last =~ "three learned matrices"
+    refute last =~ "tables"
     refute last =~ "code__line"
   end
 

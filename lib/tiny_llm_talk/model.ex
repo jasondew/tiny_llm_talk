@@ -29,6 +29,17 @@ defmodule TinyLlmTalk.Model do
   @spec probe() :: [Vocab.word()]
   def probe, do: ~w(<start> the llama who chases the dogs)
 
+  @doc "The width of every row in the model: the number of floats in one embedding."
+  @spec width() :: pos_integer()
+  def width do
+    # Before a checkpoint exists the slides still draw; 32 is the width the
+    # model is built with, and the checkpoint's rows are the proof.
+    case embedding(hd(Vocab.words())) do
+      nil -> 32
+      row -> length(row)
+    end
+  end
+
   @spec mirror_probe() :: [Vocab.word()]
   def mirror_probe, do: ~w(<start> the dogs who chase the llama)
 

@@ -37,6 +37,12 @@ defmodule TinyLlmTalk.ModelTest do
       end
     end
 
+    test "knows the width of a row" do
+      assert Model.width() == 32
+
+      assert Enum.all?(Model.parameter_tables(), fn table -> elem(table.shape, 1) in [32, 128] end)
+    end
+
     test "weights are a distribution over the past that sums to one" do
       trace = Model.trace(@probe)
 

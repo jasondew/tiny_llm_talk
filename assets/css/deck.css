@@ -1495,10 +1495,14 @@
 /* The formula alone on the first step: larger, and down in the middle of the
  * slide. On the next step it shrinks back up into its slot over the legend,
  * which is already laid out underneath it, hidden. */
+.formula--heading {
+  font-size: 38px;
+}
+
 .formula--hero {
   font-size: 48px;
   white-space: nowrap;
-  transform: translateY(200px);
+  transform: translateY(250px);
 }
 
 .formula {
@@ -1527,6 +1531,18 @@
 .definitions--formula dt sub,
 .definitions--formula dt sup {
   font-size: 0.65em;
+}
+
+.definitions--formula {
+  grid-template-columns: 270px 1fr;
+}
+
+.definitions__shape {
+  display: inline-block;
+  width: 120px;
+  font-family: var(--mono);
+  font-size: 0.85em;
+  color: var(--ink-dim);
 }
 
 .definitions--wide {

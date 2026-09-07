@@ -311,7 +311,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
   def slide(%{slide: %Slide{id: :softmax_playground}} = assigns) do
     temperature = Controls.number(assigns.controls, "softmax_temperature", 1.0)
     scores = Enum.map(@playground_scores, &elem(&1, 1))
-    [distribution] = Tensor.softmax([Enum.map(scores, &(&1 / temperature))])
+    distribution = softmax_at(scores, temperature)
 
     assigns =
       assign(assigns,
@@ -346,7 +346,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
         <input
           type="range"
           name="value"
-          min="0.1"
+          min="0"
           max="4"
           step="0.1"
           value={@temperature}
@@ -518,42 +518,62 @@ defmodule TinyLlmTalkWeb.SlideComponents do
   end
 
   def slide(%{slide: %Slide{id: :learn_the_lookup}} = assigns) do
+    assigns = assign(assigns, positions: length(Model.probe()), width: Model.width())
+
     ~H"""
     <section class="slide slide--tight">
-      <h2 class="slide__title slide__title--small">
-        Attention: what to ask, what to offer, what to hand over
-      </h2>
-      <p class={["formula", @step == 1 && "formula--hero"]}>
+      <p class={["formula", "formula--heading", @step == 1 && "formula--hero"]}>
         Attention(W<sub>Q</sub>, W<sub>K</sub>, W<sub>V</sub>) = softmax(<span class="formula__group">Q K<sup>T</sup> / √d</span>) V
       </p>
       <dl class="definitions definitions--formula">
         <.step n={2} step={@step}>
-          <dt>W<sub>Q</sub>, W<sub>K</sub>, W<sub>V</sub></dt>
-          <dd>three learned tables, 32 &times; 32 each</dd>
+          <dt>input</dt>
+          <dd>
+            <.shape rows={@positions} columns={@width} /> one row per position, from the last slide
+          </dd>
         </.step>
         <.step n={3} step={@step}>
-          <dt>Q = input × W<sub>Q</sub></dt>
-          <dd>what this position is looking for</dd>
+          <dt>W<sub>Q</sub>, W<sub>K</sub>, W<sub>V</sub></dt>
+          <dd><.shape rows={@width} columns={@width} /> three learned matrices</dd>
         </.step>
         <.step n={4} step={@step}>
-          <dt>K = input × W<sub>K</sub></dt>
-          <dd>what this position is advertising</dd>
+          <dt>Q = input × W<sub>Q</sub></dt>
+          <dd><.shape rows={@positions} columns={@width} /> what this position is looking for</dd>
         </.step>
         <.step n={5} step={@step}>
-          <dt>V = input × W<sub>V</sub></dt>
-          <dd>what this position hands over if it gets chosen</dd>
+          <dt>K = input × W<sub>K</sub></dt>
+          <dd><.shape rows={@positions} columns={@width} /> what this position is advertising</dd>
         </.step>
         <.step n={6} step={@step}>
-          <dt>Q K<sup>T</sup></dt>
-          <dd>every query scored against every key, one dot product each</dd>
+          <dt>V = input × W<sub>V</sub></dt>
+          <dd>
+            <.shape rows={@positions} columns={@width} />
+            what this position hands over if it gets chosen
+          </dd>
         </.step>
         <.step n={7} step={@step}>
-          <dt>d</dt>
-          <dd>the width of a row, 32</dd>
+          <dt>Q K<sup>T</sup></dt>
+          <dd>
+            <.shape rows={@positions} columns={@positions} />
+            every query scored against every key, one dot product each
+          </dd>
         </.step>
         <.step n={8} step={@step}>
+          <dt>d</dt>
+          <dd><.shape rows={@width} /> the width of a row</dd>
+        </.step>
+        <.step n={9} step={@step}>
           <dt>softmax</dt>
-          <dd>each row of scores becomes a distribution</dd>
+          <dd>
+            <.shape rows={@positions} columns={@positions} />
+            each row of scores becomes a distribution
+          </dd>
+        </.step>
+        <.step n={10} step={@step}>
+          <dt>Attention</dt>
+          <dd>
+            <.shape rows={@positions} columns={@width} /> the blend, one new row per position
+          </dd>
         </.step>
       </dl>
     </section>
@@ -1824,6 +1844,35 @@ defmodule TinyLlmTalkWeb.SlideComponents do
 
         Enum.map(trace.input, fn row -> Enum.map(row, &(abs(&1) / peak)) end)
     end
+  end
+
+  # The softmax at a temperature, with zero as the limit it tends to: all of
+  # the distribution on the top score, so the slider can be dragged to it.
+  defp softmax_at(scores, temperature) when temperature <= 0.0 do
+    top = Enum.max(scores)
+    Enum.map(scores, &if(&1 == top, do: 1.0, else: 0.0))
+  end
+
+  defp softmax_at(scores, temperature) do
+    [distribution] = Tensor.softmax([Enum.map(scores, &(&1 / temperature))])
+    distribution
+  end
+
+  # The shape of a matrix, or the size of a plain number, at the start of a
+  # definition so the shapes line up down the slide.
+  attr :rows, :integer, required: true
+  attr :columns, :integer, default: nil
+
+  defp shape(%{columns: nil} = assigns) do
+    ~H"""
+    <span class="definitions__shape">{@rows}</span>
+    """
+  end
+
+  defp shape(assigns) do
+    ~H"""
+    <span class="definitions__shape">{@rows} × {@columns}</span>
+    """
   end
 
   # One term of the formula over the toy table, lit while its column is the
