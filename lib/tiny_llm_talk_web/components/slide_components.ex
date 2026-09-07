@@ -390,13 +390,17 @@ defmodule TinyLlmTalkWeb.SlideComponents do
   # 3. Embedding and position -----------------------------------------------
 
   def slide(%{slide: %Slide{id: :a_word_is_a_row}} = assigns) do
-    assigns = assign(assigns, row: Model.embedding("dogs"))
+    assigns = assign(assigns, row: Model.embedding("dogs"), position: Model.position(6))
 
     ~H"""
     <section class="slide slide--tight">
       <.sentence_line />
       <.step n={2} step={@step}>
-        <h2 class="slide__title slide__title--small">Each word becomes a row of floats</h2>
+        <h2 class="slide__title slide__title--small">
+          {if @step >= 3,
+            do: "Each word becomes a row of floats, and its position is added on",
+            else: "Each word becomes a row of floats"}
+        </h2>
       </.step>
       <.step n={2} step={@step}>
         <div class="lookup">
@@ -410,53 +414,26 @@ defmodule TinyLlmTalkWeb.SlideComponents do
           </span>
         </div>
       </.step>
-      <.step :if={@row} n={2} step={@step}>
-        <div class="floats floats--all">
-          <span :for={value <- @row} class="floats__value">{format_signed(value)}</span>
-        </div>
-      </.step>
+      <div :if={@row && @step == 2} class="floats floats--all">
+        <span :for={value <- @row} class="floats__value">{format_signed(value)}</span>
+      </div>
       <.step n={3} step={@step}>
-        <.code
-          path="lib/tiny_llm/transformer.ex"
-          range={114..116}
-          step={@step}
-          focus={[1..1, 1..1, 1..1]}
-        />
-      </.step>
-    </section>
-    """
-  end
-
-  def slide(%{slide: %Slide{id: :positions_added}} = assigns) do
-    assigns = assign(assigns, row: Model.position(6))
-
-    ~H"""
-    <section class="slide slide--tight">
-      <.sentence_line />
-      <.step n={2} step={@step}>
-        <h2 class="slide__title slide__title--small">Position is another row, added on</h2>
-      </.step>
-      <.step n={2} step={@step}>
         <div class="lookup">
+          <span class="lookup__plus">+</span>
           <span class="lookup__word">position 6 of 16</span>
           <span class="lookup__arrow">&rarr;</span>
           <span class="lookup__row">
-            <.spark :if={@row} values={Enum.map(@row, &abs/1)} />
-            <.untrained :if={is_nil(@row)} what="This row of floats" />
+            <.spark :if={@position} values={Enum.map(@position, &abs/1)} />
+            <.untrained :if={is_nil(@position)} what="This row of floats" />
           </span>
         </div>
       </.step>
-      <.step :if={@row} n={2} step={@step}>
-        <div class="floats floats--all">
-          <span :for={value <- @row} class="floats__value">{format_signed(value)}</span>
-        </div>
-      </.step>
-      <.step n={3} step={@step}>
+      <.step n={4} step={@step}>
         <.code
           path="lib/tiny_llm/transformer.ex"
           range={114..116}
           step={@step}
-          focus={[2..2, 2..2, 2..2, 3..3]}
+          focus={[1..3, 1..3, 1..3, 1..3]}
         />
       </.step>
     </section>
@@ -472,7 +449,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
       <h2 class="slide__title slide__title--small">
         At this point, the model has forgotten it ever saw words
       </h2>
-      <figure :if={@rows} class="figure-centred">
+      <figure :if={@rows} class="figure-centred slide__fill">
         <.heatmap
           values={@rows}
           row_labels={Model.probe()}

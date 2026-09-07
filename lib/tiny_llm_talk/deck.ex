@@ -148,29 +148,21 @@ defmodule TinyLlmTalk.Deck do
         %Slide{
           id: :a_word_is_a_row,
           title: "Each word becomes a row of floats",
-          steps: 3,
+          steps: 4,
           notes: """
           The sentence alone first; it stays on top from here to the end of
           attention. Second step: take dogs, the word next to the blank. Look
           its integer up in a 32 by 32 table and take the row. The table
           starts random and the model moves the rows itself. All thirty-two
           floats are on the slide: this is the real dogs row from the
-          checkpoint, not a sketch. Third step, the line of code that does it.
-          """
-        },
-        %Slide{
-          id: :positions_added,
-          title: "Position is another row, added on",
-          steps: 4,
-          notes: """
-          The sentence alone first, as on the last slide. Then the title and
-          the row for position six. Attention on its own is a bag of words.
-          So each position has a learned vector of its own, added to the
-          word's row, not appended to it. Third step, the line that looks
-          the position up; fourth, the line that adds it on. dogs is position six, counting the start token as zero. Same width in, same width out, so nothing downstream has to
-          know position exists. Sixteen rows, so the context length is 16:
-          say the number, it is the only hard limit in the model, and it can
-          never read more words than that at once.
+          checkpoint, not a sketch. Third step: the floats give way to a
+          second row, the one for position six, counting the start token as
+          zero. Attention on its own is a bag of words, so each position has
+          a learned row of its own, added to the word's row, not appended to
+          it: same width in, same width out, so nothing downstream has to
+          know position exists. Sixteen positions, so the context length is
+          16: say the number, it is the only hard limit in the model. Last
+          step, the three lines that do all of it.
           """
         },
         %Slide{

@@ -621,6 +621,12 @@
   color: var(--accent);
 }
 
+.lookup__plus {
+  font-family: var(--serif);
+  font-size: 40px;
+  color: var(--accent);
+}
+
 .lookup__arrow {
   color: var(--ink-dim);
 }

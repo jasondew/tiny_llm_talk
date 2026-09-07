@@ -20,7 +20,7 @@ the sentence, the picture of where attention looks, and the score.
 | --- | --- | --- | --- | --- |
 | 0 | Cold open | 5 | **vote: flees, or flee** (the sentence and the join link, on screen while the room arrives), title, a language model is one function, the transformer (one block, drawn, × N then × 1), the model I built (every parameter table, by stage, with its shape and count) | audience vote |
 | 1 | Words become numbers | 3 | the grammar, 32 words, **it writes** (the writer: the whole path once, fast) | presenter pace |
-| 2 | Embedding and position | 3 | a word is a row, position is added, the model forgets it saw words | |
+| 2 | Embedding and position | 3 | each word is a row and its position is added on, the model forgets it saw words | |
 | 3 | Attention | 11 | math break: **dot product** with two arrows to drag and **softmax playground**; then ask/offer/hand over with the formula, **a small example by hand** on a toy map, one head of attention (the formula over sixteen annotated lines, the heatmap beside them going dark when the focus reaches the mask), **bet: where will the blank look**, **the walkthrough**, LLMs are weird | presenter drags, slider, picks; audience bet |
 | 4 | The rest of the block | 4 | the transformer in this talk (the block diagram again, × 1, the box named), Block.forward whole, normalization, the neural network, the residual, each over the block's code with the dogs row beside it | |
 | 5 | Back to words | 3 | rows become a distribution, **one word at a time** with the **temperature dial** | presenter |
