@@ -38,8 +38,7 @@ defmodule TinyLlmTalkWeb.Animation do
     if manual?(socket) do
       assign(socket, ticking: false)
     else
-      stride = Controls.stride(socket.assigns.controls)
-      socket = assign(socket, frame: socket.assigns.frame + stride)
+      socket = assign(socket, frame: advance(socket.assigns.frame, socket.assigns.controls))
 
       if socket.assigns.slide.ticks and not finished?(socket) do
         schedule(socket)
@@ -87,6 +86,11 @@ defmodule TinyLlmTalkWeb.Animation do
   end
 
   defp finished?(_socket), do: false
+
+  # Realtime shows each word only once, chosen; every other pace shows every phase.
+  defp advance(frame, controls) do
+    if Controls.realtime?(controls), do: Writer.next_pick(frame), else: frame + 1
+  end
 
   defp schedule(socket) do
     Process.send_after(self(), :frame, Controls.pace(socket.assigns.controls))

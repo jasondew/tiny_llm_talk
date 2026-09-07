@@ -63,6 +63,13 @@ defmodule TinyLlmTalk.WriterTest do
     assert List.last(Writer.frame(@seed, last).sequence) == "."
   end
 
+  test "finds the pick of this word, then the pick of the next, for realtime" do
+    assert Writer.next_pick(0) == @per_word - 1
+    assert Writer.next_pick(3) == @per_word - 1
+    assert Writer.next_pick(@per_word - 1) == 2 * @per_word - 1
+    assert Writer.frame(@seed, Writer.next_pick(10)).phase == :pick
+  end
+
   test "moves on to the next sentence and keeps the ones written" do
     [first | _rest] = Writer.paragraph(@seed)
     frame = Writer.frame(@seed, length(first) * @per_word)

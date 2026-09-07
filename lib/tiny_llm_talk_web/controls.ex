@@ -126,13 +126,9 @@ defmodule TinyLlmTalkWeb.Controls do
   @spec paces() :: [String.t()]
   def paces, do: ~w(slow normal realtime pause)
 
-  @doc "Frames per tick: one, or a whole word at a time in realtime."
-  @spec stride(map()) :: pos_integer()
-  def stride(controls) do
-    if choice(controls, "pace", @default_pace) == "realtime",
-      do: length(TinyLlmTalk.Writer.phases()),
-      else: 1
-  end
+  @doc "Whether the writer is at realtime pace, a word a tick rather than a phase."
+  @spec realtime?(map()) :: boolean()
+  def realtime?(controls), do: choice(controls, "pace", @default_pace) == "realtime"
 
   @doc """
   A two-entry vector control, sent by the dragged graph as "x,y". Anything

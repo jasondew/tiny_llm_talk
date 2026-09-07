@@ -68,6 +68,15 @@ defmodule TinyLlmTalk.Writer do
     end
   end
 
+  @doc """
+  The next frame that is a pick: this word's if it has not been picked yet,
+  otherwise the next word's. Realtime pace steps from pick to pick, so every
+  word is seen chosen and the full stop lands whatever phase the clock was on
+  when the pace changed.
+  """
+  @spec next_pick(non_neg_integer()) :: pos_integer()
+  def next_pick(number), do: number + @per_word - rem(number + 1, @per_word)
+
   @doc "Whether the paragraph is finished by this frame."
   @spec finished?(integer(), non_neg_integer()) :: boolean()
   def finished?(seed, number), do: number >= __MODULE__.length(seed) - 1
