@@ -842,6 +842,25 @@
   padding-top: 6px;
 }
 
+.heatmap--strips .heatmap__row-label {
+  font-size: 16px;
+  color: var(--ink);
+}
+
+.strip-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.dial--inline {
+  max-width: 640px;
+}
+
+.dial--inline .dial__value {
+  font-size: 26px;
+}
+
 .aside-figure {
   display: flex;
   flex-direction: column;

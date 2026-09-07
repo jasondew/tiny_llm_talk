@@ -800,32 +800,92 @@ defmodule TinyLlmTalkWeb.SlideComponents do
     """
   end
 
-  def slide(%{slide: %Slide{id: :plumbing}} = assigns) do
+  # The block's forward pass, quoted once for the three slides that walk what
+  # is left of it after attention, each lighting the lines it is about. The
+  # numbers beside the code are the dogs position, the one predicting the
+  # blank, straight from the checkpoint.
+  @block_path "lib/tiny_llm/block.ex"
+
+  def slide(%{slide: %Slide{id: :normalization}} = assigns) do
+    assigns = assign(assigns, block: block_trace(), block_path: @block_path)
+
     ~H"""
-    <section class="slide">
-      <h2 class="slide__title">Three pieces of plumbing</h2>
-      <dl class="definitions definitions--wide">
-        <.step n={1} step={@step}>
-          <dt>residual</dt>
-          <dd>
-            Add what attention returned to what was there. Do not replace it.
-            <code>x + attention(x)</code>
-          </dd>
+    <section class="slide slide--tight">
+      <p class="slide__eyebrow">normalization &middot; RMSNorm</p>
+      <p class="formula">
+        x̂ = <span class="formula__group">x / rms(x)</span> · g
+      </p>
+      <div>
+        <.code path={@block_path} range={213..221} step={@step} focus={[[2..2, 5..5]]} />
+      </div>
+      <div :if={@block} class="strip-stack">
+        <.strips
+          rows={[@block.input, Enum.map(@block.input, &(&1 / @block.rms1)), @block.norm1]}
+          labels={[
+            "x, the dogs row · rms #{format_weight(@block.rms1)}",
+            "x / rms(x) · rms 1.00",
+            "· g, 32 learned floats"
+          ]}
+        />
+      </div>
+      <.untrained :if={is_nil(@block)} what="This row" />
+    </section>
+    """
+  end
+
+  def slide(%{slide: %Slide{id: :neural_network}} = assigns) do
+    assigns = assign(assigns, block: block_trace(), block_path: @block_path)
+
+    ~H"""
+    <section class="slide slide--tight">
+      <p class="slide__eyebrow">neural network &middot; MLP</p>
+      <p class="formula">
+        ReLU(<span class="formula__group">x W<sub>1</sub> + b<sub>1</sub></span>) W<sub>2</sub>
+        + b<sub>2</sub>
+      </p>
+      <div>
+        <.code path={@block_path} range={213..221} step={@step} focus={[[6..8]]} />
+      </div>
+      <div :if={@block} class="strip-stack">
+        <.strips rows={[@block.norm2]} labels={["x · 32 wide"]} />
+        <.strips
+          rows={Enum.chunk_every(@block.hidden, 32)}
+          labels={["ReLU(x W₁ + b₁) · 128 wide", "", "", "#{zeros(@block.hidden)} of them zero"]}
+        />
+        <.strips rows={[@block.mlp]} labels={["· W₂ + b₂ · 32 wide again"]} />
+      </div>
+      <.untrained :if={is_nil(@block)} what="This row" />
+    </section>
+    """
+  end
+
+  def slide(%{slide: %Slide{id: :residual}} = assigns) do
+    assigns = assign(assigns, block: block_trace(), block_path: @block_path)
+
+    ~H"""
+    <section class="slide slide--tight">
+      <p class="slide__eyebrow">residual</p>
+      <p class="formula">
+        x + <span class="formula__group">f(x)</span>
+      </p>
+      <div>
+        <.code path={@block_path} range={213..221} step={@step} focus={[[4..4], [9..9]]} />
+      </div>
+      <div :if={@block} class="strip-stack">
+        <.step n={1} step={@step} class="aside-figure">
+          <.strips
+            rows={[@block.input, @block.attention, @block.residual]}
+            labels={["x", "attention(x)", "x + attention(x)"]}
+          />
         </.step>
-        <.step n={2} step={@step}>
-          <dt>RMSNorm</dt>
-          <dd>
-            Rescale each row to a fixed size, so nothing blows up. <code>x / rms(x) * gain</code>
-          </dd>
+        <.step n={2} step={@step} class="aside-figure">
+          <.strips
+            rows={[@block.residual, @block.mlp, @block.output]}
+            labels={["x", "mlp(x)", "x + mlp(x)"]}
+          />
         </.step>
-        <.step n={3} step={@step}>
-          <dt>MLP</dt>
-          <dd>
-            Two weighted sums with a ReLU between, per position. Where it thinks about
-            what it gathered. <code>32 &rarr; 128 &rarr; 32</code>
-          </dd>
-        </.step>
-      </dl>
+      </div>
+      <.untrained :if={is_nil(@block)} what="This row" />
     </section>
     """
   end
@@ -854,29 +914,17 @@ defmodule TinyLlmTalkWeb.SlideComponents do
     """
   end
 
-  def slide(%{slide: %Slide{id: :the_loop}} = assigns) do
-    ~H"""
-    <section class="slide">
-      <h2 class="slide__title">Ask, pick, append, ask again</h2>
-      <.code
-        path="lib/tiny_llm/sampler.ex"
-        function={:trace}
-        step={@step}
-        focus={[:all, 5..5, 11..13, 17..17]}
-      />
-    </section>
-    """
-  end
-
   def slide(%{slide: %Slide{id: :one_word_at_a_time}} = assigns) do
     words = Controls.generated(assigns.controls)
+
+    temperature = Controls.temperature(assigns.controls)
 
     assigns =
       assign(assigns,
         words: words,
         finished: Controls.finished?(words),
-        distribution:
-          Model.distribution(["<start>" | words], Controls.temperature(assigns.controls))
+        temperature: temperature,
+        distribution: Model.distribution(["<start>" | words], temperature)
       )
 
     ~H"""
@@ -893,29 +941,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
         </button>
         <button type="button" phx-click="restart" class="button button--quiet">start over</button>
       </div>
-      <div :if={@distribution && not @finished}>
-        <p class="row-caption">what it thinks comes next</p>
-        <.bars
-          values={@distribution}
-          words={Vocab.words()}
-          top={5}
-          highlight={[Vocab.id_to_word(Tensor.argmax(@distribution))]}
-        />
-      </div>
-      <p :if={@finished} class="slide__lede">Full stop. It is done, and so are we.</p>
-      <.untrained :if={is_nil(@distribution)} what="This generator" />
-    </section>
-    """
-  end
-
-  def slide(%{slide: %Slide{id: :temperature_dial}} = assigns) do
-    assigns = assign(assigns, temperature: Controls.temperature(assigns.controls))
-
-    ~H"""
-    <section class="slide">
-      <.sentence_line />
-      <h2 class="slide__title slide__title--small">Divide the scores before the softmax</h2>
-      <form id="temperature-dial" phx-change="control" class="dial">
+      <form id="temperature-dial" phx-change="control" class="dial dial--inline">
         <input type="hidden" name="name" value="temperature" />
         <input
           type="range"
@@ -928,21 +954,17 @@ defmodule TinyLlmTalkWeb.SlideComponents do
         />
         <output class="dial__value">T = {:erlang.float_to_binary(@temperature, decimals: 2)}</output>
       </form>
-      <div :if={Model.trained?(:transformer)} class="two-up">
-        <div>
-          <p class="row-caption">what comes next</p>
-          <.bars
-            values={Model.distribution(Model.probe(), @temperature)}
-            words={Vocab.words()}
-            top={5}
-            highlight={~w(flees)}
-          />
-        </div>
-        <ul class="examples examples--generated">
-          <li :for={sentence <- Model.sentences(@temperature, 5)}>{Enum.join(sentence, " ")}</li>
-        </ul>
+      <div :if={@distribution && not @finished}>
+        <p class="row-caption">what it thinks comes next</p>
+        <.bars
+          values={@distribution}
+          words={Vocab.words()}
+          top={5}
+          highlight={[Vocab.id_to_word(Tensor.argmax(@distribution))]}
+        />
       </div>
-      <.untrained :if={not Model.trained?(:transformer)} what="These generations" />
+      <p :if={@finished} class="slide__lede">Full stop. It is done, and so are we.</p>
+      <.untrained :if={is_nil(@distribution)} what="This generator" />
     </section>
     """
   end
@@ -1573,6 +1595,35 @@ defmodule TinyLlmTalkWeb.SlideComponents do
     peak = rows |> List.flatten() |> Enum.map(&abs/1) |> Enum.max()
     Enum.map(rows, fn row -> Enum.map(row, &(abs(&1) / peak)) end)
   end
+
+  # A few rows of floats as one heat strip each, on one shared scale, so the
+  # eye can compare them: the same row before and after a stage, or a row and
+  # what was added to it.
+  attr :rows, :list, required: true
+  attr :labels, :list, required: true
+  attr :cell, :integer, default: 20
+
+  defp strips(assigns) do
+    ~H"""
+    <.heatmap
+      values={magnitudes(@rows)}
+      row_labels={@labels}
+      column_labels={Enum.map(1..length(hd(@rows)), fn _column -> "" end)}
+      cell={@cell}
+      class="heatmap--compact heatmap--strips"
+    />
+    """
+  end
+
+  # The block's intermediates for the position predicting the blank.
+  defp block_trace do
+    case Model.trace(Model.probe()) do
+      nil -> nil
+      trace -> trace.block
+    end
+  end
+
+  defp zeros(row), do: Enum.count(row, &(&1 == 0.0))
 
   # The shape of a matrix, or the size of a plain number, at the start of a
   # definition so the shapes line up down the slide.

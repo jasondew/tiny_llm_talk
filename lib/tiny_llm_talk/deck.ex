@@ -305,8 +305,8 @@ defmodule TinyLlmTalk.Deck do
     %Section{
       number: 4,
       title: "The rest of the block",
-      minutes: 3,
-      lands: "residual, RMSNorm, MLP: the plumbing that makes a layer stackable",
+      minutes: 4,
+      lands: "normalize, think, add: what makes a layer stackable",
       slides: [
         %Slide{
           id: :lid_off,
@@ -319,16 +319,45 @@ defmodule TinyLlmTalk.Deck do
           """
         },
         %Slide{
-          id: :plumbing,
-          title: "Three pieces of plumbing",
-          steps: 3,
+          id: :normalization,
+          title: "Normalization",
           notes: """
-          Residual: add what attention returned to what was there, do not
-          replace it. RMSNorm: rescale each row to a fixed size so nothing
-          blows up. MLP: two weighted sums with a ReLU between, per position,
-          32 to 128 to 32, where the model thinks about what it gathered. One
-          sentence each and stop. Half the parameters are in the MLP. None of
-          them are a new idea.
+          The first of the two normalizations, on the dogs row. Divide the
+          row by its root mean square, so every row comes in at the same
+          size whatever attention did to it; then multiply by g, thirty-two
+          learned floats, so the model can choose the size it wants per
+          column. Three strips: the row as it arrived, the row at rms one,
+          the row after g. Nothing blows up and nothing vanishes, which is
+          what lets the layers stack. The code is the block's forward pass;
+          the two lit lines are the two norms.
+          """
+        },
+        %Slide{
+          id: :neural_network,
+          title: "The neural network",
+          notes: """
+          Two weighted sums with a ReLU between, per position, no mixing
+          between positions: attention gathered, this is where the model
+          thinks about what it gathered. 32 wide in, 128 hidden, 32 out.
+          The hidden strip is four rows of thirty-two; the dark cells are
+          the zeros the ReLU made, and there are a lot of them. Half the
+          parameters of the model are these two matrices.
+          """
+        },
+        %Slide{
+          id: :residual,
+          title: "The residual",
+          steps: 2,
+          notes: """
+          The block never replaces the row; it adds to it. First step: the
+          dogs row, what attention returned for it, and their sum; the sum
+          still looks like the row, with attention's contribution on top.
+          Second step: the same for the network. Why: a layer that can only
+          add starts out as the identity, so stacking a hundred of them
+          cannot lose the input, and every gradient has a straight path
+          back through the additions. This is the trick that made deep
+          networks trainable, and the transformer inherits it. Next: back
+          to words.
           """
         }
       ]
@@ -349,33 +378,19 @@ defmodule TinyLlmTalk.Deck do
           """
         },
         %Slide{
-          id: :the_loop,
-          title: "Ask, pick, append, ask again",
-          steps: 4,
-          notes: """
-          Start with start. Ask the function. Pick a word. Append it. Stop at
-          the period. No state carries between steps; the whole prefix is
-          re-read every time, which is why a model cannot take back what it
-          has already said.
-          """
-        },
-        %Slide{
           id: :one_word_at_a_time,
           title: "One word at a time",
           notes: """
-          Press next and the room watches the bars, then the pick, then the
-          append. Every press is a fresh draw, so it will surprise you too.
-          Press restart if it wanders. Three or four words are enough.
-          """
-        },
-        %Slide{
-          id: :temperature_dial,
-          title: "The knob",
-          notes: """
-          Divide the scores by a number before the softmax. Below one commits,
-          above one wanders, zero is argmax. Turn it to zero: one sentence
-          forever, and it is not in the corpus. Turn it past two: structure
-          goes before content.
+          Say the loop once: ask the function, pick a word, append it, ask
+          again, stop at the period; the whole prefix is re-read every time,
+          so a model cannot take back what it has said. Then press next and
+          the room watches the bars, then the pick, then the append. Every
+          press is a fresh draw, so it will surprise you too.
+          Press restart if it wanders. Three or four words are enough. Then
+          the slider: temperature divides the scores before the softmax.
+          Below one commits, above one wanders, zero is argmax. Turn it to
+          zero and press next: the same word every time. Turn it past two:
+          structure goes before content.
           """
         }
       ]
