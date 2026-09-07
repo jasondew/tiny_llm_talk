@@ -1598,6 +1598,12 @@
   color: var(--accent);
 }
 
+/* A rule and a breath before each stage's first table. */
+.parameters__group td {
+  padding-top: 10px;
+  border-top: 1px solid var(--rule);
+}
+
 .parameters__shape {
   color: var(--ink-dim);
 }

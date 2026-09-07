@@ -135,7 +135,10 @@ defmodule TinyLlmTalkWeb.SlideComponents do
           </tr>
         </thead>
         <tbody>
-          <tr :for={{table, index} <- Enum.with_index(@tables)}>
+          <tr
+            :for={{table, index} <- Enum.with_index(@tables)}
+            class={index > 0 && stage_label(@tables, index) && "parameters__group"}
+          >
             <td class="parameters__stage">{stage_label(@tables, index)}</td>
             <td class="parameters__name">
               {table.name}
