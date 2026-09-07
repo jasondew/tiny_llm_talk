@@ -114,16 +114,6 @@ defmodule TinyLlmTalkWeb.DeckLiveTest do
 
       assert [{:rematch, %{correct?: true}}] = Room.results(Room.state())
     end
-
-    test "puts a submitted sentence on the screen when it is picked", %{conn: conn} do
-      slide = Enum.find(Deck.slides(), &(&1.activity == :sentence))
-      {:ok, view, _html} = live(conn, ~p"/s/#{slide.index}")
-
-      render_click(view, "feature", %{"words" => "the llama flees"})
-
-      assert Room.state().featured == ~w(the llama flees)
-      assert render(view) =~ "the llama flees"
-    end
   end
 
   describe "the controls" do

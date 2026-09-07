@@ -42,10 +42,6 @@ defmodule TinyLlmTalk.DeckTest do
     end
   end
 
-  defp ids, do: Enum.map(Deck.slides(), & &1.id)
-
-  defp index(id), do: Enum.find(Deck.slides(), &(&1.id == id)).index
-
   describe "position/2" do
     test "defaults to the first slide" do
       assert Deck.position(nil, nil) == {1, 1}
