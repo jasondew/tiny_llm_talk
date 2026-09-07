@@ -238,8 +238,9 @@ defmodule TinyLlmTalk.Deck do
           that key is, so the blend answers how plural the query is. Pick a
           query; the keys are there from the start. Then one column a step:
           Q dot every K; divide by root d, d is two here, and softmax into a
-          distribution; the values; each value times its weight; and last
-          the sum. Query with goose or geese, which are not keys, and it
+          distribution; the values, 0 for singular and 1 for plural, said
+          in the header; each value times its weight; and last the sum, which
+          is the answer: 1.00, geese is plural, and the map never held it. Query with goose or geese, which are not keys, and it
           still answers sensibly. That is the whole trick, and the next slide
           is the same thing in sixteen lines.
           """

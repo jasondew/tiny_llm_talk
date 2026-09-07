@@ -485,7 +485,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
             <th>K</th>
             <th class={@step < 2 && "fuzzy--hidden"}>Q · K</th>
             <th class={@step < 3 && "fuzzy--hidden"}>softmax(Q · K / √d)</th>
-            <th class={@step < 4 && "fuzzy--hidden"}>V</th>
+            <th class={@step < 4 && "fuzzy--hidden"}>V &middot; 0 singular, 1 plural</th>
             <th class={@step < 5 && "fuzzy--hidden"}>weight &times; V</th>
           </tr>
         </thead>
@@ -510,13 +510,13 @@ defmodule TinyLlmTalkWeb.SlideComponents do
             </td>
           </tr>
         </tbody>
+        <tfoot>
+          <tr class={@step < 6 && "fuzzy--hidden"}>
+            <td colspan="5" class="fuzzy__sum-label">Σ</td>
+            <td class="fuzzy__number fuzzy__sum">{format_weight(@lookup.blend)}</td>
+          </tr>
+        </tfoot>
       </table>
-      <.step n={6} step={@step} class="fuzzy-answer">
-        <span class="fuzzy-answer__value">{format_weight(@lookup.blend)}</span>
-        <span class="fuzzy-answer__gloss">
-          how plural is <span class="word word--lit">{@query}</span>
-        </span>
-      </.step>
     </section>
     """
   end

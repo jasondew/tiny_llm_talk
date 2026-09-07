@@ -1265,20 +1265,26 @@
   opacity: 0;
 }
 
-.fuzzy-answer {
+/* The sum of the last column, as the table's last row. */
+.fuzzy tfoot tr {
+  transition: opacity 200ms linear;
+}
+
+.fuzzy tfoot td {
+  border-bottom: none;
+  padding-top: 12px;
+}
+
+.fuzzy__sum-label {
+  text-align: right;
   font-family: var(--serif);
-  font-size: 34px;
-}
-
-.fuzzy-answer__value {
-  font-family: var(--mono);
-  color: var(--accent);
-}
-
-.fuzzy-answer__gloss {
-  margin-left: 18px;
-  font-size: 26px;
+  font-size: 28px;
   color: var(--ink-dim);
+}
+
+.fuzzy__sum {
+  font-size: 28px;
+  color: var(--accent) !important;
 }
 
 /* The walkthrough: one position, all the way through --------------------- */
