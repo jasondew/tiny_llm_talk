@@ -86,8 +86,11 @@ defmodule TinyLlmTalk.Deck do
           id: :grammar,
           title: "A grammar we own",
           notes: """
-          Four sentences with the structures visible, and the two rules that
-          matter. We wrote the grammar, so "did it learn agreement" is a
+          The rules on the left are quoted from the grammar module's own
+          docs; four sentences it wrote on the right, one per structure.
+          Say the two rules that matter: a subject agrees with its verb, and
+          a relative clause's verb agrees with the head noun, not whatever is
+          nearest. We wrote the grammar, so "did it learn agreement" is a
           measurement, not a vibe. Nobody knows that about a real corpus.
           """
         },
@@ -129,9 +132,11 @@ defmodule TinyLlmTalk.Deck do
           title: "A word becomes a row of floats",
           steps: 2,
           notes: """
-          Look the word's integer up in a 32 by 32 table and take the row. The
-          table starts random and the model moves the rows itself. This is the
-          real llama row from the checkpoint, not a sketch.
+          The sentence stays on top from here to the end of attention. Look
+          the word's integer up in a 32 by 32 table and take the row. The
+          table starts random and the model moves the rows itself. All
+          thirty-two floats are on the slide: this is the real llama row from
+          the checkpoint, not a sketch.
           """
         },
         %Slide{
@@ -141,14 +146,15 @@ defmodule TinyLlmTalk.Deck do
           notes: """
           Attention on its own is a bag of words. So each position has a
           learned vector of its own, added to the word's row, not appended to
-          it. Sixteen rows, so the context length is 16: say the number, it is
-          the only hard limit in the model. Same width, which is why nothing
-          downstream has to know.
+          it. Same width in, same width out, so nothing downstream has to
+          know position exists. Sixteen rows, so the context length is 16:
+          say the number, it is the only hard limit in the model, and it can
+          never read more words than that at once.
           """
         },
         %Slide{
           id: :forgets_the_words,
-          title: "From here on the model has forgotten it saw words",
+          title: "At this point the model has forgotten it saw words",
           notes: """
           Seven positions in, seven rows of thirty-two floats out. This grid is
           what attention actually sees. Nothing after this slide mentions a

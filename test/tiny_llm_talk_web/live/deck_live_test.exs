@@ -57,6 +57,40 @@ defmodule TinyLlmTalkWeb.DeckLiveTest do
     assert html =~ Application.fetch_env!(:tiny_llm_talk, :repo_label)
   end
 
+  test "shows the grammar's rules beside sentences it wrote", %{conn: conn} do
+    slide = Enum.find(Deck.slides(), &(&1.id == :grammar))
+    {:ok, _view, html} = live(conn, ~p"/s/#{slide.index}")
+
+    assert html =~ "NounPhrase"
+    assert html =~ ~s(&quot;who&quot;)
+    assert html =~ TinyLlmTalk.Model.showcase_sentences() |> List.last() |> Enum.join(" ")
+    refute html =~ "A subject agrees with its verb"
+  end
+
+  test "shows every one of the row's 32 floats, and no sentence under them", %{conn: conn} do
+    slide = Enum.find(Deck.slides(), &(&1.id == :a_word_is_a_row))
+    {:ok, _view, html} = live(conn, ~p"/s/#{slide.index}")
+
+    assert length(Regex.scan(~r/class="floats__value"/, html)) == 32
+    assert html =~ "probe--line"
+    refute html =~ "Looked up from a table"
+  end
+
+  test "keeps the sentence over the position slide, and the prose off it", %{conn: conn} do
+    slide = Enum.find(Deck.slides(), &(&1.id == :positions_added))
+    {:ok, _view, html} = live(conn, ~p"/s/#{slide.index}/2")
+
+    assert html =~ "probe--line"
+    refute html =~ "Added, not appended"
+  end
+
+  test "keeps the one-function slide to the box and its distribution", %{conn: conn} do
+    slide = Enum.find(Deck.slides(), &(&1.id == :one_function))
+    {:ok, _view, html} = live(conn, ~p"/s/#{slide.index}")
+
+    refute html =~ "Everything we build today"
+  end
+
   test "puts the title after the vote", %{conn: conn} do
     {:ok, _view, html} = live(conn, ~p"/s/2")
 
@@ -252,6 +286,26 @@ defmodule TinyLlmTalkWeb.DeckLiveTest do
       view |> element("button[phx-click='step_frame']") |> render_click()
 
       assert live_stage(render(view)) != before
+    end
+
+    test "lands on every word's pick in realtime, whatever phase it was on", %{conn: conn} do
+      slide = Enum.find(Deck.slides(), &(&1.id == :it_writes))
+      {:ok, view, _html} = live(conn, ~p"/s/#{slide.index}")
+      send(view.pid, :frame)
+      send(view.pid, :frame)
+      assert live_stage(render(view)) =~ "3."
+
+      view |> element("button[phx-value-choice='realtime']") |> render_click()
+
+      for _tick <- 1..3 do
+        send(view.pid, :frame)
+        assert live_stage(render(view)) =~ "6."
+      end
+
+      for _tick <- 1..60, do: send(view.pid, :frame)
+
+      assert render(view) =~ "the paragraph is finished"
+      assert render(view) =~ ~r/writer__chip--lit[^>]*>\s*<span class="writer__chip-word">\.</
     end
 
     test "starts over with a new paragraph on shuffle", %{conn: conn} do

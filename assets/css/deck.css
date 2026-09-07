@@ -473,6 +473,14 @@
   font-size: 30px;
 }
 
+.examples--grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px 40px;
+  margin-top: 10px;
+  font-size: 26px;
+}
+
 .examples--generated {
   font-family: var(--mono);
   font-size: 24px;
@@ -698,6 +706,26 @@
 
 .two-up--lists {
   align-items: start;
+}
+
+/* The grammar's rules, one alternative a row, the arrow and bars lined up. */
+.bnf {
+  display: grid;
+  grid-template-columns: auto auto 1fr;
+  column-gap: 14px;
+  row-gap: 6px;
+  font-family: var(--mono);
+  font-size: 21px;
+  line-height: 1.35;
+  white-space: nowrap;
+}
+
+.bnf__name {
+  color: var(--accent);
+}
+
+.bnf__symbol {
+  color: var(--ink-dim);
 }
 
 .three-up {
@@ -971,6 +999,15 @@
   font-size: 24px;
   color: var(--ink-dim);
   white-space: pre;
+}
+
+/* The whole row, eight floats a line, so all thirty-two are on the slide. */
+.floats--all {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 4px 12px;
+  font-size: 22px;
+  text-align: right;
 }
 
 /* The fuzzy map ---------------------------------------------------------- */

@@ -21,7 +21,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
   import TinyLlmTalkWeb.FigureComponents
 
   alias TinyLlm.{Tensor, Vocab}
-  alias TinyLlmTalk.{Deck, FuzzyMap, Model, Room, Slide, Trainer, Writer}
+  alias TinyLlmTalk.{Deck, FuzzyMap, GrammarRules, Model, Room, Slide, Trainer, Writer}
   alias TinyLlmTalkWeb.Controls
 
   # Every slide in the arc is drawn. The test suite renders each one and fails
@@ -227,22 +227,24 @@ defmodule TinyLlmTalkWeb.SlideComponents do
   end
 
   def slide(%{slide: %Slide{id: :grammar}} = assigns) do
-    assigns = assign(assigns, sentences: Model.showcase_sentences())
+    assigns = assign(assigns, rules: GrammarRules.rules(), sentences: Model.showcase_sentences())
 
     ~H"""
     <section class="slide">
       <h2 class="slide__title">A grammar we own</h2>
-      <ul class="examples">
-        <li :for={sentence <- @sentences}>{Enum.join(sentence, " ")}</li>
-      </ul>
-      <ol class="rules">
-        <li>A subject agrees with its verb.</li>
-        <li>A relative clause's verb agrees with the head noun, not with whatever is nearest.</li>
-      </ol>
-      <p class="slide__note">
-        We wrote the grammar, so "did it learn agreement" is a measurement, not a vibe.
-        Nobody knows that about a real corpus.
-      </p>
+      <div class="bnf">
+        <%= for {name, alternatives} <- @rules, {alternative, index} <- Enum.with_index(alternatives) do %>
+          <span class="bnf__name">{if index == 0, do: name}</span>
+          <span class="bnf__symbol">{if index == 0, do: "→", else: "|"}</span>
+          <span class="bnf__alternative">{alternative}</span>
+        <% end %>
+      </div>
+      <div>
+        <p class="slide__eyebrow">sentences it wrote</p>
+        <ul class="examples examples--grid">
+          <li :for={sentence <- @sentences}>{Enum.join(sentence, " ")}</li>
+        </ul>
+      </div>
     </section>
     """
   end
@@ -258,7 +260,6 @@ defmodule TinyLlmTalkWeb.SlideComponents do
         input="the words so far"
         distribution={@distribution}
       />
-      <p class="slide__note">Everything we build today goes inside the box.</p>
     </section>
     """
   end
@@ -358,6 +359,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
 
     ~H"""
     <section class="slide slide--tight">
+      <.sentence_line />
       <h2 class="slide__title slide__title--small">A word becomes a row of floats</h2>
       <div class="lookup">
         <span class="lookup__word">llama</span>
@@ -369,16 +371,12 @@ defmodule TinyLlmTalkWeb.SlideComponents do
           <.untrained :if={is_nil(@row)} what="This row of floats" />
         </span>
       </div>
-      <p :if={@row} class="floats">
-        {@row |> Enum.take(6) |> Enum.map_join("  ", &format_signed/1)} &hellip;
-      </p>
+      <div :if={@row} class="floats floats--all">
+        <span :for={value <- @row} class="floats__value">{format_signed(value)}</span>
+      </div>
       <.step n={2} step={@step}>
         <.code path="lib/tiny_llm/transformer.ex" range={114..116} step={@step} focus={[1..1, 1..1]} />
       </.step>
-      <p class="slide__note">
-        Looked up from a table that starts random. The model moves the rows itself. This is
-        the real row, from the checkpoint.
-      </p>
     </section>
     """
   end
@@ -387,8 +385,9 @@ defmodule TinyLlmTalkWeb.SlideComponents do
     assigns = assign(assigns, row: Model.position(2))
 
     ~H"""
-    <section class="slide">
-      <h2 class="slide__title">Position is another row, added on</h2>
+    <section class="slide slide--tight">
+      <.sentence_line />
+      <h2 class="slide__title slide__title--small">Position is another row, added on</h2>
       <div class="lookup">
         <span class="lookup__word">position 2 of 16</span>
         <span class="lookup__arrow">&rarr;</span>
@@ -397,12 +396,12 @@ defmodule TinyLlmTalkWeb.SlideComponents do
           <.untrained :if={is_nil(@row)} what="This row of floats" />
         </span>
       </div>
-      <.code path="lib/tiny_llm/transformer.ex" range={114..116} step={@step} focus={[2..2, 3..3]} />
-      <.step n={2} step={@step} class="slide__note">
-        Added, not appended. Same width in, same width out, so nothing downstream has to know
-        that position exists. Sixteen learned rows, so the context length is 16: the model
-        can never read more words than that at once.
-      </.step>
+      <div :if={@row} class="floats floats--all">
+        <span :for={value <- @row} class="floats__value">{format_signed(value)}</span>
+      </div>
+      <div>
+        <.code path="lib/tiny_llm/transformer.ex" range={114..116} step={@step} focus={[2..2, 3..3]} />
+      </div>
     </section>
     """
   end
@@ -414,7 +413,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
     <section class="slide slide--tight">
       <.sentence_line />
       <h2 class="slide__title slide__title--small">
-        From here on, the model has forgotten it ever saw words
+        At this point, the model has forgotten it ever saw words
       </h2>
       <.heatmap
         :if={@rows}
