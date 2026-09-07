@@ -1696,10 +1696,10 @@ defmodule TinyLlmTalkWeb.SlideComponents do
   # four are the block itself; the ends are the tables on the way in and out.
   @block_layers [
     {"embedding + position", nil},
-    {"RMSNorm", "norm"},
+    {"normalization", "norm"},
     {"attention", "attention"},
-    {"RMSNorm", "norm"},
-    {"MLP", "mlp"},
+    {"normalization", "norm"},
+    {"neural network", "mlp"},
     {"32 probabilities", nil}
   ]
 

@@ -48,6 +48,10 @@ defmodule TinyLlmTalkWeb.DeckLiveTest do
     assert slide.steps == 1
     assert html =~ "stack__layer--attention"
     assert html =~ "stack__layer--mlp"
+    assert html =~ ">normalization<"
+    assert html =~ ">neural network<"
+    refute html =~ "RMSNorm"
+    refute html =~ ">MLP<"
     assert length(Regex.scan(~r/class="stack__arrow"/, html)) == 5
     refute html =~ "Every frontier model"
     refute html =~ "The one on this laptop"
