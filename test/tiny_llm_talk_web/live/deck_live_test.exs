@@ -75,13 +75,20 @@ defmodule TinyLlmTalkWeb.DeckLiveTest do
 
   test "opens attention with the formula, the code, and a single-head note", %{conn: conn} do
     slide = Enum.find(Deck.slides(), &(&1.id == :attention_code))
-    {:ok, _view, html} = live(conn, ~p"/s/#{slide.index}")
+    {:ok, view, html} = live(conn, ~p"/s/#{slide.index}")
 
+    assert slide.steps == 8
     assert html =~ "one head of attention"
     assert html =~ "Attention(W<sub>Q</sub>, W<sub>K</sub>, W<sub>V</sub>) = softmax("
     refute html =~ "Attention(Q, K, V)"
     assert html =~ "√d"
-    assert html =~ "lib/tiny_llm/attention.ex"
+    refute html =~ ~r/step--shown[^>]*>\s*<[^>]*class="code/
+
+    render_keydown(view, "key", %{"key" => "ArrowRight"})
+    shown = render(view)
+
+    assert shown =~ ~r/step--shown[^>]*>\s*<[^>]*class="code/
+    assert shown =~ "lib/tiny_llm/attention.ex"
   end
 
   test "ends on the sources, with both repos and the paper", %{conn: conn} do

@@ -534,12 +534,14 @@ defmodule TinyLlmTalkWeb.SlideComponents do
       <p class="formula">
         Attention(W<sub>Q</sub>, W<sub>K</sub>, W<sub>V</sub>) = softmax(<span class="formula__group">Q K<sup>T</sup> / √d</span>) V
       </p>
-      <.code
-        path="lib/tiny_llm/attention.ex"
-        range={198..213}
-        step={@step}
-        focus={[:all, 1..3, 5..8, 9..13, 14..14, 16..16, :all]}
-      />
+      <.step n={2} step={@step}>
+        <.code
+          path="lib/tiny_llm/attention.ex"
+          range={198..213}
+          step={@step}
+          focus={[:all, :all, 1..3, 5..8, 9..13, 14..14, 16..16, :all]}
+        />
+      </.step>
     </section>
     """
   end

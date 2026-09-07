@@ -186,13 +186,13 @@ defmodule TinyLlmTalk.Deck do
         %Slide{
           id: :attention_code,
           title: "One head of attention, sixteen lines",
-          steps: 7,
+          steps: 8,
           notes: """
-          The destination first, then the walk to it. The formula on top is
-          the whole thing: score every key against the query, scale, softmax
-          into a budget, blend the values. One head; frontier models run
-          many side by side. The code is quoted from the repo, not simplified.
-          Step through: the three projections, the dot products all at once,
+          The destination first, then the walk to it. The formula alone on
+          the first step; it is the whole thing: score every key against the
+          query, scale, softmax into a budget, blend the values. One head;
+          frontier models run many side by side. Then the code, quoted from
+          the repo, not simplified. Step through: the three projections, the dot products all at once,
           the scale, the mask, the softmax, the blend. Let them read; say only
           what each block is for. The next slides take the formula apart.
           """
