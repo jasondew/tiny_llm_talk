@@ -707,14 +707,14 @@ defmodule TinyLlmTalkWeb.SlideComponents do
     last = length(Model.probe()) - 1
     # Starts on `who`, which has a future to mask. The last position is where
     # the slide should end, by a click.
-    position = assigns.controls |> Controls.number("position", 3.0) |> round() |> min(last)
+    position = assigns.controls |> Controls.number("position", last * 1.0) |> round() |> min(last)
 
     assigns = assign(assigns, trace: trace, position: position, words: Model.probe())
 
     ~H"""
     <section class="slide slide--tight">
       <.sentence_line />
-      <h2 class="slide__title slide__title--small">One position, all the way through</h2>
+      <h2 class="slide__title slide__title--small">LLMs are weird</h2>
       <div :if={@trace} class="walk" style={"--walk-columns: #{length(@words)}"}>
         <span class="walk__label">position</span>
         <button

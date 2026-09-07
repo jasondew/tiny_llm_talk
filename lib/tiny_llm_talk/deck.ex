@@ -285,16 +285,16 @@ defmodule TinyLlmTalk.Deck do
         },
         %Slide{
           id: :walkthrough,
-          title: "One position, all the way through",
+          title: "LLMs are weird",
           notes: """
-          Starts on who, so the mask has something to hide, and the whole
-          row is there at once: its query dots every key, the future is
-          struck out, the softmax turns scores into a distribution. Real
-          numbers from the checkpoint. Then click dogs, the position
-          predicting the blank: most of its weight goes to who. Say, do not
-          show: who in turn attends to llama, so the blank reaches the
-          subject in two hops, through the word that stands for it. Click
-          any position; the future is always masked.
+          Starts on dogs, the position predicting the blank, with the whole
+          row there at once: its query dots every key, nothing to mask
+          since it is last, the softmax turns scores into a distribution.
+          Real numbers from the checkpoint. Most of its weight goes to who,
+          not llama, which is the weird part. Say, do not show: who in turn
+          attends to llama, so the blank reaches the subject in two hops,
+          through the word that stands for it. Click who to show that hop,
+          and the mask hiding its future.
           """
         }
       ]
