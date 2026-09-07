@@ -261,11 +261,14 @@ defmodule TinyLlmTalk.Deck do
           title: "Three details do all the work",
           steps: 3,
           notes: """
-          Divide by the square root of the width so the softmax does not
-          saturate as vectors grow. Mask the future before the softmax so the
-          rows still sum to one; flip the toggle to show what leaks without it.
-          And every position runs at once in one matrix multiply, no loop over
-          time, which is why this scales and a recurrent network did not.
+          The heatmap starts unmasked: every position can see the whole
+          sentence, including the words after it, which is cheating. Divide
+          by the square root of the width so the softmax does not saturate
+          as vectors grow. Second step: mask the future before the softmax
+          so the rows still sum to one, and watch the upper triangle go
+          dark. And every position runs at once in one matrix multiply, no
+          loop over time, which is why this scales and a recurrent network
+          did not.
           """
         },
         %Slide{

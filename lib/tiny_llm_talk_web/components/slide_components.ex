@@ -604,13 +604,12 @@ defmodule TinyLlmTalkWeb.SlideComponents do
   end
 
   def slide(%{slide: %Slide{id: :three_details}} = assigns) do
-    mask = Controls.choice(assigns.controls, "mask", "on")
-
+    # The heatmap leaks into the future until the masking line arrives, then
+    # the upper triangle goes dark with it.
     assigns =
       assign(assigns,
-        mask: mask,
         weights:
-          if(mask == "on",
+          if(assigns.step >= 2,
             do: Model.attention(Model.probe()),
             else: Model.unmasked_attention(Model.probe())
           )
@@ -633,9 +632,6 @@ defmodule TinyLlmTalkWeb.SlideComponents do
           </.step>
         </ol>
         <div>
-          <.step n={2} step={@step}>
-            <.picker name="mask" options={~w(on off)} chosen={@mask} class="picker--small" />
-          </.step>
           <.heatmap
             :if={@weights}
             values={@weights}
