@@ -872,26 +872,50 @@ defmodule TinyLlmTalkWeb.SlideComponents do
   # blank, straight from the checkpoint.
 
   def slide(%{slide: %Slide{id: :normalization}} = assigns) do
-    assigns = assign(assigns, block: block_trace(), block_path: @block_path)
+    block = block_trace()
+
+    assigns =
+      assign(assigns,
+        block: block,
+        width: Model.width(),
+        rms: block && format_weight(block.rms1),
+        scaled: block && Enum.map(block.input, &(&1 / block.rms1))
+      )
 
     ~H"""
     <section class="slide slide--tight">
       <p class="slide__eyebrow">normalization &middot; RMSNorm</p>
-      <p class="formula">
+      <p class="formula formula--heading">
         x̂ = <span class="formula__group">x / rms(x)</span> · g
       </p>
-      <div>
-        <.code path={@block_path} range={213..221} step={@step} focus={[[2..2, 5..5]]} />
-      </div>
-      <div :if={@block} class="strip-stack">
-        <.strips
-          rows={[@block.input, Enum.map(@block.input, &(&1 / @block.rms1)), @block.norm1]}
-          labels={[
-            "x, the dogs row · rms #{format_weight(@block.rms1)}",
-            "x / rms(x) · rms 1.00",
-            "· g, 32 learned floats"
-          ]}
-        />
+      <dl class="definitions definitions--formula">
+        <.step n={1} step={@step}>
+          <dt>normalization</dt>
+          <dd>every row arrives at the same size, whatever the last stage did to it</dd>
+        </.step>
+        <.step n={2} step={@step}>
+          <dt>rms(x) = √mean(x²)</dt>
+          <dd>root mean square: square each float, average them, take the root</dd>
+        </.step>
+        <.step n={3} step={@step}>
+          <dt>x / rms(x)</dt>
+          <dd>the row at size one, direction kept</dd>
+        </.step>
+        <.step n={4} step={@step}>
+          <dt>g</dt>
+          <dd>{@width} learned floats, one per column: the size the model wants back</dd>
+        </.step>
+      </dl>
+      <div :if={@block} class="strip-stack strip-stack--tight">
+        <.step n={2} step={@step}>
+          <.strips rows={[@block.input]} labels={["x, the dogs row · rms #{@rms}"]} cell={20} />
+        </.step>
+        <.step n={3} step={@step}>
+          <.strips rows={[@scaled]} labels={["x / rms(x) · rms 1.00"]} cell={20} />
+        </.step>
+        <.step n={4} step={@step}>
+          <.strips rows={[@block.norm1]} labels={["· g"]} cell={20} />
+        </.step>
       </div>
       <.untrained :if={is_nil(@block)} what="This row" />
     </section>
@@ -958,21 +982,51 @@ defmodule TinyLlmTalkWeb.SlideComponents do
   # 7. Back to words --------------------------------------------------------
 
   def slide(%{slide: %Slide{id: :back_to_words}} = assigns) do
-    assigns = assign(assigns, distribution: Model.distribution(Model.probe(), 1.0))
+    temperature = Controls.temperature(assigns.controls)
+    block = block_trace()
+
+    assigns =
+      assign(assigns,
+        temperature: temperature,
+        logits: block && block.logits,
+        distribution: Model.distribution(Model.probe(), temperature)
+      )
 
     ~H"""
-    <section class="slide">
+    <section class="slide slide--tight">
       <.sentence_line />
       <h2 class="slide__title slide__title--small">
         Thirty-two floats become thirty-two probabilities
       </h2>
       <.code path="lib/tiny_llm/transformer.ex" range={118..120} step={@step} focus={[3..3]} />
+      <div :if={@logits} class="strip-stack strip-stack--tight">
+        <.strips rows={[@logits]} labels={["logits, one score per word"]} cell={20} />
+      </div>
+      <div class="softmax-line">
+        <p class="formula">
+          p = softmax(<span class="formula__group">logits / T</span>)
+        </p>
+        <form id="temperature-dial" phx-change="control" class="dial dial--inline">
+          <input type="hidden" name="name" value="temperature" />
+          <input
+            type="range"
+            name="value"
+            min="0"
+            max="3"
+            step="0.05"
+            value={@temperature}
+            class="dial__range"
+          />
+          <output class="dial__value">T = {:erlang.float_to_binary(@temperature, decimals: 2)}</output>
+        </form>
+      </div>
       <.bars
         :if={@distribution}
         values={@distribution}
         words={Vocab.words()}
         top={5}
         highlight={~w(flees)}
+        class="bars--compact"
       />
       <.untrained :if={is_nil(@distribution)} what="This distribution" />
     </section>

@@ -1007,6 +1007,29 @@
   gap: 12px;
 }
 
+/* Content-width, or the grid's auto label column swallows the slack and the
+ * cells slide to the right. */
+.strip-stack--tight {
+  align-items: flex-start;
+  gap: 4px;
+}
+
+/* One strip per step means one grid each, so the label column is pinned to a
+ * width or the cells of each strip would start at a different x. */
+.strip-stack--tight .heatmap__row-label {
+  width: 280px;
+  padding-right: 10px;
+  text-align: right;
+}
+
+/* The output: the formula and its temperature, on one line. */
+.softmax-line {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 40px;
+}
+
 .dial--inline {
   max-width: 640px;
 }

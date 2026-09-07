@@ -333,15 +333,24 @@ defmodule TinyLlmTalk.Deck do
         %Slide{
           id: :normalization,
           title: "Normalization",
+          steps: 4,
           notes: """
-          The first of the two normalizations, on the dogs row. Divide the
-          row by its root mean square, so every row comes in at the same
-          size whatever attention did to it; then multiply by g, thirty-two
-          learned floats, so the model can choose the size it wants per
-          column. Three strips: the row as it arrived, the row at rms one,
-          the row after g. Nothing blows up and nothing vanishes, which is
-          what lets the layers stack. The code is the block's forward pass;
-          the two lit lines are the two norms.
+          Four steps, one line of the formula each, on the dogs row. First
+          the idea: rows come out of attention at whatever size attention
+          made them, and the next stage wants them all at one size, or the
+          big rows shout and the small ones vanish. Normalization is the
+          fix: rescale every row before handing it on. Second, rms: root
+          mean square. Square every float so signs do not cancel, average
+          the squares, take the square root; one number per row, the row's
+          typical size. The strip shows the dogs row and its rms. Third,
+          divide the row by it: same direction, size one, and the strip
+          shows the same pattern. Fourth, g: thirty-two learned floats,
+          one per column, multiplied in, so the model can choose the size
+          it wants per feature rather than being stuck at one. That is
+          RMSNorm: no mean subtracted, no bias, which is the difference
+          from LayerNorm, and the paper found the recentring buys nothing.
+          Say, do not show: this runs twice per block, before attention and
+          before the network, lines 2 and 5 of the last slide.
           """
         },
         %Slide{
@@ -384,9 +393,14 @@ defmodule TinyLlmTalk.Deck do
           id: :back_to_words,
           title: "Thirty-two floats become thirty-two probabilities",
           notes: """
-          One more weighted sum takes the last row from 32 wide to 32 scores,
-          one per word, and the same softmax turns them into a distribution. Bars for
-          the probe: flees is the top of all thirty-two.
+          One more weighted sum takes the last row from 32 wide to 32
+          scores, one per word: the logits, the strip under the code. Then
+          the softmax from the math break, with one new knob: divide the
+          logits by a temperature first. T of one is the raw softmax. Drag
+          it down and the top word takes everything, since dividing by a
+          small number stretches the gaps before the exponential; drag it
+          up and the bars flatten toward equal. Bars for the probe: flees
+          is the top of all thirty-two. The dial carries to the next slide.
           """
         },
         %Slide{
