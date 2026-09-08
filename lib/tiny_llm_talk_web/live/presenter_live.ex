@@ -6,10 +6,10 @@ defmodule TinyLlmTalkWeb.PresenterLive do
   only what has to be said out loud, and the points that must be made are
   drawn louder.
 
-  The outline budgets minutes per section, so the clock shows elapsed time
-  against the whole talk, how long this section has taken against its own
-  minutes, and how far ahead of or behind the outline the talk is at this
-  slide. The only two questions asked mid-talk are "where am I" and "am I
+  The outline budgets minutes per section, so the big clock shows how long
+  this section has taken against its own minutes, with the whole talk's
+  clock smaller under it, and between them how far ahead of or behind the
+  outline the talk is at this slide. The only two questions asked mid-talk are "where am I" and "am I
   behind."
 
   The preview is live. A control clicked in it is a control turned on the big
@@ -106,14 +106,14 @@ defmodule TinyLlmTalkWeb.PresenterLive do
         </div>
         <div class="presenter__timing">
           <p class="presenter__clock">
-            {format_clock(@elapsed)}
-            <span class="presenter__budget">of {format_clock(Deck.total_seconds())}</span>
+            {format_clock(@elapsed - @section_entered)}
+            <span class="presenter__budget">of {@section.minutes}:00 this section</span>
           </p>
           <p class={["presenter__pace", "presenter__pace--#{elem(@pace, 0)}"]}>
             {pace_label(@pace)}
           </p>
-          <p class="presenter__section-clock">
-            section {format_clock(@elapsed - @section_entered)} of {@section.minutes}:00
+          <p class="presenter__total-clock">
+            talk {format_clock(@elapsed)} of {format_clock(Deck.total_seconds())}
           </p>
         </div>
       </div>

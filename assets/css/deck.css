@@ -424,7 +424,7 @@
   color: var(--alarm);
 }
 
-.presenter__section-clock {
+.presenter__total-clock {
   font-family: var(--mono);
   font-size: 14px;
   color: var(--ink-dim);
