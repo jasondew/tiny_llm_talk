@@ -322,25 +322,28 @@ defmodule TinyLlmTalk.Deck do
         %Slide{
           id: :normalization,
           title: "Normalization",
-          steps: 4,
+          steps: 6,
           notes: """
-          Say the idea first, nothing on the slide for it: rows come out
-          of attention at whatever size attention made them, and the next
-          stage wants them all at one size, or the big rows shout and the
-          small ones vanish. Normalization rescales every row before
-          handing it on. The formula and its two definitions are up from
-          the start: rms, root mean square, square every float so signs do
-          not cancel, average the squares, take the square root, one
-          number per row, the row's typical size; and g, thirty-two
-          learned floats, one per column. Then the dogs row, one strip a
-          step. First, x as it arrived, with its rms. Second, x divided
-          by it: same direction, size one. Third, times g, so the model
-          can choose the size it wants per feature rather than being
-          stuck at one. That is
-          RMSNorm: no mean subtracted, no bias, which is the difference
-          from LayerNorm, and the paper found the recentring buys nothing.
-          Say, do not show: this runs twice per block, before attention and
-          before the network, lines 2 and 5 of the block, two slides on.
+          Say the idea first: rows come out of a stage at whatever size
+          the stage made them, and the next stage wants them all at one
+          size, or the big rows shout and the small ones vanish. Then the
+          evidence, step one: the seven rows of the sentence with the rms
+          of each, real numbers, and they differ; after the norm every one
+          is 1.00. Steps two to five are the arithmetic on a row of four
+          floats, small enough to check by eye. x. Square every float, so
+          signs do not cancel; average the squares; take the root: that
+          is rms, root mean square, the row's typical size. Divide the
+          row by it: same direction, size one. Then g, thirty-two learned
+          floats here, four in the toy: one per column, multiplied in, so
+          the model can choose the size it wants per feature rather than
+          being stuck at one; the third column doubles and the rest do
+          not. Step six, the dogs row for real, three sparks on one
+          scale: short as it arrived, tall at size one, reshaped by g.
+          That is RMSNorm: no mean subtracted, no bias, which is the
+          difference from LayerNorm, and the paper found the recentring
+          buys nothing. Say, do not show: this runs twice per block,
+          before attention and before the network, lines 2 and 5 of the
+          block, two slides on.
           """
         },
         %Slide{

@@ -871,42 +871,95 @@ defmodule TinyLlmTalkWeb.SlideComponents do
   # numbers beside the code are the dogs position, the one predicting the
   # blank, straight from the checkpoint.
 
+  # A row small enough to normalize by eye, and a gain that visibly does
+  # per-column work: one column doubled, the rest left alone.
+  @toy_row [2.0, -1.0, 3.0, 0.0]
+  @toy_gain [1.0, 1.0, 2.0, 1.0]
+
   def slide(%{slide: %Slide{id: :normalization}} = assigns) do
-    block = block_trace()
+    trace = Model.trace(Model.probe())
+    block = trace && trace.block
+    squares = Enum.map(@toy_row, &(&1 * &1))
+    mean = Enum.sum(squares) / length(squares)
+    toy_rms = :math.sqrt(mean)
+    toy_scaled = Enum.map(@toy_row, &(&1 / toy_rms))
 
     assigns =
       assign(assigns,
         block: block,
         width: Model.width(),
+        row_sizes: trace && Enum.zip(Model.probe(), Enum.map(trace.input, &rms/1)),
         rms: block && format_weight(block.rms1),
-        scaled: block && Enum.map(block.input, &(&1 / block.rms1))
+        scaled: block && Enum.map(block.input, &(&1 / block.rms1)),
+        peak: block && spark_peak([block.input, block.norm1]),
+        toy: @toy_row,
+        squares: squares,
+        mean: mean,
+        toy_rms: toy_rms,
+        toy_scaled: toy_scaled,
+        gain: @toy_gain,
+        gained: Enum.zip_with(toy_scaled, @toy_gain, &(&1 * &2))
       )
 
     ~H"""
     <section class="slide slide--tight">
       <p class="slide__eyebrow">normalization &middot; RMSNorm</p>
       <p class="formula formula--heading">
-        x̂ = <span class="formula__group">x / rms(x)</span> · g
+        x̂ = <span class="formula__group">x / rms(x)</span>
+        · g <span class="formula__aside">rms(x) = √mean(x²)</span>
       </p>
-      <dl class="definitions definitions--formula">
-        <dt>rms(x) = √mean(x²)</dt>
-        <dd>root mean square: square each float, average them, take the root</dd>
-        <dt>g</dt>
-        <dd>{@width} learned floats, one per column</dd>
-      </dl>
-      <.step :if={@block} n={2} step={@step}>
-        <p class="row-caption">the dogs row</p>
-      </.step>
-      <div :if={@block} class="strip-stack strip-stack--tight">
-        <.step n={2} step={@step}>
-          <.strips rows={[@block.input]} labels={["x · rms #{@rms}"]} cell={20} />
-        </.step>
-        <.step n={3} step={@step}>
-          <.strips rows={[@scaled]} labels={["x / rms(x) · rms 1.00"]} cell={20} />
-        </.step>
-        <.step n={4} step={@step}>
-          <.strips rows={[@block.norm1]} labels={["x / rms(x) · g"]} cell={20} />
-        </.step>
+      <div class="two-up two-up--lists rmsnorm">
+        <div class="rmsnorm__real">
+          <.step :if={@row_sizes} n={1} step={@step}>
+            <p class="row-caption">rows arrive at different sizes</p>
+            <div class="rms-table">
+              <span class="rms-table__head"></span>
+              <span class="rms-table__head">rms(x)</span>
+              <span class="rms-table__head">after</span>
+              <%= for {word, size} <- @row_sizes do %>
+                <span class="rms-table__word">{word}</span>
+                <span class="rms-table__bar">
+                  <span class="rms-table__fill" style={"width: #{round(size * 100)}%"} />
+                  <span class="rms-table__number">{format_weight(size)}</span>
+                </span>
+                <span class="rms-table__after">1.00</span>
+              <% end %>
+            </div>
+          </.step>
+          <.step :if={@block} n={6} step={@step}>
+            <p class="row-caption">the dogs row, all {@width} floats</p>
+            <div class="spark-rows">
+              <span class="spark-rows__label">x &middot; rms {@rms}</span>
+              <.spark values={Enum.map(@block.input, &abs/1)} peak={@peak} />
+              <span class="spark-rows__label">x / rms(x) &middot; rms 1.00</span>
+              <.spark values={Enum.map(@scaled, &abs/1)} peak={@peak} />
+              <span class="spark-rows__label">x / rms(x) &middot; g</span>
+              <.spark values={Enum.map(@block.norm1, &abs/1)} peak={@peak} />
+            </div>
+          </.step>
+        </div>
+        <div class="dot__arithmetic">
+          <.step n={2} step={@step}>
+            <p class="row-caption">a row of four, by hand</p>
+            <.vector label="x" values={@toy} cell={56} class="vector--a" />
+          </.step>
+          <.step n={3} step={@step} class="dot__vectors">
+            <.vector label="x²" values={@squares} cell={56} class="vector--work" />
+            <.vector
+              label={"rms(x) = √mean(x²) = √#{format_weight(@mean)}"}
+              values={[@toy_rms]}
+              cell={56}
+              class="vector--total"
+            />
+          </.step>
+          <.step n={4} step={@step}>
+            <.vector label="x / rms(x)" values={@toy_scaled} cell={56} class="vector--a" />
+          </.step>
+          <.step n={5} step={@step} class="dot__vectors">
+            <.vector label="g, learned" values={@gain} cell={56} class="vector--b" />
+            <.vector label="x / rms(x) · g" values={@gained} cell={56} class="vector--total" />
+          </.step>
+        </div>
       </div>
       <.untrained :if={is_nil(@block)} what="This row" />
     </section>
@@ -1807,6 +1860,14 @@ defmodule TinyLlmTalkWeb.SlideComponents do
   end
 
   defp zeros(row), do: Enum.count(row, &(&1 == 0.0))
+
+  # Root mean square of a row: the size normalization divides out.
+  defp rms(row) do
+    :math.sqrt(Enum.reduce(row, 0.0, fn value, sum -> sum + value * value end) / length(row))
+  end
+
+  # The tallest bar across a few rows drawn as sparks on one scale.
+  defp spark_peak(rows), do: rows |> List.flatten() |> Enum.map(&abs/1) |> Enum.max()
 
   # The shape of a matrix, or the size of a plain number, at the start of a
   # definition so the shapes line up down the slide.

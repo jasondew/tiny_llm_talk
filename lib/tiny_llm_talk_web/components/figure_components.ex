@@ -44,11 +44,15 @@ defmodule TinyLlmTalkWeb.FigureComponents do
     """
   end
 
-  @doc "A distribution as a row of thin bars, unlabelled. Shape, not values."
+  @doc """
+  A distribution as a row of thin bars, unlabelled. Shape, not values, unless
+  a shared `peak` is given, which puts several sparks on one scale.
+  """
   attr :values, :list, required: true
+  attr :peak, :float, default: nil
 
   def spark(assigns) do
-    assigns = assign(assigns, peak: Enum.max(assigns.values))
+    assigns = assign(assigns, peak: assigns.peak || Enum.max(assigns.values))
 
     ~H"""
     <div class="spark">
