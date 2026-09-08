@@ -431,7 +431,8 @@ defmodule TinyLlmTalk.Deck do
       number: 5,
       title: "Back to words",
       minutes: 3,
-      lands: "rows become a distribution, every box ticked, the loop, and the knob",
+      lands:
+        "rows become a distribution, every box ticked, the seven lines, the loop, and the knob",
       slides: [
         %Slide{
           id: :back_to_words,
@@ -457,8 +458,22 @@ defmodule TinyLlmTalk.Deck do
           The diagram from the lid-off slide once more, and every box
           wears a tick now: embedding and position, both normalizations,
           attention, the network, and the thirty-two probabilities. That
-          is the whole forward pass, seen. What is left is using it, and
-          training it.
+          is the whole forward pass, seen. Next, the seven lines that do
+          all of it.
+          """
+        },
+        %Slide{
+          id: :all_of_it_again,
+          title: "This was all of it",
+          steps: 5,
+          notes: """
+          The seven lines of the forward pass, the three from the embedding
+          slide and the three from back to words with the block between
+          them, read out loud now. A word
+          becomes a row, position is added. The block: attention gathers,
+          the residual keeps, the MLP thinks. One more norm. Thirty-two floats
+          become thirty-two probabilities. Nobody in the room needed a
+          library to follow that. Next, using it.
           """
         },
         %Slide{
@@ -515,22 +530,8 @@ defmodule TinyLlmTalk.Deck do
       number: 7,
       title: "Did it learn it",
       minutes: 2,
-      lands: "the whole thing again, the sentence again, and it writes",
+      lands: "what is not here, the sentence again, and it writes",
       slides: [
-        %Slide{
-          id: :all_of_it_again,
-          title: "This was all of it",
-          steps: 5,
-          notes: """
-          The seven lines of the forward pass, the three from the embedding
-          slide and the three from back to words with the block between
-          them, read out loud now. A word
-          becomes a row, position is added. The block: attention gathers,
-          the residual keeps, the MLP thinks. One more norm. Thirty-two floats
-          become thirty-two probabilities. Nobody in the room needed a
-          library to follow that.
-          """
-        },
         %Slide{
           id: :what_is_not_here,
           title: "What is not here, and what is",
