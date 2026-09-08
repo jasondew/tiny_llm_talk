@@ -328,15 +328,21 @@
 
 .presenter {
   /* The current slide takes the full width, unless the height would leave no
-   * room for the rest; the trig turns a length ratio into a plain number. */
+   * room for the rest; the trig turns a length ratio into a plain number.
+   * The next slide then takes whatever height is left under it. */
   --presenter-scale: min(
     tan(atan2(100vw - 64px, 1280px)),
     tan(atan2(100vh - 500px, 720px))
   );
+  --next-scale: min(
+    tan(atan2(100vh - 720px * var(--presenter-scale) - 122px, 720px)),
+    tan(atan2(50vw, 1280px)),
+    calc(var(--presenter-scale) * 0.9)
+  );
   position: fixed;
   inset: 0;
   display: grid;
-  grid-template-rows: auto auto minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr);
   gap: 20px;
   padding: 24px 32px;
   background: var(--paper);
@@ -354,26 +360,32 @@
   margin: 0 auto;
 }
 
-/* What is next, beside the clock and where the section has to land. */
-.presenter__middle {
-  display: flex;
+/* What is next on the left, the clock and the notes stacked on the right. */
+.presenter__bottom {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
   gap: 32px;
-  align-items: flex-start;
+  min-height: 0;
 }
 
-.presenter__middle .stage--preview-next {
-  --stage-scale: 0.25;
+.presenter__bottom .stage--preview-next {
+  --stage-scale: var(--next-scale);
 }
 
-.presenter__middle .stage-preview--next {
-  width: calc(1280px * 0.25);
-  height: calc(720px * 0.25);
+.presenter__bottom .stage-preview--next {
+  width: calc(1280px * var(--next-scale));
+  height: calc(720px * var(--next-scale));
+}
+
+.presenter__side {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
 }
 
 .presenter__head {
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -381,7 +393,7 @@
 
 .presenter__clock {
   font-family: var(--mono);
-  font-size: 48px;
+  font-size: 40px;
   line-height: 1;
   color: var(--accent);
 }
@@ -395,16 +407,18 @@
 
 .presenter__lands {
   font-family: var(--serif);
-  font-size: 18px;
+  font-size: 17px;
   color: var(--accent-cool);
 }
 
 .presenter__notes {
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 8px;
-  font-size: 24px;
+  font-size: 22px;
   line-height: 1.3;
 }
 
@@ -2205,12 +2219,6 @@
   margin-top: 6px;
   font-family: var(--mono);
   font-size: 0.8em;
-  color: var(--accent-cool);
-}
-
-.presenter__training {
-  font-family: var(--mono);
-  font-size: 16px;
   color: var(--accent-cool);
 }
 

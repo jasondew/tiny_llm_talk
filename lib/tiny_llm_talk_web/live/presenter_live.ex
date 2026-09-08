@@ -1,8 +1,9 @@
 defmodule TinyLlmTalkWeb.PresenterLive do
   @moduledoc """
   The laptop screen: the slide the room is looking at, as wide as the screen
-  allows; under it what comes next beside the clock; under that the notes,
-  which are only what has to be said out loud.
+  allows; under it what comes next, as tall as the rest of the screen, with
+  the clock and the notes beside it. The notes are only what has to be said
+  out loud.
 
   The outline budgets minutes per section, so the clock shows elapsed time
   against the budget spent so far. The only two questions asked mid-talk are
@@ -100,7 +101,7 @@ defmodule TinyLlmTalkWeb.PresenterLive do
           </div>
         </div>
       </div>
-      <div class="presenter__middle">
+      <div class="presenter__bottom">
         <div :if={@next} class="presenter__next">
           <p class="presenter__label">
             next: {next_label(@slide, @step, @next)}
@@ -117,32 +118,33 @@ defmodule TinyLlmTalkWeb.PresenterLive do
             </div>
           </div>
         </div>
-        <div class="presenter__head">
-          <p class="presenter__clock">
-            {format_clock(@elapsed)} <span class="presenter__budget">of {budget(@section)}</span>
-          </p>
-          <p class="presenter__label">
-            {@section.number}. {@section.title} &middot; {@section.minutes} min &middot; slide {@slide.index} of {Deck.count()} &middot; step {@step} of {@slide.steps}
-          </p>
-          <p class="presenter__lands">must land: {@section.lands}</p>
-          <p class="presenter__training">training {@trainer.status}</p>
-          <p class="presenter__keys">
-            space/arrows move &middot; t pauses the clock &middot; r resets it &middot; click a preview to run a demo
-          </p>
-        </div>
-      </div>
-      <div class="presenter__notes">
-        <%= for block <- Slide.blocks(@slide) do %>
-          <ul :if={elem(block, 0) == :bullets} class="presenter__bullets">
-            <li :for={item <- elem(block, 1)}>{item}</li>
-          </ul>
-          <dl :if={elem(block, 0) == :definitions} class="presenter__defs">
-            <%= for {term, text} <- elem(block, 1) do %>
-              <dt>{term}</dt>
-              <dd>{text}</dd>
+        <div class="presenter__side">
+          <div class="presenter__head">
+            <p class="presenter__clock">
+              {format_clock(@elapsed)} <span class="presenter__budget">of {budget(@section)}</span>
+            </p>
+            <p class="presenter__label">
+              {@section.number}. {@section.title} &middot; {@section.minutes} min &middot; slide {@slide.index} of {Deck.count()} &middot; step {@step} of {@slide.steps}
+            </p>
+            <p class="presenter__lands">must land: {@section.lands}</p>
+            <p class="presenter__keys">
+              training {@trainer.status} &middot; space/arrows move &middot; t pauses &middot; r resets &middot; click a preview to drive it
+            </p>
+          </div>
+          <div class="presenter__notes">
+            <%= for block <- Slide.blocks(@slide) do %>
+              <ul :if={elem(block, 0) == :bullets} class="presenter__bullets">
+                <li :for={item <- elem(block, 1)}>{item}</li>
+              </ul>
+              <dl :if={elem(block, 0) == :definitions} class="presenter__defs">
+                <%= for {term, text} <- elem(block, 1) do %>
+                  <dt>{term}</dt>
+                  <dd>{text}</dd>
+                <% end %>
+              </dl>
             <% end %>
-          </dl>
-        <% end %>
+          </div>
+        </div>
       </div>
     </div>
     """

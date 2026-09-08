@@ -65,7 +65,8 @@ defmodule TinyLlmTalk.Deck do
           notes: """
           - Attention gathers, a small network thinks; repeated N times
           - Say, do not show: every frontier model uses these pieces
-          = GPT-4, Gemini, DeepSeek-V3: "Transformer-based", "builds on Transformer decoders", "still within the Transformer framework"
+          = GPT-4, Gemini: "Transformer-based", "builds on Transformer decoders"
+          = DeepSeek-V3: "still within the Transformer framework"
           = Llama 4, Claude: mixture of experts; Anthropic does not publish
           = Mamba, Qwen3-Next: a cheaper mixer for most attention; block kept
           """
