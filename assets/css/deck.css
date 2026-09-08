@@ -531,62 +531,6 @@
   color: var(--ink-dim);
 }
 
-/* The bookend: the sentence as it was asked, the two hops the blank takes to
- * reach the subject, and what the model puts on the blank. */
-.sentence-arcs {
-  display: block;
-  margin: 32px auto 0;
-  max-width: 100%;
-  overflow: visible;
-}
-
-.sentence-arcs__word {
-  font-family: var(--serif);
-  font-size: 48px;
-  fill: var(--ink);
-  text-anchor: middle;
-  transition: fill 160ms linear;
-}
-
-.sentence-arcs__word--blank {
-  fill: var(--ink-dim);
-}
-
-.sentence-arcs__word--lit {
-  fill: var(--accent);
-}
-
-.sentence-arcs__arc {
-  fill: none;
-  stroke: var(--accent);
-  stroke-width: 3;
-}
-
-.sentence-arcs__head {
-  fill: var(--accent);
-}
-
-.sentence-arcs__weight {
-  font-family: var(--mono);
-  font-size: 20px;
-  fill: var(--accent);
-  text-anchor: middle;
-}
-
-.sentence-answer {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.sentence-answer__temperature {
-  margin-left: 1.5em;
-  font-family: var(--mono);
-  font-size: 16px;
-  opacity: 0.6;
-}
-
 /* Slide furniture -------------------------------------------------------- */
 
 .slide--tight {

@@ -405,7 +405,7 @@ defmodule TinyLlmTalk.Deck do
       number: 7,
       title: "Did it learn it",
       minutes: 2,
-      lands: "what is not here, the sentence again with its two hops, and it writes",
+      lands: "what is not here, and it writes",
       slides: [
         %Slide{
           id: :what_is_not_here,
@@ -416,16 +416,6 @@ defmodule TinyLlmTalk.Deck do
           - Here the prefix is re-read
           ! Same pieces as a frontier model
           ! Thirteen orders of magnitude and a tokenizer apart
-          """
-        },
-        %Slide{
-          id: :the_sentence_again,
-          title: "the llama who chases the dogs flees",
-          steps: 3,
-          notes: """
-          ! The vote, answered
-          - The subject in two hops
-          - Then flees above flee
           """
         },
         %Slide{

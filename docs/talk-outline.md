@@ -25,7 +25,7 @@ the sentence, the picture of where attention looks, and the score.
 | 4 | The rest of the block | 6 | the transformer in this talk (the block diagram again, × 1, the box named), normalization (the two definitions, then the dogs row as printed numbers through rms, the divide, and g), the ReLU with its graph, a feed forward network from one node up to the full graph, the network in the block with the dogs row, then Block.forward stepped down its nine lines with the flow and its two skips lit beside it | |
 | 5 | Back to words | 3 | rows become a distribution, the block diagram with every box ticked, this was all of it (the seven lines, walked), **one word at a time** with the **temperature dial** | presenter |
 | 6 | Training | 3 | the whole backward pass on screen for effect, then the five beats in its place | |
-| 7 | Did it learn it | 2 | what is not here, the sentence again (the blank's two hops, then the probabilities), **it writes** again under the repo link, with the sources along its foot | |
+| 7 | Did it learn it | 2 | what is not here, **it writes** again under the repo link, with the sources along its foot | |
 
 ## Live training and the writer
 

@@ -1329,51 +1329,6 @@ defmodule TinyLlmTalkWeb.SlideComponents do
     """
   end
 
-  # The bookend: the sentence as the cold open asked it, then the two hops the
-  # blank takes to reach the subject, then what the model puts on the blank.
-  # The hops are attention weights from the checkpoint: the dogs row's weight
-  # on who, and the who row's weight on llama, as the walkthrough showed.
-  @sentence_words ["the", "llama", "who", "chases", "the", "dogs", "____"]
-  @sentence_hops [
-    %{from: 6, to: 2, row: 6, column: 3},
-    %{from: 2, to: 1, row: 3, column: 2}
-  ]
-
-  def slide(%{slide: %Slide{id: :the_sentence_again}} = assigns) do
-    temperature = Controls.temperature(assigns.controls)
-    weights = Model.attention(Model.probe())
-
-    assigns =
-      assign(assigns,
-        words: @sentence_words,
-        hops: (weights && hops_with_weights(@sentence_hops, weights)) || [],
-        temperature: temperature,
-        distribution: Model.distribution(Model.probe(), temperature)
-      )
-
-    ~H"""
-    <section class="slide slide--tight">
-      <.sentence_arcs words={@words} hops={if @step >= 2, do: @hops, else: []} />
-      <.step :if={@distribution} n={3} step={@step} class="sentence-answer">
-        <p class="row-caption">
-          what it puts on the blank
-          <span class="sentence-answer__temperature">
-            T = {:erlang.float_to_binary(@temperature, decimals: 2)}
-          </span>
-        </p>
-        <.bars
-          values={@distribution}
-          words={Vocab.words()}
-          top={5}
-          highlight={~w(flees)}
-          class="bars--compact"
-        />
-      </.step>
-      <.untrained :if={is_nil(@distribution)} what="This answer" />
-    </section>
-    """
-  end
-
   def slide(%{slide: %Slide{id: :it_writes_again}} = assigns) do
     ~H"""
     <.writer controls={@controls} frame={@frame} eyebrow="github.com/jasondew/tiny_llm" sources />
@@ -2179,81 +2134,6 @@ defmodule TinyLlmTalkWeb.SlideComponents do
       <text x="222" y="30" class="relu-graph__name">ReLU(z)</text>
     </svg>
     """
-  end
-
-  # The sentence with the blank's hops drawn under it: each hop an arc from
-  # the position asking to the position it looked at, labelled with the share
-  # of its attention that went there. The words are set in the SVG so the
-  # arcs land on them without measuring anything.
-  attr :words, :list, required: true
-  attr :hops, :list, required: true, doc: "from, to and weight over word positions"
-
-  defp sentence_arcs(assigns) do
-    slot = 1150 / length(assigns.words)
-    centre = fn index -> slot * index + slot / 2 end
-
-    assigns =
-      assign(assigns,
-        placed:
-          Enum.with_index(assigns.words, fn word, index -> {word, index, centre.(index)} end),
-        lit: Enum.map(assigns.hops, & &1.to),
-        arcs:
-          Enum.map(assigns.hops, fn hop ->
-            x1 = centre.(hop.from)
-            x2 = centre.(hop.to)
-            depth = 30 + abs(x1 - x2) * 0.15
-
-            %{
-              path: "M #{x1} 80 Q #{(x1 + x2) / 2} #{80 + depth * 2} #{x2} 80",
-              label_x: (x1 + x2) / 2,
-              label_y: 80 + depth - 8,
-              weight: hop.weight
-            }
-          end)
-      )
-
-    ~H"""
-    <svg class="sentence-arcs" viewBox="0 0 1150 240" width="1150" height="240">
-      <defs>
-        <marker
-          id="sentence-arrow"
-          viewBox="0 0 10 10"
-          refX="8"
-          refY="5"
-          markerWidth="7"
-          markerHeight="7"
-          orient="auto"
-        >
-          <path d="M 0 0 L 10 5 L 0 10 z" class="sentence-arcs__head" />
-        </marker>
-      </defs>
-      <text
-        :for={{word, index, x} <- @placed}
-        x={x}
-        y="60"
-        class={[
-          "sentence-arcs__word",
-          word == "____" && "sentence-arcs__word--blank",
-          index in @lit && "sentence-arcs__word--lit"
-        ]}
-      >
-        {word}
-      </text>
-      <%= for arc <- @arcs do %>
-        <path d={arc.path} class="sentence-arcs__arc" marker-end="url(#sentence-arrow)" />
-        <text x={arc.label_x} y={arc.label_y} class="sentence-arcs__weight">
-          {format_percent(arc.weight)}
-        </text>
-      <% end %>
-    </svg>
-    """
-  end
-
-  # Each hop with the checkpoint's weight for it read off the attention matrix.
-  defp hops_with_weights(hops, weights) do
-    Enum.map(hops, fn hop ->
-      Map.put(hop, :weight, weights |> Enum.at(hop.row) |> Enum.at(hop.column))
-    end)
   end
 
   # A row of signed floats as bars from a baseline, up for positive and down
