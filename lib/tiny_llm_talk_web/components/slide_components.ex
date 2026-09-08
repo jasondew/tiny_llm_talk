@@ -1152,12 +1152,12 @@ defmodule TinyLlmTalkWeb.SlideComponents do
         path="lib/tiny_llm/transformer.ex"
         range={118..120}
         step={@step}
-        focus={[3..3, 3..3, 3..3]}
+        focus={[1..1, 2..2, 3..3, 3..3]}
       />
-      <.step :if={@logits} n={2} step={@step} class="strip-stack strip-stack--tight">
+      <.step :if={@logits} n={3} step={@step} class="strip-stack strip-stack--tight">
         <.strips rows={[@logits]} labels={["logits, one score per word"]} cell={20} />
       </.step>
-      <.step n={3} step={@step} class="softmax-line">
+      <.step n={4} step={@step} class="softmax-line">
         <p class="formula">
           p = softmax(<span class="formula__group">logits / T</span>)
         </p>
@@ -1175,7 +1175,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
           <output class="dial__value">T = {:erlang.float_to_binary(@temperature, decimals: 2)}</output>
         </form>
       </.step>
-      <.step :if={@distribution} n={3} step={@step}>
+      <.step :if={@distribution} n={4} step={@step}>
         <.bars
           values={@distribution}
           words={Vocab.words()}

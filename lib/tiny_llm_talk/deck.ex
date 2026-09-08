@@ -337,7 +337,7 @@ defmodule TinyLlmTalk.Deck do
         %Slide{
           id: :back_to_words,
           title: "Thirty-two floats become thirty-two probabilities",
-          steps: 3,
+          steps: 4,
           notes: """
           = temperature: T = 1 is the raw softmax
           - Below 1 the top takes all
