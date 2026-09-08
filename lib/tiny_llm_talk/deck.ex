@@ -314,25 +314,8 @@ defmodule TinyLlmTalk.Deck do
           The picture from slide 4 again, with the 1, and the dashed box
           named: the block. Attention is done; what is left of the block is
           the two normalizations and the neural network, and the arrows
-          between them. The next slide is the block as code.
-          """
-        },
-        %Slide{
-          id: :block_code,
-          title: "Block.forward",
-          steps: 8,
-          notes: """
-          The whole block is one function, nine lines of work; the return
-          value, a map of every intermediate for training, is folded away.
-          The flow beside it is the diagram redrawn with the two adds in,
-          and the two skips down its right edge are x: the input carried
-          past normalization and attention to the first add, and that sum
-          carried past the second normalization and the network to the
-          second.
-          Step down it, one line and one box at a time: normalize, attend,
-          add the input back, normalize, the network, add again. The last
-          step shows it whole again. The next three slides take the lines
-          that are new one at a time.
+          between them. The next two slides take those two stages, then
+          the block as code.
           """
         },
         %Slide{
@@ -355,7 +338,7 @@ defmodule TinyLlmTalk.Deck do
           RMSNorm: no mean subtracted, no bias, which is the difference
           from LayerNorm, and the paper found the recentring buys nothing.
           Say, do not show: this runs twice per block, before attention and
-          before the network, lines 2 and 5 of the last slide.
+          before the network, lines 2 and 5 of the block, two slides on.
           """
         },
         %Slide{
@@ -367,23 +350,31 @@ defmodule TinyLlmTalk.Deck do
           thinks about what it gathered. 32 wide in, 128 hidden, 32 out.
           The hidden strip is four rows of thirty-two; the dark cells are
           the zeros the ReLU made, and there are a lot of them. Half the
-          parameters of the model are these two matrices.
+          parameters of the model are these two matrices. Next, the block
+          as code, with both stages in their places.
           """
         },
         %Slide{
-          id: :residual,
-          title: "The residual",
-          steps: 2,
+          id: :block_code,
+          title: "Block.forward",
+          steps: 8,
           notes: """
-          The block never replaces the row; it adds to it. First step: the
-          dogs row, what attention returned for it, and their sum; the sum
-          still looks like the row, with attention's contribution on top.
-          Second step: the same for the network. Why: a layer that can only
-          add starts out as the identity, so stacking a hundred of them
-          cannot lose the input, and every gradient has a straight path
-          back through the additions. This is the trick that made deep
-          networks trainable, and the transformer inherits it. Next: back
-          to words.
+          The whole block is one function, nine lines of work; the return
+          value, a map of every intermediate for training, is folded away.
+          The flow beside it is the diagram redrawn with the two adds in,
+          and the two skips down its right edge are x: the input carried
+          past normalization and attention to the first add, and that sum
+          carried past the second normalization and the network to the
+          second.
+          Step down it, one line and one box at a time: normalize, attend,
+          add the input back, normalize, the network, add again. The two
+          adds are the residual, and this is the only place they are
+          explained: the block never replaces the row, it adds to it. A
+          layer that can only add starts out as the identity, so stacking
+          a hundred of them cannot lose the input, and every gradient has
+          a straight path back through the additions. That is the trick
+          that made deep networks trainable, and the transformer inherits
+          it. The last step shows it whole again. Next: back to words.
           """
         }
       ]

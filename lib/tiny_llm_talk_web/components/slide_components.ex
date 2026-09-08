@@ -944,37 +944,6 @@ defmodule TinyLlmTalkWeb.SlideComponents do
     """
   end
 
-  def slide(%{slide: %Slide{id: :residual}} = assigns) do
-    assigns = assign(assigns, block: block_trace(), block_path: @block_path)
-
-    ~H"""
-    <section class="slide slide--tight">
-      <p class="slide__eyebrow">residual</p>
-      <p class="formula">
-        x + <span class="formula__group">f(x)</span>
-      </p>
-      <div>
-        <.code path={@block_path} range={213..221} step={@step} focus={[[4..4], [9..9]]} />
-      </div>
-      <div :if={@block} class="strip-stack">
-        <.step n={1} step={@step} class="aside-figure">
-          <.strips
-            rows={[@block.input, @block.attention, @block.residual]}
-            labels={["x", "attention(x)", "x + attention(x)"]}
-          />
-        </.step>
-        <.step n={2} step={@step} class="aside-figure">
-          <.strips
-            rows={[@block.residual, @block.mlp, @block.output]}
-            labels={["x + attention(x)", "mlp(x)", "x + attention(x) + mlp(x)"]}
-          />
-        </.step>
-      </div>
-      <.untrained :if={is_nil(@block)} what="This row" />
-    </section>
-    """
-  end
-
   # 7. Back to words --------------------------------------------------------
 
   def slide(%{slide: %Slide{id: :back_to_words}} = assigns) do
