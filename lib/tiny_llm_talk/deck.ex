@@ -315,8 +315,8 @@ defmodule TinyLlmTalk.Deck do
           named: the block. Embedding and attention wear ticks, the two
           stages covered so far; what is left of the block is
           the two normalizations and the neural network, and the arrows
-          between them. The next two slides take those two stages, then
-          the block as code.
+          between them. The next three slides take normalization, the
+          activation, and the network, then the block as code.
           """
         },
         %Slide{
@@ -347,25 +347,6 @@ defmodule TinyLlmTalk.Deck do
           """
         },
         %Slide{
-          id: :neural_network,
-          title: "The neural network",
-          steps: 3,
-          notes: """
-          The textbook picture first: three columns of nodes, every node
-          wired to every node in the next column, and every wire is one
-          learned float. 32 in, 128 hidden, 32 out; the dots stand for the
-          rest. A node is a weighted sum of the column before it plus a
-          bias, then the ReLU, which is the next slide. Per position, no
-          mixing between positions: attention gathered, this is where the
-          model thinks about what it gathered. Second step, the three
-          lines that do it: two matmuls with the bend between. Third, the
-          dogs row for real: 32 wide in, the hidden 128 as four rows of
-          thirty-two with the zeros the ReLU made dark, and there are a
-          lot of them, then 32 wide again. Half the parameters of the
-          model are these two matrices.
-          """
-        },
-        %Slide{
           id: :relu,
           title: "The activation",
           steps: 2,
@@ -377,7 +358,26 @@ defmodule TinyLlmTalk.Deck do
           single matrix and the network could only draw straight lines.
           Second step, the dogs row's 128 hidden floats before and after,
           on one scale: every bar that hung below the line is gone, and
-          the count says how many. Next, the block as code, with all
+          the count says how many. Next, the network it sits inside.
+          """
+        },
+        %Slide{
+          id: :neural_network,
+          title: "The neural network",
+          steps: 3,
+          notes: """
+          The textbook picture first: three columns of nodes, every node
+          wired to every node in the next column, and every wire is one
+          learned float. 32 in, 128 hidden, 32 out; the dots stand for the
+          rest. A node is a weighted sum of the column before it plus a
+          bias, then the ReLU from the last slide. Per position, no
+          mixing between positions: attention gathered, this is where the
+          model thinks about what it gathered. Second step, the three
+          lines that do it: two matmuls with the bend between. Third, the
+          dogs row for real: 32 wide in, the hidden 128 as four rows of
+          thirty-two with the zeros the ReLU made dark, and there are a
+          lot of them, then 32 wide again. Half the parameters of the
+          model are these two matrices. Next, the block as code, with all
           three stages in their places.
           """
         },
