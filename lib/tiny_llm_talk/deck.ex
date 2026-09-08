@@ -505,17 +505,20 @@ defmodule TinyLlmTalk.Deck do
         %Slide{
           id: :live_training,
           title: "Training",
-          steps: 5,
+          steps: 6,
           notes: """
-          Five beats, one a step. The corpus is sentences the grammar
+          The math first, for effect: the whole backward pass, every
+          gradient the nudge needs, derived by hand in the repo's backprop
+          notes with no autodiff to hide behind. Do not read it. Let them
+          look at how much of it there is, say it all fit in one file, and
+          then press on: the first step replaces it with five sentences,
+          which is all training is. The corpus is sentences the grammar
           wrote, two thousand of them, so every prefix comes with the word
           that really followed. Take a prefix; run the model for its 32
           probabilities; measure how surprised it was by the real word;
           nudge every number in the direction that makes the surprise
-          smaller; repeat a few hundred times. No chain rule here; the
-          nudges are derived by hand in the repo, with no autodiff to hide
-          behind, and the last slide of the deck has them written out with
-          the loss falling live, if there is time.
+          smaller; repeat a few hundred times. The loss falling live is
+          the last slide of the deck, if there is time.
           """
         }
       ]
@@ -565,7 +568,7 @@ defmodule TinyLlmTalk.Deck do
       number: 8,
       title: "If there is time",
       minutes: 3,
-      lands: "the loss falls live, beside every derivative that moves it",
+      lands: "the loss falls live",
       slides: [
         %Slide{
           id: :training_math,
@@ -578,14 +581,7 @@ defmodule TinyLlmTalk.Deck do
           two lines: it starts at knowing nothing, ln 32, and the dashed
           line is the best anything can do seeing only the previous word.
           The point lands when the curve goes well under the dashed line:
-          it is using information the previous word does not carry. The
-          column beside it is the whole backward pass, every gradient the
-          nudge needs, derived by hand in the repo's backprop notes: the
-          softmax and cross-entropy collapsing to p minus one-hot, the
-          two matmul rules, RMSNorm's row-scalar, the ReLU gate, the
-          residual sums, attention's Jacobian, the scatter back to the
-          tables, and the update. Do not read it. Let them look at how
-          much of it there is, and say that it all fit in one file.
+          it is using information the previous word does not carry.
           """
         }
       ]

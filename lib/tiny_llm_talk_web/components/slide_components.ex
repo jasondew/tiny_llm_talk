@@ -165,64 +165,89 @@ defmodule TinyLlmTalkWeb.SlideComponents do
     """
   end
 
+  # The nudges, written out: the whole backward pass, quoted from the repo's
+  # derivation. On screen first, for effect, then replaced by five sentences.
+  # Each line is markup the deck wrote, so it is rendered raw for the
+  # subscripts and transposes.
+  @backward [
+    {"loss", ["L = −(1/N) Σ<sub>t</sub> log p<sub>t</sub>[y<sub>t</sub>]"]},
+    {"output",
+     [
+       "dZ = (p − onehot(y)) / N",
+       "dW<sub>u</sub> = N<sub>3</sub><sup>T</sup> dZ &emsp; dN<sub>3</sub> = dZ W<sub>u</sub><sup>T</sup>"
+     ]},
+    {"rmsnorm",
+     [
+       "dg<sub>i</sub> = Σ<sub>t</sub> dy<sub>ti</sub> n<sub>ti</sub>",
+       "dx<sub>j</sub> = (dn<sub>j</sub> − n<sub>j</sub> · mean(dn ⊙ n)) / rms",
+       "∂(1/r) / ∂x<sub>j</sub> = −x<sub>j</sub> / (d r<sup>3</sup>)"
+     ]},
+    {"network",
+     [
+       "dW<sub>2</sub> = H<sup>T</sup> dY &emsp; dH = dY W<sub>2</sub><sup>T</sup>",
+       "dPre = dH ⊙ [Pre &gt; 0]",
+       "dW<sub>1</sub> = N<sub>2</sub><sup>T</sup> dPre &emsp; db = Σ<sub>t</sub> dPre<sub>t</sub>"
+     ]},
+    {"residual", ["dR = dY + dR<sub>norm2</sub>", "dX = dR + dX<sub>norm1</sub>"]},
+    {"attention",
+     [
+       "dA = dC V<sup>T</sup> &emsp; dV = A<sup>T</sup> dC",
+       "dM<sub>tj</sub> = A<sub>tj</sub> (dA<sub>tj</sub> − dA<sub>t</sub> · A<sub>t</sub>)",
+       "dU = dM / √d",
+       "dQ = dU K &emsp; dK = dU<sup>T</sup> Q",
+       "dW<sub>Q</sub> = X<sup>T</sup> dQ &emsp; dW<sub>K</sub> = X<sup>T</sup> dK",
+       "dW<sub>V</sub> = X<sup>T</sup> dV",
+       "dX = dQ W<sub>Q</sub><sup>T</sup> + dK W<sub>K</sub><sup>T</sup> + dV W<sub>V</sub><sup>T</sup>"
+     ]},
+    {"tables", ["dE[a<sub>t</sub>] += dX<sub>t</sub> &emsp; dP[t] += dX<sub>t</sub>"]},
+    {"update", ["θ ← θ − η ∂L/∂θ"]}
+  ]
+
   def slide(%{slide: %Slide{id: :live_training}} = assigns) do
     config = Trainer.checkpoint_config()
-    assigns = assign(assigns, corpus_size: Map.get(config, :training_corpus_size))
+
+    assigns =
+      assign(assigns,
+        corpus_size: Map.get(config, :training_corpus_size),
+        columns: Enum.chunk_every(@backward, 4)
+      )
 
     ~H"""
     <section class="slide">
       <h2 class="slide__title">Training</h2>
-      <ol class="beats beats--numbered">
-        <.step n={1} step={@step}>
-          <li>
-            Take a prefix from the corpus, where we know the next word.
-            <span :if={@corpus_size} class="beats__aside">
-              {format_count(@corpus_size)} sentences the grammar wrote
-            </span>
-          </li>
-        </.step>
-        <.step n={2} step={@step}>
+      <div :if={@step == 1} class="two-up two-up--lists">
+        <dl :for={column <- @columns} class="definitions definitions--math">
+          <%= for {stage, lines} <- column do %>
+            <dt>{stage}</dt>
+            <dd>
+              <span :for={line <- lines} class="definitions__line">{Phoenix.HTML.raw(line)}</span>
+            </dd>
+          <% end %>
+        </dl>
+      </div>
+      <ol :if={@step >= 2} class="beats beats--numbered">
+        <li>
+          Take a prefix from the corpus, where we know the next word.
+          <span :if={@corpus_size} class="beats__aside">
+            {format_count(@corpus_size)} sentences the grammar wrote
+          </span>
+        </li>
+        <.step n={3} step={@step}>
           <li>Run the model: 32 probabilities.</li>
         </.step>
-        <.step n={3} step={@step}>
+        <.step n={4} step={@step}>
           <li>Measure how surprised it was by the real word.</li>
         </.step>
-        <.step n={4} step={@step}>
+        <.step n={5} step={@step}>
           <li>Nudge every number in the direction that makes the surprise smaller.</li>
         </.step>
-        <.step n={5} step={@step}>
+        <.step n={6} step={@step}>
           <li>Repeat a few hundred times.</li>
         </.step>
       </ol>
     </section>
     """
   end
-
-  # The nudges, written out: the whole backward pass, quoted from the repo's
-  # derivation, beside the loss falling live.
-  @backward [
-    {"loss", ["L = −(1/N) Σₜ log p[t][yₜ]"]},
-    {"output", ["dZ = (p − onehot(y)) / N", "dWᵤ = N₃ᵀ dZ      dN₃ = dZ Wᵤᵀ"]},
-    {"rmsnorm",
-     [
-       "dgᵢ = Σₜ dyₜᵢ nₜᵢ",
-       "dxⱼ = (dnⱼ − nⱼ · mean(dn ⊙ n)) / rms",
-       "∂(1/r)/∂xⱼ = −xⱼ / (d r³)"
-     ]},
-    {"network",
-     ["dW₂ = Hᵀ dY      dH = dY W₂ᵀ", "dPre = dH ⊙ [Pre > 0]", "dW₁ = N₂ᵀ dPre    db = Σₜ dPreₜ"]},
-    {"residual", ["dR = dY + dR_norm2      dX = dR + dX_norm1"]},
-    {"attention",
-     [
-       "dA = dC Vᵀ      dV = Aᵀ dC",
-       "dM[t][j] = A[t][j] (dA[t][j] − dA[t] · A[t])",
-       "dU = dM / √d      dQ = dU K      dK = dUᵀ Q",
-       "dW_Q = Xᵀ dQ    dW_K = Xᵀ dK    dW_V = Xᵀ dV",
-       "dX = dQ W_Qᵀ + dK W_Kᵀ + dV W_Vᵀ"
-     ]},
-    {"tables", ["dE[aₜ] += dXₜ      dP[t] += dXₜ"]},
-    {"update", ["θ ← θ − η ∂L/∂θ"]}
-  ]
 
   def slide(%{slide: %Slide{id: :training_math}} = assigns) do
     trainer = assigns.trainer || Trainer.state()
@@ -234,8 +259,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
         losses: Trainer.losses(trainer),
         steps: config.steps,
         elapsed: elapsed(trainer),
-        final: final_loss(trainer),
-        backward: @backward
+        final: final_loss(trainer)
       )
 
     ~H"""
@@ -259,7 +283,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
           </p>
         </div>
       </div>
-      <div class="two-up two-up--training">
+      <div class="slide__fill figure-centred">
         <.loss_chart
           losses={@losses}
           knowing_nothing={Model.knowing_nothing()}
@@ -267,17 +291,9 @@ defmodule TinyLlmTalkWeb.SlideComponents do
           floor_label="the best any one-word model can do"
           series_label={"held-out loss, one block, seed #{config_seed(@trainer)}"}
           steps={@steps}
-          width={600}
-          height={380}
+          width={1000}
+          height={400}
         />
-        <dl class="definitions definitions--math">
-          <%= for {stage, lines} <- @backward do %>
-            <dt>{stage}</dt>
-            <dd>
-              <span :for={line <- lines} class="definitions__line">{line}</span>
-            </dd>
-          <% end %>
-        </dl>
       </div>
     </section>
     """

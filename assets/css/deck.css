@@ -485,16 +485,18 @@
   gap: 24px 40px;
 }
 
-/* The backward pass, dense on purpose: the point is how much of it there is. */
+/* The backward pass, dense on purpose: the point is how much of it there is.
+ * Set in the serif with real subscripts, so it reads as math, not code. */
 .definitions.definitions--math {
   grid-template-columns: 110px 1fr;
-  gap: 6px 16px;
+  gap: 6px 24px;
   align-items: start;
-  font-size: 15px;
+  font-size: 21px;
 }
 
 .definitions.definitions--math dt {
-  padding-top: 1px;
+  padding-top: 5px;
+  font-family: var(--mono);
   font-size: 14px;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -504,10 +506,14 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
-  font-family: var(--mono);
+  font-family: var(--serif);
   color: var(--ink);
-  line-height: 1.4;
-  white-space: pre;
+  line-height: 1.35;
+}
+
+.definitions.definitions--math sub,
+.definitions.definitions--math sup {
+  font-size: 0.65em;
 }
 
 .beats--numbered li::before {
