@@ -971,10 +971,12 @@ defmodule TinyLlmTalkWeb.SlideComponents do
           _ -> "A network is layers, one feeding the next"
         end}
       </h2>
-      <div class="two-up two-up--lists mlp">
-        <.node_graph :if={@step == 1} />
-        <.layer_graph :if={@step == 2} />
-        <.mlp_graph :if={@step >= 3} />
+      <div :if={@step >= 2} class="slide__fill idea-figure">
+        <.layer_graph :if={@step == 2} class="mlp-graph--wide" />
+        <.mlp_graph :if={@step >= 3} class="mlp-graph--wide" />
+      </div>
+      <div :if={@step == 1} class="two-up two-up--lists mlp">
+        <.node_graph />
         <div class="dot__arithmetic node-sum">
           <p class="row-caption">one node, by hand</p>
           <.vector label="x, the inputs" values={@inputs} cell={64} class="vector--a" />
@@ -1927,6 +1929,8 @@ defmodule TinyLlmTalkWeb.SlideComponents do
     {500, "out (32)", [40, 85, 215, 260], "output"}
   ]
 
+  attr :class, :string, default: nil
+
   defp mlp_graph(assigns) do
     [input, hidden, output] = @mlp_columns
 
@@ -1937,7 +1941,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
       )
 
     ~H"""
-    <svg class="mlp-graph" viewBox="0 0 560 300" width="560" height="300">
+    <svg class={["mlp-graph", @class]} viewBox="0 0 560 300" width="560" height="300">
       <line
         :for={{x1, y1, x2, y2} <- @wires}
         x1={x1}
@@ -2002,6 +2006,8 @@ defmodule TinyLlmTalkWeb.SlideComponents do
   # node with its own weight; six outputs.
   @layer_node_ys [40, 84, 128, 172, 216, 260]
 
+  attr :class, :string, default: nil
+
   defp layer_graph(assigns) do
     assigns =
       assign(assigns,
@@ -2011,7 +2017,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
       )
 
     ~H"""
-    <svg class="mlp-graph" viewBox="0 0 560 300" width="560" height="300">
+    <svg class={["mlp-graph", @class]} viewBox="0 0 560 300" width="560" height="300">
       <line :for={{y1, y2} <- @wires} x1="80" y1={y1} x2="330" y2={y2} class="mlp-graph__wire" />
       <%= for {y, index} <- @inputs do %>
         <circle cx="80" cy={y} r="11" class="mlp-graph__node mlp-graph__node--input" />

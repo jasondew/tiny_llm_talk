@@ -685,6 +685,18 @@
   gap: 6px;
 }
 
+/* With nothing beside it, a graph takes the width of the slide. */
+.idea-figure {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mlp-graph--wide {
+  width: 900px;
+  height: auto;
+}
+
 .mlp-graph__wire {
   stroke: var(--rule);
   stroke-width: 1;
