@@ -436,15 +436,18 @@ defmodule TinyLlmTalk.Deck do
         %Slide{
           id: :back_to_words,
           title: "Thirty-two floats become thirty-two probabilities",
+          steps: 4,
           notes: """
-          One more weighted sum takes the last row from 32 wide to 32
-          scores, one per word: the logits, the strip under the code. Then
+          Four steps. First the code: one more norm, then one more
+          weighted sum takes the last row from 32 wide to 32 scores, one
+          per word. Second, those scores: the logits, as a strip. Third,
           the softmax from the math break, with one new knob: divide the
           logits by a temperature first. T of one is the raw softmax. Drag
           it down and the top word takes everything, since dividing by a
           small number stretches the gaps before the exponential; drag it
-          up and the bars flatten toward equal. Bars for the probe: flees
-          is the top of all thirty-two. The dial carries to the next slide.
+          up and the bars flatten toward equal. Fourth, the bars for the
+          probe: flees is the top of all thirty-two. The dial carries to
+          the next slide.
           """
         },
         %Slide{

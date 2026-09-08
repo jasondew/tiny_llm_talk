@@ -1302,6 +1302,15 @@
 
 /* Content-width, or the grid's auto label column swallows the slack and the
  * cells slide to the right. */
+/* Strips with the slide to themselves: bigger cells, readable labels. */
+.strip-stack--big {
+  gap: 14px;
+}
+
+.strip-stack--big .heatmap__row-label {
+  font-size: 17px;
+}
+
 .strip-stack--tight {
   align-items: flex-start;
   gap: 4px;

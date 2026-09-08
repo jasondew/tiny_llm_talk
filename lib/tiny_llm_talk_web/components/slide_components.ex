@@ -1004,16 +1004,18 @@ defmodule TinyLlmTalkWeb.SlideComponents do
         ReLU(<span class="formula__group">x W<sub>1</sub> + b<sub>1</sub></span>) W<sub>2</sub>
         + b<sub>2</sub>
       </p>
-      <.code path={@block_path} range={218..220} step={@step} />
-      <.step :if={@block} n={2} step={@step} class="strip-stack">
+      <div>
+        <.code path={@block_path} range={218..220} step={@step} />
+      </div>
+      <.step :if={@block} n={2} step={@step} class="strip-stack strip-stack--big">
         <p class="row-caption">the dogs row</p>
-        <.strips rows={[@block.norm2]} labels={["x, 32 wide"]} cell={16} />
+        <.strips rows={[@block.norm2]} labels={["x, 32 wide"]} cell={28} />
         <.strips
           rows={Enum.chunk_every(@block.hidden, 32)}
           labels={["ReLU(x W₁ + b₁), 128 wide", "", "", "#{zeros(@block.hidden)} of them zero"]}
-          cell={16}
+          cell={28}
         />
-        <.strips rows={[@block.mlp]} labels={["hidden W₂ + b₂, 32 wide again"]} cell={16} />
+        <.strips rows={[@block.mlp]} labels={["hidden W₂ + b₂, 32 wide again"]} cell={28} />
       </.step>
       <.untrained :if={is_nil(@block)} what="This row" />
     </section>
@@ -1080,11 +1082,16 @@ defmodule TinyLlmTalkWeb.SlideComponents do
       <h2 class="slide__title slide__title--small">
         Thirty-two floats become thirty-two probabilities
       </h2>
-      <.code path="lib/tiny_llm/transformer.ex" range={118..120} step={@step} focus={[3..3]} />
-      <div :if={@logits} class="strip-stack strip-stack--tight">
+      <.code
+        path="lib/tiny_llm/transformer.ex"
+        range={118..120}
+        step={@step}
+        focus={[3..3, 3..3, 3..3, 3..3]}
+      />
+      <.step :if={@logits} n={2} step={@step} class="strip-stack strip-stack--tight">
         <.strips rows={[@logits]} labels={["logits, one score per word"]} cell={20} />
-      </div>
-      <div class="softmax-line">
+      </.step>
+      <.step n={3} step={@step} class="softmax-line">
         <p class="formula">
           p = softmax(<span class="formula__group">logits / T</span>)
         </p>
@@ -1101,15 +1108,16 @@ defmodule TinyLlmTalkWeb.SlideComponents do
           />
           <output class="dial__value">T = {:erlang.float_to_binary(@temperature, decimals: 2)}</output>
         </form>
-      </div>
-      <.bars
-        :if={@distribution}
-        values={@distribution}
-        words={Vocab.words()}
-        top={5}
-        highlight={~w(flees)}
-        class="bars--compact"
-      />
+      </.step>
+      <.step :if={@distribution} n={4} step={@step}>
+        <.bars
+          values={@distribution}
+          words={Vocab.words()}
+          top={5}
+          highlight={~w(flees)}
+          class="bars--compact"
+        />
+      </.step>
       <.untrained :if={is_nil(@distribution)} what="This distribution" />
     </section>
     """
