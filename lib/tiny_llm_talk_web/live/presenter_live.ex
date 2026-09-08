@@ -98,9 +98,21 @@ defmodule TinyLlmTalkWeb.PresenterLive do
             />
           </div>
         </div>
-        <div class="presenter__next">
-          <p class="presenter__label">next</p>
-          <p class="presenter__next-title">{@upcoming && @upcoming.title}</p>
+        <div :if={@next} class="presenter__next">
+          <p class="presenter__label">
+            next: {next_label(@slide, @step, @next)}
+          </p>
+          <div class="stage-preview stage-preview--next">
+            <div class="stage stage--preview stage--preview-next">
+              <SlideComponents.slide
+                slide={elem(@next, 0)}
+                step={elem(@next, 1)}
+                controls={@controls}
+                trainer={@trainer}
+                frame={0}
+              />
+            </div>
+          </div>
         </div>
       </div>
       <div class="presenter__aside">
@@ -111,7 +123,19 @@ defmodule TinyLlmTalkWeb.PresenterLive do
           {@section.number}. {@section.title} &middot; {@section.minutes} min &middot; slide {@slide.index} of {Deck.count()} &middot; step {@step} of {@slide.steps}
         </p>
         <p class="presenter__lands">must land: {@section.lands}</p>
-        <p class="presenter__notes">{Slide.prose(@slide)}</p>
+        <div class="presenter__notes">
+          <%= for block <- Slide.blocks(@slide) do %>
+            <ul :if={elem(block, 0) == :bullets} class="presenter__bullets">
+              <li :for={item <- elem(block, 1)}>{item}</li>
+            </ul>
+            <dl :if={elem(block, 0) == :definitions} class="presenter__defs">
+              <%= for {term, text} <- elem(block, 1) do %>
+                <dt>{term}</dt>
+                <dd>{text}</dd>
+              <% end %>
+            </dl>
+          <% end %>
+        </div>
         <p class="presenter__training">training {@trainer.status}</p>
         <p class="presenter__keys">
           space/arrows move &middot; t pauses the clock &middot; r resets it &middot; click the preview to run a demo
@@ -123,14 +147,24 @@ defmodule TinyLlmTalkWeb.PresenterLive do
 
   ## PRIVATE FUNCTIONS
 
+  # What the next press of the right arrow shows: the next step of this
+  # slide, or the first step of the next one, or nothing at the end.
   defp assign_upcoming(socket) do
-    index = socket.assigns.slide.index
+    here = {socket.assigns.slide.index, socket.assigns.step}
 
-    assign(socket,
-      upcoming: if(index < Deck.count(), do: Deck.at(index + 1)),
-      section: Deck.section(socket.assigns.slide)
-    )
+    next =
+      case Deck.move("ArrowRight", here, &SlideComponents.steps/1) do
+        ^here -> nil
+        {index, step} -> {Deck.at(index), step}
+      end
+
+    assign(socket, next: next, section: Deck.section(socket.assigns.slide))
   end
+
+  defp next_label(slide, _step, {next_slide, next_step}) when next_slide.index == slide.index,
+    do: "step #{next_step} of #{slide.steps}"
+
+  defp next_label(_slide, _step, {next_slide, _next_step}), do: next_slide.title
 
   # The minutes the outline says should have passed by the end of this section.
   defp budget(section) do

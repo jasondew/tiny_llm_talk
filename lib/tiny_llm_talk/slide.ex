@@ -23,15 +23,65 @@ defmodule TinyLlmTalk.Slide do
           ticks: boolean()
         }
 
-  @doc """
-  The notes as one paragraph.
+  @typedoc "A run of bullets, or a run of term and definition pairs."
+  @type block :: {:bullets, [String.t()]} | {:definitions, [{String.t(), String.t()}]}
 
-  They are written as heredocs wrapped to the width of the source file, and a
-  speaker glancing down mid-sentence should not be reading someone else's line
-  breaks.
+  @doc """
+  The notes as blocks for the presenter: a line starting with `- ` is a
+  bullet, a line starting with `= ` is a definition, `term: what it means`,
+  and any other line continues the item before it. Consecutive items of one
+  kind are grouped, so the presenter can draw a list, then a glossary, then a
+  list again.
+  """
+  @spec blocks(t()) :: [block()]
+  def blocks(%__MODULE__{notes: notes}) do
+    notes
+    |> String.split("\n")
+    |> Enum.map(&String.trim/1)
+    |> Enum.reject(&(&1 == ""))
+    |> Enum.reduce([], &add_line/2)
+    |> Enum.reverse()
+    |> Enum.map(fn {kind, items} -> {kind, Enum.reverse(items)} end)
+  end
+
+  @doc """
+  The notes as one paragraph, for the stub and for checking a slide has any.
   """
   @spec prose(t()) :: String.t()
-  def prose(%__MODULE__{notes: notes}) do
-    notes |> String.replace(~r/\s+/, " ") |> String.trim()
+  def prose(slide) do
+    slide
+    |> blocks()
+    |> Enum.flat_map(fn
+      {:bullets, items} -> items
+      {:definitions, pairs} -> Enum.map(pairs, fn {term, text} -> term <> ": " <> text end)
+    end)
+    |> Enum.join(" ")
+  end
+
+  ## PRIVATE FUNCTIONS
+
+  defp add_line("- " <> text, [{:bullets, items} | rest]), do: [{:bullets, [text | items]} | rest]
+  defp add_line("- " <> text, blocks), do: [{:bullets, [text]} | blocks]
+
+  defp add_line("= " <> text, [{:definitions, pairs} | rest]),
+    do: [{:definitions, [definition(text) | pairs]} | rest]
+
+  defp add_line("= " <> text, blocks), do: [{:definitions, [definition(text)]} | blocks]
+
+  # A line with no marker continues whatever came before it, or opens a
+  # bullet when nothing did.
+  defp add_line(text, [{:bullets, [last | items]} | rest]),
+    do: [{:bullets, [last <> " " <> text | items]} | rest]
+
+  defp add_line(text, [{:definitions, [{term, last} | pairs]} | rest]),
+    do: [{:definitions, [{term, last <> " " <> text} | pairs]} | rest]
+
+  defp add_line(text, []), do: [{:bullets, [text]}]
+
+  defp definition(text) do
+    case String.split(text, ": ", parts: 2) do
+      [term, meaning] -> {term, meaning}
+      [term] -> {term, ""}
+    end
   end
 end

@@ -59,6 +59,17 @@
   border: 1px solid var(--rule);
 }
 
+/* What the next press shows, smaller than the slide the room is on. */
+.stage--preview-next {
+  --stage-scale: 0.3;
+}
+
+.stage-preview--next {
+  width: calc(1280px * 0.3);
+  height: calc(720px * 0.3);
+  opacity: 0.85;
+}
+
 /* Slides ----------------------------------------------------------------- */
 
 .slide {
@@ -273,11 +284,15 @@
   left: 64px;
   right: 64px;
   bottom: 16px;
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   font-family: var(--mono);
   font-size: 14px;
-  color: var(--ink-dim);
+  color: color-mix(in oklab, var(--ink-dim) 55%, var(--paper));
+}
+
+.deck-footer__position {
+  text-align: right;
 }
 
 /* The stub every unwritten slide falls through to ------------------------ */
@@ -359,13 +374,50 @@
 .presenter__notes {
   flex: 1;
   overflow-y: auto;
-  font-size: 26px;
-  line-height: 1.5;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  font-size: 23px;
+  line-height: 1.4;
 }
 
-.presenter__next-title {
-  font-family: var(--serif);
-  font-size: 26px;
+.presenter__bullets {
+  margin: 0;
+  padding-left: 1.1em;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.presenter__bullets li::marker {
+  color: var(--accent);
+}
+
+.presenter__defs {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 6px 18px;
+  margin: 0;
+  padding: 10px 14px;
+  border-left: 3px solid var(--accent-cool);
+  background: var(--paper-raised);
+}
+
+.presenter__defs dt {
+  font-family: var(--mono);
+  font-size: 0.8em;
+  padding-top: 3px;
+  color: var(--accent-cool);
+}
+
+.presenter__defs dd {
+  margin: 0;
+}
+
+.presenter__next {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .presenter__keys {
