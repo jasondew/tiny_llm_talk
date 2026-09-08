@@ -971,22 +971,68 @@ defmodule TinyLlmTalkWeb.SlideComponents do
 
     ~H"""
     <section class="slide slide--tight">
-      <p class="slide__eyebrow">neural network &middot; MLP</p>
+      <p class="slide__eyebrow">neural network &middot; MLP, a multilayer perceptron</p>
       <p class="formula">
         ReLU(<span class="formula__group">x W<sub>1</sub> + b<sub>1</sub></span>) W<sub>2</sub>
         + b<sub>2</sub>
       </p>
-      <div>
-        <.code path={@block_path} range={213..221} step={@step} focus={[[6..8]]} />
+      <div class="two-up two-up--lists mlp">
+        <.mlp_graph />
+        <.step :if={@block} n={3} step={@step} class="strip-stack mlp__real">
+          <p class="row-caption">the dogs row</p>
+          <.strips rows={[@block.norm2]} labels={["x · 32 wide"]} cell={11} />
+          <.strips
+            rows={Enum.chunk_every(@block.hidden, 32)}
+            labels={["ReLU(x W₁ + b₁) · 128 wide", "", "", "#{zeros(@block.hidden)} of them zero"]}
+            cell={11}
+          />
+          <.strips rows={[@block.mlp]} labels={["· W₂ + b₂ · 32 wide again"]} cell={11} />
+        </.step>
       </div>
-      <div :if={@block} class="strip-stack">
-        <.strips rows={[@block.norm2]} labels={["x · 32 wide"]} />
-        <.strips
-          rows={Enum.chunk_every(@block.hidden, 32)}
-          labels={["ReLU(x W₁ + b₁) · 128 wide", "", "", "#{zeros(@block.hidden)} of them zero"]}
-        />
-        <.strips rows={[@block.mlp]} labels={["· W₂ + b₂ · 32 wide again"]} />
+      <.step n={2} step={@step}>
+        <.code path={@block_path} range={218..220} step={@step} />
+      </.step>
+      <.untrained :if={is_nil(@block)} what="This row" />
+    </section>
+    """
+  end
+
+  def slide(%{slide: %Slide{id: :relu}} = assigns) do
+    block = block_trace()
+
+    assigns =
+      assign(assigns,
+        block: block,
+        peak: block && spark_peak([block.pre]),
+        zeros: block && zeros(block.hidden)
+      )
+
+    ~H"""
+    <section class="slide slide--tight">
+      <p class="slide__eyebrow">activation &middot; ReLU, a rectified linear unit</p>
+      <p class="formula">
+        ReLU(z) = <span class="formula__group">max(0, z)</span>
+      </p>
+      <div class="two-up two-up--lists relu">
+        <.relu_graph />
+        <dl class="definitions definitions--formula">
+          <dt>z &lt; 0</dt>
+          <dd>becomes 0</dd>
+          <dt>z &ge; 0</dt>
+          <dd>passes through unchanged</dd>
+          <dt>the bend</dt>
+          <dd>without it, W<sub>1</sub> then W<sub>2</sub> is just one matrix</dd>
+        </dl>
       </div>
+      <.step :if={@block} n={2} step={@step} class="relu__real">
+        <p class="row-caption">the dogs row's 128 hidden floats</p>
+        <div class="signed-rows">
+          <span class="signed-rows__label">x W₁ + b₁</span>
+          <.signed_spark values={@block.pre} peak={@peak} />
+          <span class="signed-rows__label">ReLU &middot; {@zeros} of 128 now zero</span>
+          <.signed_spark values={@block.hidden} peak={@peak} />
+        </div>
+      </.step>
       <.untrained :if={is_nil(@block)} what="This row" />
     </section>
     """
@@ -1848,6 +1894,139 @@ defmodule TinyLlmTalkWeb.SlideComponents do
       cell={3}
       class="heatmap--compact heatmap--bare"
     />
+    """
+  end
+
+  # The network as the textbook draws it: three columns of nodes, every node
+  # wired to every node in the next column. A few nodes stand for each layer;
+  # the dots say there are more. Each wire is one float in W1 or W2.
+  @mlp_columns [
+    {60, "x · 32", [40, 85, 215, 260], "input"},
+    {280, "hidden · 128 · ReLU", [30, 75, 120, 180, 225, 270], "hidden"},
+    {500, "out · 32", [40, 85, 215, 260], "output"}
+  ]
+
+  defp mlp_graph(assigns) do
+    [input, hidden, output] = @mlp_columns
+
+    assigns =
+      assign(assigns,
+        columns: @mlp_columns,
+        wires: wires(input, hidden) ++ wires(hidden, output)
+      )
+
+    ~H"""
+    <svg class="mlp-graph" viewBox="0 0 560 300" width="560" height="300">
+      <line
+        :for={{x1, y1, x2, y2} <- @wires}
+        x1={x1}
+        y1={y1}
+        x2={x2}
+        y2={y2}
+        class="mlp-graph__wire"
+      />
+      <%= for {x, label, ys, kind} <- @columns do %>
+        <text x={x} y="14" class="mlp-graph__label">{label}</text>
+        <circle
+          :for={y <- ys}
+          cx={x}
+          cy={y}
+          r="11"
+          class={"mlp-graph__node mlp-graph__node--#{kind}"}
+        />
+        <text x={x} y="156" class="mlp-graph__dots">&#8942;</text>
+      <% end %>
+      <text x="170" y="295" class="mlp-graph__weights">
+        W<tspan baseline-shift="sub">1</tspan>
+        · 32 × 128, + b<tspan baseline-shift="sub">1</tspan>
+      </text>
+      <text x="390" y="295" class="mlp-graph__weights">
+        W<tspan baseline-shift="sub">2</tspan>
+        · 128 × 32, + b<tspan baseline-shift="sub">2</tspan>
+      </text>
+    </svg>
+    """
+  end
+
+  defp wires({x1, _label1, ys1, _kind1}, {x2, _label2, ys2, _kind2}) do
+    for y1 <- ys1, y2 <- ys2, do: {x1, y1, x2, y2}
+  end
+
+  # ReLU as a graph: flat at zero on the left, the identity on the right,
+  # the bend at the origin. Three units each way, sixty pixels a unit.
+  defp relu_graph(assigns) do
+    ~H"""
+    <svg class="relu-graph" viewBox="0 0 420 270" width="420" height="270">
+      <line x1="20" y1="225" x2="400" y2="225" class="relu-graph__axis" />
+      <line x1="210" y1="255" x2="210" y2="20" class="relu-graph__axis" />
+      <%= for unit <- [-3, -2, -1, 1, 2, 3] do %>
+        <text x={210 + unit * 60} y="245" class="relu-graph__tick">{unit}</text>
+      <% end %>
+      <%= for unit <- [1, 2, 3] do %>
+        <text x="198" y={225 - unit * 60 + 5} class="relu-graph__tick relu-graph__tick--y">
+          {unit}
+        </text>
+      <% end %>
+      <polyline points="30,225 210,225" class="relu-graph__line relu-graph__line--flat" />
+      <polyline points="210,225 390,45" class="relu-graph__line" />
+      <text x="392" y="232" class="relu-graph__name">z</text>
+      <text x="222" y="30" class="relu-graph__name">ReLU(z)</text>
+    </svg>
+    """
+  end
+
+  # A row of signed floats as bars from a baseline, up for positive and down
+  # for negative, on a shared scale so a row before and after the ReLU can be
+  # compared. A value at exactly zero leaves a faint stub, so the room can
+  # see the ReLU set it rather than a bar too small to draw.
+  attr :values, :list, required: true
+  attr :peak, :float, required: true
+
+  defp signed_spark(assigns) do
+    count = length(assigns.values)
+    slot = 900 / count
+
+    assigns =
+      assign(assigns,
+        bars:
+          Enum.with_index(assigns.values, fn value, index ->
+            height = abs(value) / max(assigns.peak, 1.0e-9) * 34
+            x = index * slot
+            {x, value, height}
+          end),
+        width: max(slot - 2, 1)
+      )
+
+    ~H"""
+    <svg class="signed-spark" viewBox="0 0 900 80" width="900" height="80">
+      <line x1="0" y1="40" x2="900" y2="40" class="signed-spark__baseline" />
+      <%= for {x, value, height} <- @bars do %>
+        <rect
+          :if={value > 0}
+          x={x}
+          y={40 - height}
+          width={@width}
+          height={height}
+          class="signed-spark__bar signed-spark__bar--up"
+        />
+        <rect
+          :if={value < 0}
+          x={x}
+          y="40"
+          width={@width}
+          height={height}
+          class="signed-spark__bar signed-spark__bar--down"
+        />
+        <rect
+          :if={value == 0}
+          x={x}
+          y="39"
+          width={@width}
+          height="2"
+          class="signed-spark__bar signed-spark__bar--zero"
+        />
+      <% end %>
+    </svg>
     """
   end
 

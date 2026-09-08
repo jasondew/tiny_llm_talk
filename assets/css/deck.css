@@ -668,6 +668,121 @@
   align-items: center;
 }
 
+/* The network as a node graph, and the ReLU as a graph. */
+.mlp {
+  grid-template-columns: 560px 1fr;
+  align-items: center;
+}
+
+.mlp__real {
+  gap: 6px;
+}
+
+.mlp-graph__wire {
+  stroke: var(--rule);
+  stroke-width: 1;
+}
+
+.mlp-graph__node {
+  fill: var(--paper-raised);
+  stroke: var(--ink-dim);
+  stroke-width: 1.5;
+}
+
+.mlp-graph__node--hidden {
+  stroke: var(--accent-cool);
+}
+
+.mlp-graph__label,
+.mlp-graph__weights,
+.mlp-graph__dots {
+  font-family: var(--mono);
+  font-size: 14px;
+  fill: var(--ink-dim);
+  text-anchor: middle;
+}
+
+.mlp-graph__dots {
+  font-size: 20px;
+  fill: var(--ink);
+}
+
+.relu {
+  grid-template-columns: 420px 1fr;
+  align-items: center;
+}
+
+.relu-graph__axis {
+  stroke: var(--ink-dim);
+  stroke-width: 1;
+}
+
+.relu-graph__tick {
+  font-family: var(--mono);
+  font-size: 12px;
+  fill: var(--ink-dim);
+  text-anchor: middle;
+}
+
+.relu-graph__tick--y {
+  text-anchor: end;
+}
+
+.relu-graph__line {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 4;
+  stroke-linecap: round;
+}
+
+.relu-graph__line--flat {
+  stroke: var(--ink-dim);
+}
+
+.relu-graph__name {
+  font-family: var(--serif);
+  font-size: 20px;
+  fill: var(--ink);
+}
+
+.relu__real {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.signed-rows {
+  display: grid;
+  grid-template-columns: auto 900px;
+  align-items: center;
+  gap: 4px 16px;
+}
+
+.signed-rows__label {
+  font-family: var(--mono);
+  font-size: 14px;
+  color: var(--ink-dim);
+  text-align: right;
+  white-space: nowrap;
+}
+
+.signed-spark__baseline {
+  stroke: var(--rule);
+  stroke-width: 1;
+}
+
+.signed-spark__bar--up {
+  fill: var(--accent);
+}
+
+.signed-spark__bar--down {
+  fill: var(--ink-dim);
+}
+
+.signed-spark__bar--zero {
+  fill: var(--rule);
+}
+
 /* Normalization: the why on the left, the arithmetic on the right. */
 .rmsnorm {
   grid-template-columns: 1fr 1fr;

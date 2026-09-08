@@ -20,7 +20,7 @@ defmodule TinyLlmTalk.Model do
   # Bump when the shape of a trace changes. The Agent outlives a code reload
   # in development, and a memoized trace of the old shape would otherwise be
   # handed to a slide expecting the new one.
-  @trace_shape 4
+  @trace_shape 5
   @corpus_size 2_000
   @probe_corpus_size 20_000
   @floor_corpus_size 50_000
@@ -266,6 +266,7 @@ defmodule TinyLlmTalk.Model do
               residual: List.last(cache.block.residual),
               norm2: List.last(cache.block.norm2.output),
               rms2: List.last(cache.block.norm2.rms),
+              pre: List.last(cache.block.pre),
               hidden: List.last(cache.block.hidden),
               mlp: List.last(cache.block.mlp),
               output: List.last(cache.block.output),
