@@ -90,9 +90,6 @@ defmodule TinyLlmTalkWeb.PresenterLive do
     ~H"""
     <div class="presenter" phx-window-keydown="key">
       <div class="presenter__head">
-        <p class="presenter__clock">
-          {format_clock(@elapsed)} <span class="presenter__budget">of {budget(@section)}</span>
-        </p>
         <div class="presenter__where">
           <p class="presenter__label">
             {@section.number}. {@section.title} &middot; {@section.minutes} min &middot; slide {@slide.index} of {Deck.count()} &middot; step {@step} of {@slide.steps}
@@ -101,8 +98,11 @@ defmodule TinyLlmTalkWeb.PresenterLive do
             training {@trainer.status} &middot; space/arrows move &middot; t pauses &middot; r resets &middot; click a preview to drive it
           </p>
         </div>
-        <p class="presenter__lands">must land: {@section.lands}</p>
+        <p class="presenter__clock">
+          {format_clock(@elapsed)} <span class="presenter__budget">of {budget(@section)}</span>
+        </p>
       </div>
+      <p class="presenter__lands">{@section.lands}</p>
       <div class="presenter__current">
         <div class="stage-preview">
           <div class="stage stage--preview">

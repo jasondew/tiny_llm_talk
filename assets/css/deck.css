@@ -335,25 +335,26 @@
     tan(atan2(100vh - 500px, 720px))
   );
   --next-scale: min(
-    tan(atan2(100vh - 720px * var(--presenter-scale) - 134px, 720px)),
+    tan(atan2(100vh - 720px * var(--presenter-scale) - 160px, 720px)),
     tan(atan2(50vw, 1280px)),
     calc(var(--presenter-scale) * 0.9)
   );
   position: fixed;
   inset: 0;
   display: grid;
-  grid-template-rows: auto auto minmax(0, 1fr);
-  gap: 14px;
+  grid-template-rows: auto auto auto minmax(0, 1fr);
+  gap: 12px;
   padding: 16px 32px;
   background: var(--paper);
   color: var(--ink);
   font-family: var(--sans);
 }
 
-/* The clock, where the talk is, and what the section must land, in a row. */
+/* The clock and where the talk is, in a row; what the section must land on
+ * its own line under them, full width. */
 .presenter__head {
   display: grid;
-  grid-template-columns: auto auto minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) auto;
   gap: 32px;
   align-items: center;
 }
@@ -395,6 +396,7 @@
   font-family: var(--mono);
   font-size: 40px;
   line-height: 1;
+  text-align: right;
   color: var(--accent);
 }
 
@@ -407,7 +409,7 @@
 
 .presenter__lands {
   font-family: var(--serif);
-  font-size: 17px;
+  font-size: 20px;
   color: var(--accent-cool);
 }
 
