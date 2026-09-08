@@ -930,15 +930,25 @@
   gap: 24px 32px;
 }
 
+/* Boxes down the first column; the two skips that carry x past a stage to
+ * its add sit in the second, spanning the grid rows of the boxes they join. */
 .flow {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
+  display: grid;
+  grid-template-columns: 240px 20px;
+  grid-auto-flow: row;
+  justify-items: center;
+  gap: 2px 0;
   margin-top: -18px;
 }
 
+.flow__box,
+.flow__arrow {
+  grid-column: 1;
+}
+
 .flow__box {
+  position: relative;
+  z-index: 1;
   box-sizing: border-box;
   width: 240px;
   padding: 8px 12px;
@@ -980,6 +990,57 @@
   font-size: 14px;
   line-height: 1;
   color: var(--ink-dim);
+}
+
+.flow__skip {
+  position: relative;
+  z-index: 0;
+  grid-column: 2;
+  box-sizing: border-box;
+  justify-self: start;
+  width: 34px;
+  margin: 20px 0 19px -20px;
+  border: 1px solid var(--ink-dim);
+  border-left: none;
+  border-radius: 0 8px 8px 0;
+  padding: 2px 4px 0 0;
+  text-align: right;
+  font-family: var(--mono);
+  font-size: 12px;
+  line-height: 1;
+  color: var(--ink-dim);
+  transition: opacity 200ms ease, border-color 200ms ease;
+}
+
+.flow__skip::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -5px;
+  border-top: 4px solid transparent;
+  border-bottom: 4px solid transparent;
+  border-right: 7px solid var(--ink-dim);
+}
+
+.flow__skip--first {
+  grid-row: 1 / 8;
+}
+
+.flow__skip--second {
+  grid-row: 7 / 14;
+}
+
+.flow--stepping .flow__skip:not(.flow__skip--lit) {
+  opacity: 0.28;
+}
+
+.flow__skip--lit {
+  border-color: var(--ink);
+  color: var(--ink);
+}
+
+.flow__skip--lit::after {
+  border-right-color: var(--ink);
 }
 
 .two-up__aside {

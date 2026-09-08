@@ -516,7 +516,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
             <th>K</th>
             <th class={@step < 2 && "fuzzy--hidden"}>Q · K</th>
             <th class={@step < 3 && "fuzzy--hidden"}>softmax(Q · K / √d) (weight)</th>
-            <th>V (0 := singular, 1 := plural)</th>
+            <th>V (0 singular, 1 plural)</th>
             <th class={@step < 4 && "fuzzy--hidden"}>weight &times; V</th>
           </tr>
         </thead>
@@ -895,7 +895,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
         </.step>
         <.step n={2} step={@step}>
           <dt>rms(x) = √mean(x²)</dt>
-          <dd>root mean square: square each float, average them, take the root · here {@rms}</dd>
+          <dd>root mean square: square each float, average them, take the root</dd>
         </.step>
         <.step n={3} step={@step}>
           <dt>x / rms(x) · g</dt>
@@ -966,7 +966,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
         <.step n={2} step={@step} class="aside-figure">
           <.strips
             rows={[@block.residual, @block.mlp, @block.output]}
-            labels={["x", "mlp(x)", "x + mlp(x)"]}
+            labels={["x + attention(x)", "mlp(x)", "x + attention(x) + mlp(x)"]}
           />
         </.step>
       </div>
@@ -1169,7 +1169,6 @@ defmodule TinyLlmTalkWeb.SlideComponents do
         <span class="word word--answer">flees</span>, at {format_percent(@flees)}: the highest
         of all thirty-two words.
       </p>
-      <p class="slide__note">github.com/jasondew/tiny_llm</p>
     </section>
     """
   end
@@ -1219,7 +1218,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
     assigns =
       assign(assigns,
         frame: frame,
-        pace: Controls.choice(assigns.controls, "pace", "normal"),
+        pace: Controls.choice(assigns.controls, "pace", "pause"),
         parameters: format_count(Model.parameter_count()),
         last_chip: frame && length(frame.sequence) - 1
       )
@@ -1581,6 +1580,8 @@ defmodule TinyLlmTalkWeb.SlideComponents do
           {label}
         </div>
       <% end %>
+      <span class={["flow__skip flow__skip--first", @stage == :add1 && "flow__skip--lit"]}>x</span>
+      <span class={["flow__skip flow__skip--second", @stage == :add2 && "flow__skip--lit"]}>x</span>
     </div>
     """
   end

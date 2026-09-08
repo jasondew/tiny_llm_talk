@@ -52,7 +52,8 @@ defmodule TinyLlmTalk.Deck do
           here and never let go of it. Everything we build today goes inside
           the box. Say once: the simplest thing that fits in the box is a
           count table over adjacent pairs, and it fails exactly where the
-          nearest noun lies. That is the baseline section 8 beats.
+          nearest noun lies. That is the dashed line the training curve
+          has to beat on the training slide.
           """
         },
         %Slide{
@@ -90,7 +91,7 @@ defmodule TinyLlmTalk.Deck do
           notes: """
           One word is one token is one integer; there is no tokenizer. Point at
           start and at the period: sequences begin with one and end with the
-          other. Every word is lowercase, including the title.
+          other. Every word is lowercase.
           """
         },
         %Slide{
@@ -310,7 +311,7 @@ defmodule TinyLlmTalk.Deck do
           id: :lid_off,
           title: "The transformer in this talk",
           notes: """
-          The picture from slide 3 again, with the 1, and the dashed box
+          The picture from slide 4 again, with the 1, and the dashed box
           named: the block. Attention is done; what is left of the block is
           the two normalizations and the neural network, and the arrows
           between them. The next slide is the block as code.
@@ -323,7 +324,11 @@ defmodule TinyLlmTalk.Deck do
           notes: """
           The whole block is one function, nine lines of work; the return
           value, a map of every intermediate for training, is folded away.
-          The flow beside it is the diagram redrawn with the two adds in.
+          The flow beside it is the diagram redrawn with the two adds in,
+          and the two skips down its right edge are x: the input carried
+          past normalization and attention to the first add, and that sum
+          carried past the second normalization and the network to the
+          second.
           Step down it, one line and one box at a time: normalize, attend,
           add the input back, normalize, the network, add again. The last
           step shows it whole again. The next three slides take the lines
@@ -463,7 +468,9 @@ defmodule TinyLlmTalk.Deck do
           title: "This was all of it",
           steps: 5,
           notes: """
-          The same seven lines from the opener, read out loud now. A word
+          The seven lines of the forward pass, the three from the embedding
+          slide and the three from back to words with the block between
+          them, read out loud now. A word
           becomes a row, position is added. The block: attention gathers,
           the residual keeps, the MLP thinks. One more norm. Thirty-two floats
           become thirty-two probabilities. Nobody in the room needed a
