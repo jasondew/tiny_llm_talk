@@ -426,6 +426,13 @@
   max-width: 32ch;
 }
 
+.slide__byline {
+  margin-top: 28px;
+  font-family: var(--serif);
+  font-size: 30px;
+  color: var(--ink-dim);
+}
+
 .slide__note {
   max-width: 78ch;
   font-size: 22px;
@@ -691,6 +698,47 @@
 
 .mlp-graph__node--hidden {
   stroke: var(--accent-cool);
+}
+
+.mlp-graph__wire--strong {
+  stroke: var(--ink-dim);
+}
+
+.mlp-graph__weight {
+  font-family: var(--serif);
+  font-size: 15px;
+  fill: var(--accent-cool);
+  text-anchor: middle;
+}
+
+.mlp-graph__label--end {
+  text-anchor: end;
+  font-family: var(--serif);
+  font-size: 16px;
+  fill: var(--ink);
+}
+
+.mlp-graph__label--ink {
+  font-family: var(--serif);
+  font-size: 16px;
+  fill: var(--ink);
+}
+
+.node-sum {
+  gap: 10px;
+}
+
+.node-sum .vector__cell {
+  font-size: 19px;
+}
+
+.node-sum .vector__label {
+  width: 250px;
+  box-sizing: border-box;
+}
+
+.node-sum .vector {
+  justify-content: start;
 }
 
 .mlp-graph__label,

@@ -95,6 +95,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
       <h1 class="slide__statement slide__statement--wide">
         Transformers from Scratch,<br />in Elixir
       </h1>
+      <p class="slide__byline">Jason Dew</p>
     </section>
     """
   end
@@ -941,31 +942,76 @@ defmodule TinyLlmTalkWeb.SlideComponents do
     """
   end
 
+  # One node's arithmetic, small enough to check by eye, and chosen so the
+  # activation does something: the weighted sum lands just under zero.
+  @node_inputs [2.0, 1.0, 0.0, 3.0]
+  @node_weights [0.5, -2.0, 1.0, 0.5]
+  @node_bias -1.0
+
+  def slide(%{slide: %Slide{id: :neural_network_idea}} = assigns) do
+    weighted = Enum.zip_with(@node_inputs, @node_weights, &(&1 * &2))
+    pre = Enum.sum(weighted) + @node_bias
+
+    assigns =
+      assign(assigns,
+        inputs: @node_inputs,
+        weights: @node_weights,
+        bias: @node_bias,
+        pre: pre,
+        out: max(pre, 0.0)
+      )
+
+    ~H"""
+    <section class="slide slide--tight">
+      <p class="slide__eyebrow">neural network: the idea</p>
+      <h2 class="slide__title slide__title--small">
+        {case @step do
+          1 -> "A node is a dot product, a bias, and an activation"
+          2 -> "A layer is many nodes reading the same inputs"
+          _ -> "A network is layers, one feeding the next"
+        end}
+      </h2>
+      <div class="two-up two-up--lists mlp">
+        <.node_graph :if={@step == 1} />
+        <.layer_graph :if={@step == 2} />
+        <.mlp_graph :if={@step >= 3} />
+        <div class="dot__arithmetic node-sum">
+          <p class="row-caption">one node, by hand</p>
+          <.vector label="x, the inputs" values={@inputs} cell={64} class="vector--a" />
+          <.vector label="w, its weights" values={@weights} cell={64} class="vector--b" />
+          <.vector
+            label={"x · w + b, with b = #{format_signed(@bias)}"}
+            values={[@pre]}
+            cell={64}
+            class="vector--work"
+          />
+          <.vector label="ReLU" values={[@out]} cell={64} class="vector--total" />
+        </div>
+      </div>
+    </section>
+    """
+  end
+
   def slide(%{slide: %Slide{id: :neural_network}} = assigns) do
     assigns = assign(assigns, block: block_trace(), block_path: @block_path)
 
     ~H"""
     <section class="slide slide--tight">
-      <p class="slide__eyebrow">neural network: MLP, a multilayer perceptron</p>
+      <p class="slide__eyebrow">neural network: the one in the block</p>
       <p class="formula">
         ReLU(<span class="formula__group">x W<sub>1</sub> + b<sub>1</sub></span>) W<sub>2</sub>
         + b<sub>2</sub>
       </p>
-      <div class="two-up two-up--lists mlp">
-        <.mlp_graph />
-        <.step :if={@block} n={3} step={@step} class="strip-stack mlp__real">
-          <p class="row-caption">the dogs row</p>
-          <.strips rows={[@block.norm2]} labels={["x, 32 wide"]} cell={11} />
-          <.strips
-            rows={Enum.chunk_every(@block.hidden, 32)}
-            labels={["ReLU(x W₁ + b₁), 128 wide", "", "", "#{zeros(@block.hidden)} of them zero"]}
-            cell={11}
-          />
-          <.strips rows={[@block.mlp]} labels={["hidden W₂ + b₂, 32 wide again"]} cell={11} />
-        </.step>
-      </div>
-      <.step n={2} step={@step}>
-        <.code path={@block_path} range={218..220} step={@step} />
+      <.code path={@block_path} range={218..220} step={@step} />
+      <.step :if={@block} n={2} step={@step} class="strip-stack">
+        <p class="row-caption">the dogs row</p>
+        <.strips rows={[@block.norm2]} labels={["x, 32 wide"]} cell={16} />
+        <.strips
+          rows={Enum.chunk_every(@block.hidden, 32)}
+          labels={["ReLU(x W₁ + b₁), 128 wide", "", "", "#{zeros(@block.hidden)} of them zero"]}
+          cell={16}
+        />
+        <.strips rows={[@block.mlp]} labels={["hidden W₂ + b₂, 32 wide again"]} cell={16} />
       </.step>
       <.untrained :if={is_nil(@block)} what="This row" />
     </section>
@@ -995,7 +1041,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
           <dd>becomes 0</dd>
           <dt>z &ge; 0</dt>
           <dd>passes through unchanged</dd>
-          <dt>the bend</dt>
+          <dt>the activation</dt>
           <dd>without it, W<sub>1</sub> then W<sub>2</sub> is just one matrix</dd>
         </dl>
       </div>
@@ -1918,6 +1964,70 @@ defmodule TinyLlmTalkWeb.SlideComponents do
       <text x="390" y="295" class="mlp-graph__weights">
         W<tspan baseline-shift="sub">2</tspan>
         (128 × 32), + b<tspan baseline-shift="sub">2</tspan>
+      </text>
+    </svg>
+    """
+  end
+
+  # One node: four inputs, a weight on every wire, the sum and bias in the
+  # circle, the ReLU on the way out.
+  @node_input_ys [60, 120, 180, 240]
+
+  defp node_graph(assigns) do
+    assigns = assign(assigns, ys: Enum.with_index(@node_input_ys, 1))
+
+    ~H"""
+    <svg class="mlp-graph" viewBox="0 0 560 300" width="560" height="300">
+      <%= for {y, index} <- @ys do %>
+        <line x1="80" y1={y} x2="330" y2="150" class="mlp-graph__wire mlp-graph__wire--strong" />
+        <circle cx="80" cy={y} r="11" class="mlp-graph__node mlp-graph__node--input" />
+        <text x="50" y={y + 5} class="mlp-graph__label mlp-graph__label--end">
+          x<tspan baseline-shift="sub">{index}</tspan>
+        </text>
+        <text x={190} y={(y + 150) / 2 - 6 + (index - 2.5) * 4} class="mlp-graph__weight">
+          w<tspan baseline-shift="sub">{index}</tspan>
+        </text>
+      <% end %>
+      <circle cx="330" cy="150" r="30" class="mlp-graph__node mlp-graph__node--hidden" />
+      <text x="330" y="156" class="mlp-graph__label mlp-graph__label--ink">Σ + b</text>
+      <line x1="362" y1="150" x2="468" y2="150" class="mlp-graph__wire mlp-graph__wire--strong" />
+      <text x="415" y="140" class="mlp-graph__label">ReLU</text>
+      <circle cx="490" cy="150" r="11" class="mlp-graph__node mlp-graph__node--output" />
+      <text x="490" y="184" class="mlp-graph__label">out</text>
+    </svg>
+    """
+  end
+
+  # A layer: the same four inputs, six nodes, every input wired to every
+  # node with its own weight; six outputs.
+  @layer_node_ys [40, 84, 128, 172, 216, 260]
+
+  defp layer_graph(assigns) do
+    assigns =
+      assign(assigns,
+        inputs: Enum.with_index(@node_input_ys, 1),
+        nodes: @layer_node_ys,
+        wires: for(y1 <- @node_input_ys, y2 <- @layer_node_ys, do: {y1, y2})
+      )
+
+    ~H"""
+    <svg class="mlp-graph" viewBox="0 0 560 300" width="560" height="300">
+      <line :for={{y1, y2} <- @wires} x1="80" y1={y1} x2="330" y2={y2} class="mlp-graph__wire" />
+      <%= for {y, index} <- @inputs do %>
+        <circle cx="80" cy={y} r="11" class="mlp-graph__node mlp-graph__node--input" />
+        <text x="50" y={y + 5} class="mlp-graph__label mlp-graph__label--end">
+          x<tspan baseline-shift="sub">{index}</tspan>
+        </text>
+      <% end %>
+      <%= for y <- @nodes do %>
+        <circle cx="330" cy={y} r="11" class="mlp-graph__node mlp-graph__node--hidden" />
+        <line x1="343" y1={y} x2="400" y2={y} class="mlp-graph__wire mlp-graph__wire--strong" />
+      <% end %>
+      <text x="330" y="14" class="mlp-graph__label">six nodes, each with its own four weights</text>
+      <text x="450" y="155" class="mlp-graph__label">six outputs</text>
+      <text x="205" y="295" class="mlp-graph__weights">
+        W<tspan baseline-shift="sub">1</tspan>
+        (4 × 6): one column per node, + b<tspan baseline-shift="sub">1</tspan>
       </text>
     </svg>
     """

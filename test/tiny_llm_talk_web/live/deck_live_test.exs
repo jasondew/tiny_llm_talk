@@ -10,7 +10,7 @@ defmodule TinyLlmTalkWeb.DeckLiveTest do
     {:ok, _view, html} = live(conn, ~p"/")
 
     assert html =~ "llama"
-    assert html =~ Application.fetch_env!(:tiny_llm_talk, :repo_label)
+    assert html =~ TinyLlmTalk.Deck.title()
   end
 
   test "puts the position in the address bar so a crash can recover it", %{conn: conn} do

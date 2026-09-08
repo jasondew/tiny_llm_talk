@@ -117,7 +117,7 @@ defmodule TinyLlmTalk.Deck do
           random and training moves every one of them; nothing in here is
           written by hand. Say, do not show: one block deep, a single head
           wide, pure Elixir standard library with an empty deps list. The
-          repo link is in the footer and stays there.
+          repo link comes at the end, over the closing writer.
           """
         },
         %Slide{
@@ -304,7 +304,7 @@ defmodule TinyLlmTalk.Deck do
     %Section{
       number: 4,
       title: "The rest of the block",
-      minutes: 5,
+      minutes: 6,
       lands: "normalize, think, add: what makes a layer stackable",
       slides: [
         %Slide{
@@ -353,32 +353,53 @@ defmodule TinyLlmTalk.Deck do
           notes: """
           The one nonlinear thing in the whole block, and it is one line:
           max of zero and z. Negative becomes zero, positive passes through
-          untouched; the graph is flat then the identity, with a bend at
-          the origin. The bend is the point: without it, W1 then W2 is a
+          untouched; the graph is flat then the identity, with a corner
+          at the origin. The activation is the point: without it, W1 then
+          W2 is a
           single matrix and the network could only draw straight lines.
           Second step, the dogs row's 128 hidden floats before and after,
           on one scale: every bar that hung below the line is gone, and
-          the count says how many. Next, the network it sits inside.
+          the count says how many. Next, what a neural network is.
+          """
+        },
+        %Slide{
+          id: :neural_network_idea,
+          title: "A neural network",
+          steps: 3,
+          notes: """
+          Some of the room has never seen one, so one idea at a time and
+          nothing about training. Step one, a node: four inputs, a weight
+          on every wire, add them up, add a bias, through the activation.
+          The
+          arithmetic on the right is the dot product from the math break,
+          x dot w, plus b, then ReLU; with these numbers the sum lands
+          just under zero and the node goes quiet, which is the
+          activation doing its job. The weights and the bias are the learned part.
+          Step two, a layer: many nodes reading the same inputs, each
+          with its own weights, so a matrix W1 with one column per node
+          and a bias per node; six outputs from four inputs. Step three,
+          a network: layers feeding each other, and this is the one in
+          the block, 32 in, 128 hidden, 32 out, the dots standing for the
+          rest. Say once: the whole transformer is also a neural network;
+          this small one inside the block is the textbook kind. Do not go
+          near backprop here.
           """
         },
         %Slide{
           id: :neural_network,
-          title: "The neural network",
-          steps: 3,
+          title: "The neural network in the block",
+          steps: 2,
           notes: """
-          The textbook picture first: three columns of nodes, every node
-          wired to every node in the next column, and every wire is one
-          learned float. 32 in, 128 hidden, 32 out; the dots stand for the
-          rest. A node is a weighted sum of the column before it plus a
-          bias, then the ReLU from the last slide. Per position, no
-          mixing between positions: attention gathered, this is where the
-          model thinks about what it gathered. Second step, the three
-          lines that do it: two matmuls with the bend between. Third, the
-          dogs row for real: 32 wide in, the hidden 128 as four rows of
-          thirty-two with the zeros the ReLU made dark, and there are a
-          lot of them, then 32 wide again. Half the parameters of the
-          model are these two matrices. Next, the block as code, with all
-          three stages in their places.
+          The one from the last slide, in practice. The formula and the
+          three lines that do it: two matmuls with the activation between,
+          which is all a two-layer network is. Per position, no mixing
+          between positions: attention gathered, this is where the model
+          thinks about what it gathered. Second step, the dogs row for
+          real: 32 wide in, the hidden 128 as four rows of thirty-two
+          with the zeros the ReLU made dark, and there are a lot of them,
+          then 32 wide again. Half the parameters of the model are these
+          two matrices. Next, the block as code, with all three stages in
+          their places.
           """
         },
         %Slide{
@@ -532,6 +553,8 @@ defmodule TinyLlmTalk.Deck do
     }
   ]
 
+  @title "Transformers from Scratch, in Elixir"
+
   @slides @sections
           |> Enum.flat_map(fn section ->
             Enum.map(section.slides, &%{&1 | section: section.number})
@@ -547,6 +570,10 @@ defmodule TinyLlmTalk.Deck do
 
   @forward_keys ~w(ArrowRight ArrowDown PageDown Enter n j l) ++ [" "]
   @backward_keys ~w(ArrowLeft ArrowUp PageUp Backspace p k h)
+
+  @doc "The talk's title, as the footer of every slide shows it."
+  @spec title() :: String.t()
+  def title, do: @title
 
   @spec sections() :: [Section.t()]
   def sections, do: @numbered_sections

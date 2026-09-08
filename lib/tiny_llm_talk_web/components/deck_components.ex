@@ -20,13 +20,13 @@ defmodule TinyLlmTalkWeb.DeckComponents do
     assigns =
       assign(assigns,
         section: Deck.section(assigns.slide),
-        repo: Application.fetch_env!(:tiny_llm_talk, :repo_label),
+        talk: Deck.title(),
         count: Deck.count()
       )
 
     ~H"""
     <footer class="deck-footer">
-      <span class="deck-footer__repo">{@repo}</span>
+      <span class="deck-footer__talk">{@talk}</span>
       <span class="deck-footer__section">{@section.number}. {@section.title}</span>
       <span class="deck-footer__position">{@slide.index} / {@count}</span>
     </footer>
