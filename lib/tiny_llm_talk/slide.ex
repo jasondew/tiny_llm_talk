@@ -23,15 +23,22 @@ defmodule TinyLlmTalk.Slide do
           ticks: boolean()
         }
 
-  @typedoc "A run of bullets, or a run of term and definition pairs."
-  @type block :: {:bullets, [String.t()]} | {:definitions, [{String.t(), String.t()}]}
+  @typedoc """
+  A run of bullets, a run of points that must be made out loud, or a run of
+  term and definition pairs.
+  """
+  @type block ::
+          {:bullets, [String.t()]}
+          | {:musts, [String.t()]}
+          | {:definitions, [{String.t(), String.t()}]}
 
   @doc """
   The notes as blocks for the presenter: a line starting with `- ` is a
-  bullet, a line starting with `= ` is a definition, `term: what it means`,
-  and any other line continues the item before it. Consecutive items of one
-  kind are grouped, so the presenter can draw a list, then a glossary, then a
-  list again.
+  bullet, one starting with `! ` is a point that must be made out loud, one
+  starting with `= ` is a definition, `term: what it means`, and any other
+  line continues the item before it. Consecutive items of one kind are
+  grouped, so the presenter can draw a list, then a glossary, then a list
+  again.
   """
   @spec blocks(t()) :: [block()]
   def blocks(%__MODULE__{notes: notes}) do
@@ -53,6 +60,7 @@ defmodule TinyLlmTalk.Slide do
     |> blocks()
     |> Enum.flat_map(fn
       {:bullets, items} -> items
+      {:musts, items} -> items
       {:definitions, pairs} -> Enum.map(pairs, fn {term, text} -> term <> ": " <> text end)
     end)
     |> Enum.join(" ")
@@ -63,6 +71,9 @@ defmodule TinyLlmTalk.Slide do
   defp add_line("- " <> text, [{:bullets, items} | rest]), do: [{:bullets, [text | items]} | rest]
   defp add_line("- " <> text, blocks), do: [{:bullets, [text]} | blocks]
 
+  defp add_line("! " <> text, [{:musts, items} | rest]), do: [{:musts, [text | items]} | rest]
+  defp add_line("! " <> text, blocks), do: [{:musts, [text]} | blocks]
+
   defp add_line("= " <> text, [{:definitions, pairs} | rest]),
     do: [{:definitions, [definition(text) | pairs]} | rest]
 
@@ -72,6 +83,9 @@ defmodule TinyLlmTalk.Slide do
   # bullet when nothing did.
   defp add_line(text, [{:bullets, [last | items]} | rest]),
     do: [{:bullets, [last <> " " <> text | items]} | rest]
+
+  defp add_line(text, [{:musts, [last | items]} | rest]),
+    do: [{:musts, [last <> " " <> text | items]} | rest]
 
   defp add_line(text, [{:definitions, [{term, last} | pairs]} | rest]),
     do: [{:definitions, [{term, last <> " " <> text} | pairs]} | rest]

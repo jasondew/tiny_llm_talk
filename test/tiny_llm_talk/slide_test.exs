@@ -18,6 +18,7 @@ defmodule TinyLlmTalk.SlideTest do
         wrapped onto a second line
       = rms: root mean square
       = g: a learned gain
+      ! say this one out loud
       - last cue
       """
     }
@@ -25,6 +26,7 @@ defmodule TinyLlmTalk.SlideTest do
     assert Slide.blocks(slide) == [
              {:bullets, ["first cue wrapped onto a second line"]},
              {:definitions, [{"rms", "root mean square"}, {"g", "a learned gain"}]},
+             {:musts, ["say this one out loud"]},
              {:bullets, ["last cue"]}
            ]
   end

@@ -1,9 +1,10 @@
 defmodule TinyLlmTalkWeb.PresenterLive do
   @moduledoc """
-  The laptop screen: the slide the room is looking at, as wide as the screen
-  allows; under it what comes next, as tall as the rest of the screen, with
-  the clock and the notes beside it. The notes are only what has to be said
-  out loud.
+  The laptop screen: the clock, the section and what it must land across the
+  top; the slide the room is looking at, as wide as the screen allows; under
+  it the notes on the left and what comes next on the right. The notes are
+  only what has to be said out loud, and the points that must be made are
+  drawn louder.
 
   The outline budgets minutes per section, so the clock shows elapsed time
   against the budget spent so far. The only two questions asked mid-talk are
@@ -88,6 +89,20 @@ defmodule TinyLlmTalkWeb.PresenterLive do
   def render(assigns) do
     ~H"""
     <div class="presenter" phx-window-keydown="key">
+      <div class="presenter__head">
+        <p class="presenter__clock">
+          {format_clock(@elapsed)} <span class="presenter__budget">of {budget(@section)}</span>
+        </p>
+        <div class="presenter__where">
+          <p class="presenter__label">
+            {@section.number}. {@section.title} &middot; {@section.minutes} min &middot; slide {@slide.index} of {Deck.count()} &middot; step {@step} of {@slide.steps}
+          </p>
+          <p class="presenter__keys">
+            training {@trainer.status} &middot; space/arrows move &middot; t pauses &middot; r resets &middot; click a preview to drive it
+          </p>
+        </div>
+        <p class="presenter__lands">must land: {@section.lands}</p>
+      </div>
       <div class="presenter__current">
         <div class="stage-preview">
           <div class="stage stage--preview">
@@ -102,6 +117,22 @@ defmodule TinyLlmTalkWeb.PresenterLive do
         </div>
       </div>
       <div class="presenter__bottom">
+        <div class="presenter__notes">
+          <%= for block <- Slide.blocks(@slide) do %>
+            <ul :if={elem(block, 0) == :bullets} class="presenter__bullets">
+              <li :for={item <- elem(block, 1)}>{item}</li>
+            </ul>
+            <ul :if={elem(block, 0) == :musts} class="presenter__musts">
+              <li :for={item <- elem(block, 1)}>{item}</li>
+            </ul>
+            <dl :if={elem(block, 0) == :definitions} class="presenter__defs">
+              <%= for {term, text} <- elem(block, 1) do %>
+                <dt>{term}</dt>
+                <dd>{text}</dd>
+              <% end %>
+            </dl>
+          <% end %>
+        </div>
         <div :if={@next} class="presenter__next">
           <p class="presenter__label">
             next: {next_label(@slide, @step, @next)}
@@ -116,33 +147,6 @@ defmodule TinyLlmTalkWeb.PresenterLive do
                 frame={0}
               />
             </div>
-          </div>
-        </div>
-        <div class="presenter__side">
-          <div class="presenter__head">
-            <p class="presenter__clock">
-              {format_clock(@elapsed)} <span class="presenter__budget">of {budget(@section)}</span>
-            </p>
-            <p class="presenter__label">
-              {@section.number}. {@section.title} &middot; {@section.minutes} min &middot; slide {@slide.index} of {Deck.count()} &middot; step {@step} of {@slide.steps}
-            </p>
-            <p class="presenter__lands">must land: {@section.lands}</p>
-            <p class="presenter__keys">
-              training {@trainer.status} &middot; space/arrows move &middot; t pauses &middot; r resets &middot; click a preview to drive it
-            </p>
-          </div>
-          <div class="presenter__notes">
-            <%= for block <- Slide.blocks(@slide) do %>
-              <ul :if={elem(block, 0) == :bullets} class="presenter__bullets">
-                <li :for={item <- elem(block, 1)}>{item}</li>
-              </ul>
-              <dl :if={elem(block, 0) == :definitions} class="presenter__defs">
-                <%= for {term, text} <- elem(block, 1) do %>
-                  <dt>{term}</dt>
-                  <dd>{text}</dd>
-                <% end %>
-              </dl>
-            <% end %>
           </div>
         </div>
       </div>
