@@ -330,25 +330,27 @@
   position: fixed;
   inset: 0;
   display: grid;
-  grid-template-columns: minmax(0, 620px) 1fr;
-  gap: 32px;
-  padding: 32px;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: 24px;
+  padding: 28px 32px;
   background: var(--paper);
   color: var(--ink);
   font-family: var(--sans);
 }
 
-.presenter__now {
+/* The previews and the clock share the top row; the notes get the rest. */
+.presenter__top {
   display: flex;
-  flex-direction: column;
-  gap: 24px;
+  gap: 32px;
+  align-items: flex-start;
 }
 
-.presenter__aside {
+.presenter__head {
+  flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  min-width: 0;
+  gap: 10px;
 }
 
 .presenter__clock {
@@ -372,13 +374,12 @@
 }
 
 .presenter__notes {
-  flex: 1;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  font-size: 23px;
-  line-height: 1.4;
+  gap: 12px;
+  font-size: 27px;
+  line-height: 1.35;
 }
 
 .presenter__bullets {
@@ -424,6 +425,62 @@
   font-family: var(--mono);
   font-size: 14px;
   color: var(--ink-dim);
+}
+
+/* The bookend: the sentence as it was asked, the two hops the blank takes to
+ * reach the subject, and what the model puts on the blank. */
+.sentence-arcs {
+  display: block;
+  margin: 32px auto 0;
+  max-width: 100%;
+  overflow: visible;
+}
+
+.sentence-arcs__word {
+  font-family: var(--serif);
+  font-size: 48px;
+  fill: var(--ink);
+  text-anchor: middle;
+  transition: fill 160ms linear;
+}
+
+.sentence-arcs__word--blank {
+  fill: var(--ink-dim);
+}
+
+.sentence-arcs__word--lit {
+  fill: var(--accent);
+}
+
+.sentence-arcs__arc {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 3;
+}
+
+.sentence-arcs__head {
+  fill: var(--accent);
+}
+
+.sentence-arcs__weight {
+  font-family: var(--mono);
+  font-size: 20px;
+  fill: var(--accent);
+  text-anchor: middle;
+}
+
+.sentence-answer {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sentence-answer__temperature {
+  margin-left: 1.5em;
+  font-family: var(--mono);
+  font-size: 16px;
+  opacity: 0.6;
 }
 
 /* Slide furniture -------------------------------------------------------- */
@@ -773,6 +830,11 @@
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+/* With a caption above it, the network graph gives up a little height. */
+.idea-figure--captioned .mlp-graph--wide {
+  width: 820px;
 }
 
 .mlp-graph--wide {

@@ -28,12 +28,11 @@ defmodule TinyLlmTalk.Deck do
           id: :training_math,
           title: "Training, live",
           notes: """
-          - Press start as soon as the projector is up; about 70 seconds; runs under the chatter
-          - Same config and seed as the checkpoint, so it lands on the loss every figure came from; the slide says whether it matched
-          - If asked: the model in this talk, training itself from random, right now
-          = knowing nothing: ln 32 = 3.466, the loss of a uniform guess
-          = dashed line: 1.904, the best any one-word model can do; the curve going well under it means it uses information the previous word does not carry
-          - When it is time, move on to the sentence
+          - Press start once the projector is up; about 70 s; runs under the chatter
+          - If asked: this talk's model, training itself from random
+          = top line: ln 32 = 3.466, a uniform guess
+          = dashed line: 1.904, the best one-word model can do; going under it means it uses more than the previous word
+          - When ready, move on
           """
         },
         %Slide{
@@ -41,9 +40,9 @@ defmodule TinyLlmTalk.Deck do
           title: "flees, or flee?",
           steps: 2,
           notes: """
-          - Ask out loud, hands up for each; do not fill the silence
-          - Step 2 lights flees; everybody knew
-          - Say: the rule is easy to name; the hard part is knowing which noun is the subject when a plural one sits next to the blank. That is the talk
+          - Ask out loud; hands up for each; wait
+          - Step 2 lights flees
+          - Say: the rule is easy; knowing which noun is the subject is the hard part. That is the talk
           """
         },
         %Slide{
@@ -51,16 +50,16 @@ defmodule TinyLlmTalk.Deck do
           title: "Transformers from Scratch, in Elixir",
           notes: """
           - Say the title once
-          - The sentence before it is what the whole talk is about, and the room just answered it
+          - The room just answered what the talk is about
           """
         },
         %Slide{
           id: :one_function,
           title: "A language model is one function",
           notes: """
-          - Input: the words so far. Output: 32 probabilities. Never let go of this frame
+          - Words in, 32 probabilities out; keep this frame all talk
           - Everything we build goes inside the box
-          - Say once: the simplest thing that fits is a count table over adjacent pairs; it fails exactly where the nearest noun lies. That is the dashed line on the training chart
+          = the dashed line: a count table over adjacent pairs; fails exactly where the nearest noun lies
           """
         },
         %Slide{
@@ -68,16 +67,13 @@ defmodule TinyLlmTalk.Deck do
           title: "The transformer",
           steps: 2,
           notes: """
-          - A word becomes a row, then the block, then probabilities
-          - Inside the dashed box: attention gathers, a small network thinks; repeated N times
-          - Step 2: N becomes 1, the model on this laptop, one block deep
-          - Say, do not show: every frontier model uses these same pieces, in their own reports
-          = GPT-4: "Transformer-based"
-          = Gemini: "builds on Transformer decoders"
-          = DeepSeek-V3: "still within the Transformer framework"
-          = Llama 4: a mixture-of-experts transformer
-          = Claude: Anthropic does not publish the architecture
-          = Mamba, Qwen3-Next: swap most attention layers for a cheaper mixer and keep the rest; the block is still in them
+          - Word to row, the block, probabilities
+          - Inside the box: attention gathers, a small network thinks; times N
+          - Step 2: N = 1, this laptop's model
+          - Say, do not show: every frontier model uses these pieces
+          = GPT-4, Gemini, DeepSeek-V3: "Transformer-based", "builds on Transformer decoders", "still within the Transformer framework"
+          = Llama 4, Claude: a mixture-of-experts transformer; Anthropic does not publish
+          = Mamba, Qwen3-Next: swap most attention for a cheaper mixer; the block stays
           """
         }
       ]
@@ -92,31 +88,28 @@ defmodule TinyLlmTalk.Deck do
           id: :vocabulary,
           title: "Vocabulary",
           notes: """
-          - One word is one token is one integer; there is no tokenizer
-          - Point at start and the period: sequences begin with one and end with the other
-          - Every word is lowercase
+          - One word, one token, one integer; no tokenizer
+          - Point at start and the period
+          - All lowercase
           """
         },
         %Slide{
           id: :grammar,
           title: "Grammar",
           notes: """
-          - Rules on the left are quoted from the grammar module's docs; four sentences it wrote on the right
-          = agreement: a subject agrees with its verb
-          = relative clause: its verb agrees with the head noun, not the nearest noun
-          - We wrote the grammar, so "did it learn agreement" is a measurement, not a vibe. Nobody knows that about a real corpus
+          - Rules quoted from the grammar module; four sentences it wrote
+          = relative clause: the verb agrees with the head noun, not the nearest
+          - We wrote the grammar, so "did it learn agreement" is measurable
           """
         },
         %Slide{
           id: :parameters,
           title: "Parameters",
           notes: """
-          - Every table, by stage, with its shape and count
-          = parameter: one float in one of these tables
-          - Two tables on the way in, four square matrices in attention, the network holds more than half
-          - Every one starts random and training moves every one; nothing is written by hand
-          - Say, do not show: one block deep, one head wide, pure Elixir standard library, empty deps list
-          - The repo link comes at the end
+          - Every table, shape, count; every float learned, none by hand
+          - Two tables in, four square matrices in attention, the network holds over half
+          = W_O: the fourth attention matrix mixes the blend back into the row; not on the attention slides
+          - One block, one head, pure Elixir, empty deps; repo link at the end
           """
         },
         %Slide{
@@ -124,11 +117,11 @@ defmodule TinyLlmTalk.Deck do
           title: "It writes",
           ticks: true,
           notes: """
-          - Starts paused; press normal when ready
-          - The whole path once, fast, before we take it slowly
-          - Left: the paragraph. Right: the forward pass for the word being written: integers, rows, query and keys, attention, the distribution, the pick
-          - Say only: fifteen thousand floats, pure Elixir, no library, every picture is real
-          - Slow it down if people lean in; reset if a sentence is dull
+          - Paused; press normal
+          - The whole path once, fast; slowly after
+          - Left the paragraph; right the forward pass for the word being written
+          - Say: fifteen thousand floats, no library, every picture real
+          - Slow it if they lean in; reset if dull
           """
         }
       ]
@@ -144,20 +137,20 @@ defmodule TinyLlmTalk.Deck do
           title: "Each word becomes a row of floats",
           steps: 4,
           notes: """
-          - The sentence alone first; it stays on top through attention
-          - Step 2: dogs, the word next to the blank; look its integer up in a 32 × 32 table and take the row. All 32 floats are real, from the checkpoint
-          - Step 3: a second row for position 6 (the start token is 0), added, not appended: same width in, same width out
-          = why positions: attention on its own is a bag of words
-          = context length: 16 positions, the only hard limit in the model
-          - Step 4: the three lines that do all of it
+          - Sentence first; it stays on top through attention
+          - Step 2: dogs, integer 5, row 5 of a 32 × 32 table; real floats
+          - Step 3: position 6 (start is 0), added, not appended
+          = why positions: attention alone is a bag of words
+          = context length: 16 positions, the only hard limit
+          - Step 4: three lines
           """
         },
         %Slide{
           id: :forgets_the_words,
-          title: "At this point the model has forgotten it saw words",
+          title: "At this point, the model has forgotten it ever saw words",
           notes: """
-          - Seven positions in, seven rows of 32 floats out; this grid is what attention sees
-          - Nothing after this slide mentions a word until the very end
+          - Seven rows of 32 floats; this is what attention sees
+          - No word is mentioned again until the end
           """
         }
       ]
@@ -173,9 +166,9 @@ defmodule TinyLlmTalk.Deck do
           title: "A dot product is a similarity score",
           steps: 3,
           notes: """
-          - Say "math break" out loud; two slides of arithmetic, then back to the model
-          - Two lists, multiply pairwise, add
-          = big: they point the same way
+          - Say "math break": two slides, then back
+          - Multiply pairwise, add
+          = big: same direction
           = near zero: unrelated
           = negative: opposed
           - The only arithmetic in attention
@@ -185,12 +178,12 @@ defmodule TinyLlmTalk.Deck do
           id: :softmax_playground,
           title: "A softmax turns scores into a distribution",
           notes: """
-          - Five scores in, five shares out, always summing to one
-          = distribution: positive numbers that sum to one; define it once
-          - The words are only labels, none from the sentence
-          - Drag a score up: its share grows and every other shrinks; far below the rest goes to nearly nothing, never zero
-          = softmax: e to the score, divided by the sum of all of them; e to anything is positive, which is why the shares are
-          - End of the break; the next slide puts both pieces to work
+          - Five scores in, five shares out, sum to one
+          = distribution: positive numbers summing to one
+          - Labels only, none from the sentence
+          - Drag one up: it grows, the rest shrink; never zero
+          = softmax: e to the score over the sum; e to anything is positive
+          - End of the break
           """
         },
         %Slide{
@@ -198,30 +191,25 @@ defmodule TinyLlmTalk.Deck do
           title: "Attention: ask, offer, hand over",
           steps: 10,
           notes: """
-          - Formula alone and large first; let them look. Then it shrinks to the top and one symbol arrives per step
-          = input: the grid from the last slide, 7 × 32
-          = W_Q, W_K, W_V: three learned matrices, 32 × 32
-          = Q, K, V: what this position is looking for, what it advertises, what it hands over if chosen; each is input × matrix, 7 × 32
-          = Q Kᵀ: every dot product at once, 7 × 7
-          = √d: d is the width of a key, 32, so the softmax does not saturate; the paper's d_k, not d_model; the same 32 here with one head and no slicing. Frontier models slice the embedding across heads
-          = softmax: each row becomes a distribution
-          = Attention: blend the values; the input's shape, which is what lets the residual add it back
-          - Next: the same thing on a toy map, by hand
+          - Formula alone first; let them look; then one symbol a step
+          - The definitions are on the slide; two need more
+          = √d: d is the key width, 32; keeps the softmax from saturating; the paper's d_k; frontier models slice across heads
+          = Attention: the blend has the input's shape, 7 × 32, so the residual can add it
+          - Next: a toy map by hand
           """
         },
         %Slide{
           id: :fuzzy_map,
-          title: "A small example, by hand",
+          title: "A small example, by hand: \"Is it plural?\"",
           steps: 5,
           notes: """
-          - The same formula on five keys with two-number vectors, checkable by eye
-          = key vector: how much of an animal, how plural
-          = value: how plural that key is, 0 singular, 1 plural, so the blend answers how plural the query is
-          - Pick a query, then one column a step: Q · K; divide by √2 and softmax; weight × V; the sum
-          = geese: 1.00, plural, and the map never held it
-          = sleepy: no animal, no number, every score zero, the softmax spreads evenly, 0.50, the honest "no idea"
-          - goose and geese are not keys and it still answers sensibly. That is the whole trick
-          - Next: the same thing in sixteen lines
+          - Same formula, five keys, two-number vectors
+          = key, value: how animal and how plural; the value is how plural, 0 or 1
+          - Pick a query; one column a step
+          = geese: 1.00, plural; never a key
+          = sleepy: all zeros; softmax spreads evenly; 0.50, "no idea"
+          - Not in the map, still sensible. That is the trick
+          - Next: sixteen lines
           """
         },
         %Slide{
@@ -229,16 +217,12 @@ defmodule TinyLlmTalk.Deck do
           title: "One head of attention, sixteen lines",
           steps: 8,
           notes: """
-          - Real code from the repo, not simplified, with the real numbers beside it
-          - Step 2: the three projections; the input's seven rows, three 32 × 32 matrices, and the Q, K, V each makes
-          - Step 3: Q Kᵀ, the 7 × 7 scores, signed and raw
-          - Step 4: divide by √d on its own line; the same cells shrink
-          - Step 5: the mask; the future struck out, every cell above the diagonal
-          - Step 6: softmax; each row sums to one; struck-out cells stay struck out, their weight is exactly zero
-          - Step 7: the blend; attention output, 7 × 32, the input's shape
-          - One head; frontier models run many side by side
-          - Say: every position at once in one matmul, no loop over time; that is why this scales and a recurrent network did not
-          - Let them read; say only what each block is for
+          - Real code, real numbers
+          - Step 2 projections; 3 Q Kᵀ; 4 divide by √d; 5 mask; 6 softmax, rows sum to one; 7 blend, 7 × 32
+          - Masked cells stay exactly zero
+          - One head; frontier models run many
+          - Say: every position in one matmul, no loop; why this scales and RNNs did not
+          - Let them read
           """
         },
         %Slide{
@@ -246,21 +230,20 @@ defmodule TinyLlmTalk.Deck do
           title: "Where will the blank look?",
           steps: 2,
           notes: """
-          - Ask by voice before showing: llama, dogs, who, chases. Most rooms say llama
-          - The weights stay on screen to stare at while they answer
-          - The model says who; the reveal is the last row of the heatmap, the dogs position
-          = why the dogs row: the blank has no row; it is predicted from the output of the last position given. Say it plainly, someone will ask
-          - Being wrong together is what makes the walkthrough land
+          - Ask before showing: llama, dogs, who, chases? Most say llama
+          - Answer: who; the last row of the heatmap
+          = why the dogs row: the blank has no row; it is predicted from the last position given
+          - Wrong together sets up the walkthrough
           """
         },
         %Slide{
           id: :walkthrough,
           title: "LLMs are weird",
           notes: """
-          - Starts on dogs, the position predicting the blank, the whole row at once: its query dots every key, nothing to mask since it is last, softmax
-          - Real numbers from the checkpoint. Most of the weight goes to who, not llama. That is the weird part
-          - Say, do not show: who in turn attends to llama, so the blank reaches the subject in two hops, through the word that stands for it
-          - Click who to show that hop, and the mask hiding its future
+          - Dogs row: its query dots every key; nothing to mask; softmax
+          - The weight goes to who, not llama. Weird
+          - Say: who attends to llama; the subject in two hops
+          - Click who: its hop, and the mask
           """
         }
       ]
@@ -275,10 +258,9 @@ defmodule TinyLlmTalk.Deck do
           id: :lid_off,
           title: "The transformer in this talk",
           notes: """
-          - The picture from the cold open again, with the 1 and the dashed box named
-          - Embedding and attention wear ticks, the two stages covered so far
-          - Left: the two normalizations, the network, and the arrows between them
-          - Next three slides: normalization, the activation, the network; then the block as code
+          - The diagram again; ticks on embedding and attention
+          - Left: two normalizations, the network, the adds
+          - Next: normalization, activation, network, the block as code
           """
         },
         %Slide{
@@ -286,13 +268,13 @@ defmodule TinyLlmTalk.Deck do
           title: "Normalization",
           steps: 6,
           notes: """
-          - Say the idea first, nothing on the slide for it: rows come out of a stage at whatever size the stage made them; the next stage wants them all at one size, or the big rows shout and the small ones vanish
-          = RMSNorm: divide the row by its rms, then multiply by g
-          = rms: root mean square; square every float so signs do not cancel, average the squares, take the root; one number per row, its typical size
-          - Then the dogs row, real numbers, the first ten of 32
-          - Step 2: its rms. Step 3: divided by it, same direction, size one. Step 4: g, 32 learned floats, one per column, so the model chooses the size per feature. Step 5: the product, what the next stage receives. Step 6: bars, all 32, one scale
-          = vs LayerNorm: no mean subtracted, no bias; the RMSNorm paper found the recentring buys nothing
-          - Say, do not show: it runs twice per block, before attention and before the network; lines 2 and 5 of the block
+          - Say first: stages hand rows out at any size; the next wants one size, or big rows shout
+          = RMSNorm: divide by rms, multiply by g
+          = rms: square every float, average, root; the row's typical size
+          - Dogs row, first 10 of 32
+          - Step 2 rms; 3 divided, size one; 4 g, 32 learned, one per column; 5 the product; 6 bars, all 32
+          = vs LayerNorm: no mean, no bias; recentring buys nothing
+          - Runs twice per block; lines 2 and 5
           """
         },
         %Slide{
@@ -300,36 +282,35 @@ defmodule TinyLlmTalk.Deck do
           title: "The activation",
           steps: 2,
           notes: """
-          - The one nonlinear thing in the block, and it is one line: max of zero and z
-          = ReLU: negative becomes 0, positive passes through untouched; flat, then the identity, a corner at the origin
-          = why: without the activation, W₁ then W₂ is a single matrix; the network could only draw straight lines
-          - Step 2: the dogs row's 128 hidden floats before and after, on one scale; every bar below the line is gone, and the count says how many
-          - Next: what a neural network is
+          - The one nonlinear line: max(0, z)
+          = ReLU: negative to 0, positive untouched
+          = why: without it W₁ then W₂ is one matrix; straight lines only
+          - Step 2: 128 hidden floats before and after; bars below the line gone
+          - Next: what a feed forward network is
           """
         },
         %Slide{
           id: :neural_network_idea,
-          title: "A neural network",
+          title: "A feed forward network",
           steps: 3,
           notes: """
-          - Some of the room has never seen one; one idea at a time, nothing about training
-          - Step 1, a node: four inputs, a weight on every wire, add them up, add a bias, through the activation. It is the dot product from the math break: x · w + b, then ReLU. With these numbers the sum lands just under zero and the node goes quiet
+          - One idea a step; nothing about training or backprop
+          - Step 1, a node: dot product, bias, activation; here the sum lands under zero, the node goes quiet
           = learned: the weights and the bias
-          - Step 2, a layer: many nodes reading the same inputs, each with its own weights; W₁ has one column per node and a bias per node; six outputs from four inputs
-          - Step 3, a network: layers feeding each other; this is the one in the block, 32 in, 128 hidden, 32 out
-          - Say once: the whole transformer is also a neural network; this small one inside the block is the textbook kind
-          - Do not go near backprop
+          - Step 2, a layer: many nodes, same inputs, own weights; a column of W₁ each
+          - Step 3, a network: layers feeding layers; 32 in, 128 hidden, 32 out
+          - Say once: also called a neural network, or an MLP; the whole transformer is one too
           """
         },
         %Slide{
           id: :neural_network,
-          title: "The neural network in the block",
+          title: "The feed forward network in the block",
           steps: 2,
           notes: """
-          - The one from the last slide, in practice: the formula and the three lines, two matmuls with the activation between
-          - Per position, no mixing between positions: attention gathered, this is where the model thinks about what it gathered
-          - Step 2: the dogs row for real; 32 in, the hidden 128 as four rows of 32 with the ReLU's zeros dark, 32 out again
-          = half the parameters: these two matrices, 4,096 floats each, plus their biases
+          - The formula and three lines: two matmuls, the activation between
+          - Per position, no mixing; attention gathered, this thinks
+          - Step 2: the dogs row for real; hidden as four rows of 32, zeros dark
+          = half the parameters: two matrices of 4,096
           - Next: the block as code
           """
         },
@@ -338,11 +319,11 @@ defmodule TinyLlmTalk.Deck do
           title: "Block.forward",
           steps: 8,
           notes: """
-          - One function, nine lines of work; the training-only return value is folded away
-          - The flow is the diagram with the two adds; the skips down its right edge are x: the input carried past normalization and attention to the first add, that sum carried past the second normalization and the network to the second
-          - Step down one line and one box at a time: normalize, attend, add the input back, normalize, the network, add again
-          = residual: the block never replaces the row, it adds to it. A layer that can only add starts as the identity, so a hundred stacked cannot lose the input, and every gradient has a straight path back through the additions. This is what made deep networks trainable
-          - The last step shows it whole. Next: back to words
+          - One function, nine lines; the training return folded away
+          - The skips on the right are x, carried past to each add
+          - A step per line: normalize, attend, add, normalize, network, add
+          = residual: adds, never replaces; starts as the identity; a straight path back for gradients; what made deep nets trainable
+          - Last step whole. Next: back to words
           """
         }
       ]
@@ -359,20 +340,20 @@ defmodule TinyLlmTalk.Deck do
           title: "Thirty-two floats become thirty-two probabilities",
           steps: 3,
           notes: """
-          - Step 1, the code: one more norm, then one more weighted sum takes the last row from 32 wide to 32 scores, one per word
-          - Step 2: the logits, as a strip
-          - Step 3: the softmax from the math break with its bars, and one new knob
-          = temperature: divide the logits by T before the softmax. T = 1 is the raw softmax; below 1 the top word takes everything, since a small divisor stretches the gaps before the exponential; above 1 the bars flatten toward equal
-          - The bars are the probe's: flees is the top of all 32, narrowly; are is second. Say so before someone else does
-          - The dial carries to the generation slide
+          - Step 1: one more norm, one weighted sum; 32 wide to 32 scores
+          - Step 2: the logits as a strip
+          - Step 3: the softmax, with a knob
+          = temperature: logits divided by T before the softmax; T = 1 raw; below 1 the top takes all; above 1 flattens
+          - flees tops all 32, narrowly; are second. Say it first
+          - The dial carries to generation
           """
         },
         %Slide{
           id: :every_part,
           title: "The transformer in this talk, every part",
           notes: """
-          - The diagram once more, and every box wears a tick
-          - That is the whole forward pass, seen. Next: the seven lines that do all of it
+          - Every box ticked; the whole forward pass, seen
+          - Next: the seven lines
           """
         },
         %Slide{
@@ -380,19 +361,19 @@ defmodule TinyLlmTalk.Deck do
           title: "This was all of it",
           steps: 5,
           notes: """
-          - Read the seven lines out loud: the three from the embedding slide, the block, the three from back to words
-          - A word becomes a row, position is added. The block: attention gathers, the residual keeps, the network thinks. One more norm. 32 floats become 32 logits, and the softmax makes them probabilities
-          - Nobody in the room needed a library to follow that. Next: using it
+          - Read the seven lines aloud
+          - Row, position added; the block; one more norm; 32 logits, softmax
+          - Nobody needed a library. Next: using it
           """
         },
         %Slide{
           id: :one_word_at_a_time,
           title: "How to eat an elephant",
           notes: """
-          - Answer the title: one bite at a time; here, one word at a time
-          = the loop: ask the function, pick a word, append it, ask again, stop at the period. The whole prefix is re-read every time, so a model cannot take back what it has said
-          - Press next: the bars, the pick, the append. Every press is a fresh draw. Start over if it wanders. Three or four words are enough
-          = temperature: below one commits, above one wanders, zero is argmax. At zero, the same word every time. Past two, structure goes before content
+          - One bite at a time
+          = the loop: ask, pick, append, ask again, stop at the period; the prefix is re-read every time
+          - Press next: bars, pick, append; a fresh draw each press; three or four words
+          = temperature: below 1 commits, above 1 wanders, 0 is argmax; past 2 structure goes first
           """
         }
       ]
@@ -408,12 +389,12 @@ defmodule TinyLlmTalk.Deck do
           title: "Training",
           steps: 6,
           notes: """
-          - The math first, for effect: the whole backward pass, every gradient the nudge needs, derived by hand in the repo's backprop notes, no autodiff. Do not read it. Say it all fit in one file
-          - Step 1 replaces it with five sentences, which is all training is
-          = corpus: 2,000 sentences the grammar wrote, so every prefix comes with the word that really followed
-          = surprise: the loss, minus the log of the probability the model gave the real word
-          - Take a prefix; run it; measure the surprise; nudge every number the way that makes it smaller; repeat a few hundred times
-          - The loss falling live was slide 1; step back to it if there is time
+          - Math first, for effect: every gradient by hand, no autodiff; do not read it; one file
+          - Step 1: five sentences, which is all training is
+          = corpus: 2,000 grammar sentences; every prefix knows its next word
+          = surprise: the loss; minus the log of the probability on the real word
+          - Prefix, run, surprise, nudge, repeat
+          - Slide 1 has the curve if there is time
           """
         }
       ]
@@ -422,25 +403,28 @@ defmodule TinyLlmTalk.Deck do
       number: 7,
       title: "Did it learn it",
       minutes: 2,
-      lands: "what is not here, the sentence again, and it writes",
+      lands: "what is not here, the sentence again with its two hops, and it writes",
       slides: [
         %Slide{
           id: :what_is_not_here,
           title: "What is not here, and what is",
           steps: 2,
           notes: """
-          = not here: a tokenizer, a GPU, multi-head attention, depth, KV caching
-          = KV caching: here the whole prefix is re-read every word; a real model keeps the keys and values it already computed
-          = here: embeddings, learned positions, scaled dot-product attention, a causal mask, residuals, RMSNorm, an MLP, temperature sampling
-          - The loss and the hand-written gradients are in the repo but not in the talk, so they stay off the list
-          - Every one of these is the same thing a frontier model does. The difference is thirteen orders of magnitude and a tokenizer
+          = not here: tokenizer, GPU, multi-head, depth, KV caching
+          = KV caching: a real model keeps the keys and values it computed; here the prefix is re-read
+          = here: embeddings, learned positions, scaled dot-product attention, causal mask, residuals, RMSNorm, feed forward, temperature
+          - Same pieces as a frontier model; thirteen orders of magnitude and a tokenizer apart
           """
         },
         %Slide{
           id: :the_sentence_again,
           title: "the llama who chases the dogs flees",
+          steps: 3,
           notes: """
-          - The bracket drawn, and the probability the model puts on flees: the highest of all 32 words
+          - Step 1: the sentence from the open, blank and all
+          - Step 2: where the blank looked: who, then who to llama; the subject in two hops
+          - Step 3: what it puts on the blank; flees above flee
+          - The vote, answered
           """
         },
         %Slide{
@@ -448,9 +432,9 @@ defmodule TinyLlmTalk.Deck do
           title: "It writes",
           ticks: true,
           notes: """
-          - The writer again, under the repo link, with both repos and the papers along the bottom
-          - Everything quoted about the frontier models came from the reports listed there
-          - Leave it running through the questions. Stop talking
+          - The writer under the repo link; sources along the bottom
+          - The frontier quotes came from those reports
+          - Leave it running; stop talking
           """
         }
       ]

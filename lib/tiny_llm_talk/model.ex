@@ -161,7 +161,7 @@ defmodule TinyLlmTalk.Model do
     {"normalization", [:gain1]},
     {"a single head of attention", [:query_weight, :key_weight, :value_weight, :output_weight]},
     {"normalization", [:gain2]},
-    {"neural network", [:weight1, :bias1, :weight2, :bias2]},
+    {"feed forward network", [:weight1, :bias1, :weight2, :bias2]},
     {"output", [:gain3, :projection]}
   ]
 

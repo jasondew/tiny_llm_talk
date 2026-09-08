@@ -781,9 +781,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
     ~H"""
     <section class="slide slide--tight">
       <.sentence_line />
-      <h2 class="slide__title slide__title--small">
-        Which word does the blank attend to the most?
-      </h2>
+      <h2 class="slide__title slide__title--small">{@slide.title}</h2>
       <div :if={@stage} class="two-up two-up--bet">
         <div class="aside-figure">
           <p class="aside-figure__caption">{@stage.caption}</p>
@@ -1024,7 +1022,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
 
     ~H"""
     <section class="slide slide--tight">
-      <p class="slide__eyebrow">neural network: the idea</p>
+      <p class="slide__eyebrow">feed forward network: the idea</p>
       <h2 class="slide__title slide__title--small">
         {case @step do
           1 -> "A node is a dot product, a bias, and an activation"
@@ -1032,7 +1030,13 @@ defmodule TinyLlmTalkWeb.SlideComponents do
           _ -> "A network is layers, one feeding the next"
         end}
       </h2>
-      <div :if={@step >= 2} class="slide__fill idea-figure">
+      <p :if={@step >= 3} class="row-caption">
+        a neural network; this shape is also called a multilayer perceptron, an MLP
+      </p>
+      <div
+        :if={@step >= 2}
+        class={["slide__fill idea-figure", @step >= 3 && "idea-figure--captioned"]}
+      >
         <.layer_graph :if={@step == 2} class="mlp-graph--wide" />
         <.mlp_graph :if={@step >= 3} class="mlp-graph--wide" />
       </div>
@@ -1043,7 +1047,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
           <.vector label="x, the inputs" values={@inputs} cell={64} class="vector--a" />
           <.vector label="w, its weights" values={@weights} cell={64} class="vector--b" />
           <.vector
-            label={"x · w + b, with b = #{format_signed(@bias)}"}
+            label={"x · w + b, with b = #{format_typeset(@bias)}"}
             values={[@pre]}
             cell={64}
             class="vector--work"
@@ -1060,7 +1064,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
 
     ~H"""
     <section class="slide slide--tight">
-      <p class="slide__eyebrow">neural network: the one in the block</p>
+      <p class="slide__eyebrow">feed forward network: the one in the block</p>
       <p class="formula">
         ReLU(<span class="formula__group">x W<sub>1</sub> + b<sub>1</sub></span>) W<sub>2</sub>
         + b<sub>2</sub>
@@ -1189,7 +1193,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
     "embedding + position",
     "normalization",
     "attention",
-    "neural network",
+    "feed forward network",
     "32 probabilities"
   ]
 
@@ -1198,7 +1202,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
 
     ~H"""
     <section class="slide slide--tight">
-      <h2 class="slide__title slide__title--small">The transformer in this talk</h2>
+      <h2 class="slide__title slide__title--small">{@slide.title}</h2>
       <div class="slide__fill">
         <.block_diagram repeats="× 1" label="Block" done={@done} />
       </div>
@@ -1277,7 +1281,9 @@ defmodule TinyLlmTalkWeb.SlideComponents do
             <li>A word becomes a row. Position is added.</li>
           </.step>
           <.step n={3} step={@step}>
-            <li>The block: attention gathers, the residual keeps, the MLP thinks.</li>
+            <li>
+              The block: attention gathers, the residual keeps, the feed forward network thinks.
+            </li>
           </.step>
           <.step n={4} step={@step}>
             <li>One more norm.</li>
@@ -1313,7 +1319,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
             <li>scaled dot-product attention</li>
             <li>a causal mask</li>
             <li>residuals and RMSNorm</li>
-            <li>an MLP</li>
+            <li>a feed forward network</li>
             <li>temperature sampling</li>
           </ul>
         </.step>
@@ -1322,30 +1328,47 @@ defmodule TinyLlmTalkWeb.SlideComponents do
     """
   end
 
+  # The bookend: the sentence as the cold open asked it, then the two hops the
+  # blank takes to reach the subject, then what the model puts on the blank.
+  # The hops are attention weights from the checkpoint: the dogs row's weight
+  # on who, and the who row's weight on llama, as the walkthrough showed.
+  @sentence_words ["the", "llama", "who", "chases", "the", "dogs", "____"]
+  @sentence_hops [
+    %{from: 6, to: 2, row: 6, column: 3},
+    %{from: 2, to: 1, row: 3, column: 2}
+  ]
+
   def slide(%{slide: %Slide{id: :the_sentence_again}} = assigns) do
-    assigns = assign(assigns, flees: probability_after(Model.probe(), "flees"))
+    temperature = Controls.temperature(assigns.controls)
+    weights = Model.attention(Model.probe())
+
+    assigns =
+      assign(assigns,
+        words: @sentence_words,
+        hops: (weights && hops_with_weights(@sentence_hops, weights)) || [],
+        temperature: temperature,
+        distribution: Model.distribution(Model.probe(), temperature)
+      )
 
     ~H"""
-    <section class="slide slide--centred">
-      <.probe
-        words={[
-          "the",
-          {"llama", :subject},
-          "who",
-          "chases",
-          "the",
-          {"dogs", :distractor},
-          {"flees", :answer}
-        ]}
-        bracket={2..7}
-        show_marks
-        show_bracket
-        class="probe--huge"
-      />
-      <p :if={@flees} class="slide__punchline">
-        <span class="word word--answer">flees</span>, at {format_percent(@flees)}: the highest
-        of all thirty-two words.
-      </p>
+    <section class="slide slide--tight">
+      <.sentence_arcs words={@words} hops={if @step >= 2, do: @hops, else: []} />
+      <.step :if={@distribution} n={3} step={@step} class="sentence-answer">
+        <p class="row-caption">
+          what it puts on the blank
+          <span class="sentence-answer__temperature">
+            T = {:erlang.float_to_binary(@temperature, decimals: 2)}
+          </span>
+        </p>
+        <.bars
+          values={@distribution}
+          words={Vocab.words()}
+          top={5}
+          highlight={~w(flees)}
+          class="bars--compact"
+        />
+      </.step>
+      <.untrained :if={is_nil(@distribution)} what="This answer" />
     </section>
     """
   end
@@ -1615,8 +1638,8 @@ defmodule TinyLlmTalkWeb.SlideComponents do
   defp plumbing_labels do
     [
       "blend + row",
-      "MLP hidden, ReLU (128, 4 per cell)",
-      "MLP out + row",
+      "feed forward hidden, ReLU (128, 4 per cell)",
+      "feed forward out + row",
       "norm, project = logits"
     ]
   end
@@ -1727,7 +1750,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
     {"normalization", "norm"},
     {"attention", "attention"},
     {"normalization", "norm"},
-    {"neural network", "mlp"},
+    {"feed forward network", "mlp"},
     {"32 probabilities", nil}
   ]
 
@@ -1739,8 +1762,8 @@ defmodule TinyLlmTalkWeb.SlideComponents do
     {:attention, "attention", "attention"},
     {:add1, "x + attention(x)", "add"},
     {:norm2, "normalization", "norm"},
-    {:network, "neural network", "mlp"},
-    {:add2, "x + mlp(x)", "add"},
+    {:network, "feed forward network", "mlp"},
+    {:add2, "x + feed forward(x)", "add"},
     {:output, "output", nil}
   ]
 
@@ -2157,6 +2180,81 @@ defmodule TinyLlmTalkWeb.SlideComponents do
     """
   end
 
+  # The sentence with the blank's hops drawn under it: each hop an arc from
+  # the position asking to the position it looked at, labelled with the share
+  # of its attention that went there. The words are set in the SVG so the
+  # arcs land on them without measuring anything.
+  attr :words, :list, required: true
+  attr :hops, :list, required: true, doc: "from, to and weight over word positions"
+
+  defp sentence_arcs(assigns) do
+    slot = 1150 / length(assigns.words)
+    centre = fn index -> slot * index + slot / 2 end
+
+    assigns =
+      assign(assigns,
+        placed:
+          Enum.with_index(assigns.words, fn word, index -> {word, index, centre.(index)} end),
+        lit: Enum.map(assigns.hops, & &1.to),
+        arcs:
+          Enum.map(assigns.hops, fn hop ->
+            x1 = centre.(hop.from)
+            x2 = centre.(hop.to)
+            depth = 30 + abs(x1 - x2) * 0.15
+
+            %{
+              path: "M #{x1} 80 Q #{(x1 + x2) / 2} #{80 + depth * 2} #{x2} 80",
+              label_x: (x1 + x2) / 2,
+              label_y: 80 + depth - 8,
+              weight: hop.weight
+            }
+          end)
+      )
+
+    ~H"""
+    <svg class="sentence-arcs" viewBox="0 0 1150 240" width="1150" height="240">
+      <defs>
+        <marker
+          id="sentence-arrow"
+          viewBox="0 0 10 10"
+          refX="8"
+          refY="5"
+          markerWidth="7"
+          markerHeight="7"
+          orient="auto"
+        >
+          <path d="M 0 0 L 10 5 L 0 10 z" class="sentence-arcs__head" />
+        </marker>
+      </defs>
+      <text
+        :for={{word, index, x} <- @placed}
+        x={x}
+        y="60"
+        class={[
+          "sentence-arcs__word",
+          word == "____" && "sentence-arcs__word--blank",
+          index in @lit && "sentence-arcs__word--lit"
+        ]}
+      >
+        {word}
+      </text>
+      <%= for arc <- @arcs do %>
+        <path d={arc.path} class="sentence-arcs__arc" marker-end="url(#sentence-arrow)" />
+        <text x={arc.label_x} y={arc.label_y} class="sentence-arcs__weight">
+          {format_percent(arc.weight)}
+        </text>
+      <% end %>
+    </svg>
+    """
+  end
+
+  # Each hop with the checkpoint's weight for it read off the attention matrix.
+  defp hops_with_weights(hops, weights) do
+    Enum.map(hops, fn hop ->
+      Map.put(hop, :weight, weights |> Enum.at(hop.row) |> Enum.at(hop.column))
+    end)
+  end
+
   # A row of signed floats as bars from a baseline, up for positive and down
   # for negative, on a shared scale so a row before and after the ReLU can be
   # compared. A value at exactly zero leaves a faint stub, so the room can
@@ -2268,13 +2366,6 @@ defmodule TinyLlmTalkWeb.SlideComponents do
     end
   end
 
-  defp probability_after(words, word) do
-    case Model.distribution(words, 1.0) do
-      nil -> nil
-      distribution -> Enum.at(distribution, Vocab.word_to_id(word))
-    end
-  end
-
   defp format_vector(vector), do: "[" <> Enum.map_join(vector, ", ", &format_signed/1) <> "]"
 
   defp format_signed(value) when value >= 0,
@@ -2283,6 +2374,10 @@ defmodule TinyLlmTalkWeb.SlideComponents do
   defp format_signed(value), do: :erlang.float_to_binary(value * 1.0, decimals: 2)
 
   defp format_weight(value), do: :erlang.float_to_binary(value * 1.0, decimals: 2)
+
+  # A signed number set in prose, with a real minus sign rather than a hyphen.
+  defp format_typeset(value) when value < 0, do: "\u2212" <> format_weight(-value)
+  defp format_typeset(value), do: format_weight(value)
 
   defp format_count(nil), do: "About fifteen thousand"
 
