@@ -758,6 +758,19 @@
   gap: 4px 16px;
 }
 
+.signed-rows--tall {
+  grid-template-columns: 200px 900px;
+  gap: 14px 16px;
+}
+
+.signed-rows--tall .signed-spark {
+  height: 96px;
+}
+
+.signed-rows--tall .signed-rows__label {
+  font-size: 18px;
+}
+
 .signed-rows__label {
   font-family: var(--mono);
   font-size: 14px;

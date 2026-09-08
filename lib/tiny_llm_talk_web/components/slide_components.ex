@@ -366,7 +366,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
       </p>
       <div class="two-up">
         <div>
-          <p class="row-caption">scores in &middot; drag one</p>
+          <p class="row-caption">scores in, drag one</p>
           <div class="score-rows">
             <form
               :for={{word, score} <- @scores}
@@ -391,7 +391,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
         </div>
         <div>
           <p class="row-caption">
-            distribution out &middot; sums to {format_weight(Enum.sum(@distribution))}
+            distribution out, sums to {format_weight(Enum.sum(@distribution))}
           </p>
           <.bars values={@distribution} words={@words} top={5} highlight={@words} absolute />
         </div>
@@ -849,7 +849,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
 
     ~H"""
     <section class="slide slide--tight">
-      <p class="slide__eyebrow">the block &middot; lib/tiny_llm/block.ex</p>
+      <p class="slide__eyebrow">the block, lib/tiny_llm/block.ex</p>
       <h2 class="slide__title slide__title--small">Block.forward</h2>
       <div class="two-up two-up--walk">
         <.code
@@ -888,12 +888,21 @@ defmodule TinyLlmTalkWeb.SlideComponents do
         rms: block && block.rms1,
         scaled: block && Enum.take(Enum.map(block.input, &(&1 / block.rms1)), @shown_columns),
         gain: params && Enum.take(hd(params.gain1), @shown_columns),
-        normalized: block && Enum.take(block.norm1, @shown_columns)
+        normalized: block && Enum.take(block.norm1, @shown_columns),
+        bars:
+          block && params &&
+            [
+              {"x", block.input},
+              {"x / rms(x)", Enum.map(block.input, &(&1 / block.rms1))},
+              {"g, learned", hd(params.gain1)},
+              {"x / rms(x) · g", block.norm1}
+            ],
+        peak: block && params && spark_peak([block.input, block.norm1, hd(params.gain1)])
       )
 
     ~H"""
     <section class="slide slide--tight">
-      <p class="slide__eyebrow">normalization &middot; RMSNorm</p>
+      <p class="slide__eyebrow">normalization: RMSNorm</p>
       <p class="formula formula--stacked">
         RMSNorm(x) = <span class="formula__group">x / rms(x)</span> · g
       </p>
@@ -901,8 +910,12 @@ defmodule TinyLlmTalkWeb.SlideComponents do
         rms(x) = <span class="formula__group">√mean(x²)</span>
         <span class="formula__gloss">square each float, average, take the root: the row's typical size</span>
       </p>
-      <p :if={@row} class="row-caption">the dogs row, the first {@shown} of its {@width} floats</p>
-      <div :if={@row} class="dot__arithmetic rmsnorm">
+      <p :if={@row} class="row-caption">
+        {if @step >= 6,
+          do: "the dogs row, all #{@width} floats",
+          else: "the dogs row, the first #{@shown} of its #{@width} floats"}
+      </p>
+      <div :if={@row && @step < 6} class="dot__arithmetic rmsnorm">
         <.vector label="x" values={@row} cell={64} class="vector--a" />
         <.step n={2} step={@step}>
           <.vector label="rms(x)" values={[@rms]} cell={64} class="vector--total" />
@@ -917,6 +930,12 @@ defmodule TinyLlmTalkWeb.SlideComponents do
           <.vector label="x / rms(x) · g" values={@normalized} cell={64} class="vector--total" />
         </.step>
       </div>
+      <div :if={@bars && @step >= 6} class="signed-rows signed-rows--tall">
+        <%= for {label, values} <- @bars do %>
+          <span class="signed-rows__label">{label}</span>
+          <.signed_spark values={values} peak={@peak} />
+        <% end %>
+      </div>
       <.untrained :if={is_nil(@row)} what="This row" />
     </section>
     """
@@ -927,7 +946,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
 
     ~H"""
     <section class="slide slide--tight">
-      <p class="slide__eyebrow">neural network &middot; MLP, a multilayer perceptron</p>
+      <p class="slide__eyebrow">neural network: MLP, a multilayer perceptron</p>
       <p class="formula">
         ReLU(<span class="formula__group">x W<sub>1</sub> + b<sub>1</sub></span>) W<sub>2</sub>
         + b<sub>2</sub>
@@ -936,13 +955,13 @@ defmodule TinyLlmTalkWeb.SlideComponents do
         <.mlp_graph />
         <.step :if={@block} n={3} step={@step} class="strip-stack mlp__real">
           <p class="row-caption">the dogs row</p>
-          <.strips rows={[@block.norm2]} labels={["x · 32 wide"]} cell={11} />
+          <.strips rows={[@block.norm2]} labels={["x, 32 wide"]} cell={11} />
           <.strips
             rows={Enum.chunk_every(@block.hidden, 32)}
-            labels={["ReLU(x W₁ + b₁) · 128 wide", "", "", "#{zeros(@block.hidden)} of them zero"]}
+            labels={["ReLU(x W₁ + b₁), 128 wide", "", "", "#{zeros(@block.hidden)} of them zero"]}
             cell={11}
           />
-          <.strips rows={[@block.mlp]} labels={["· W₂ + b₂ · 32 wide again"]} cell={11} />
+          <.strips rows={[@block.mlp]} labels={["hidden W₂ + b₂, 32 wide again"]} cell={11} />
         </.step>
       </div>
       <.step n={2} step={@step}>
@@ -965,7 +984,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
 
     ~H"""
     <section class="slide slide--tight">
-      <p class="slide__eyebrow">activation &middot; ReLU, a rectified linear unit</p>
+      <p class="slide__eyebrow">activation: ReLU, a rectified linear unit</p>
       <p class="formula">
         ReLU(z) = <span class="formula__group">max(0, z)</span>
       </p>
@@ -985,7 +1004,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
         <div class="signed-rows">
           <span class="signed-rows__label">x W₁ + b₁</span>
           <.signed_spark values={@block.pre} peak={@peak} />
-          <span class="signed-rows__label">ReLU &middot; {@zeros} of 128 now zero</span>
+          <span class="signed-rows__label">ReLU: {@zeros} of 128 now zero</span>
           <.signed_spark values={@block.hidden} peak={@peak} />
         </div>
       </.step>
@@ -1261,7 +1280,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
       <div :if={@frame} class="writer__pipe">
         <div class={["writer__stage", stage_class(@frame.phase, :word)]}>
           <p class="writer__label">
-            1. words become integers{if @frame.finished, do: " · the paragraph is finished", else: ""}
+            1. words become integers{if @frame.finished, do: ", the paragraph is finished", else: ""}
           </p>
           <div class="writer__chips">
             <span
@@ -1291,7 +1310,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
             <.heatmap
               :if={@qk}
               values={[List.last(@qk.scaled.queries) | @qk.scaled.keys]}
-              row_labels={["q · " <> List.last(@qk.prefix) | Enum.map(@qk.prefix, &("k · " <> &1))]}
+              row_labels={["q: " <> List.last(@qk.prefix) | Enum.map(@qk.prefix, &("k: " <> &1))]}
               column_labels={List.duplicate("", 32)}
               highlight={[{0, -1}]}
               cell={rows_cell(@qk.size)}
@@ -1326,7 +1345,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
           <.heatmap
             :if={@values}
             values={@values.scaled.values ++ [@values.scaled.blend]}
-            row_labels={Enum.map(@values.prefix, &("v · " <> &1)) ++ ["= blend"]}
+            row_labels={Enum.map(@values.prefix, &("v: " <> &1)) ++ ["= blend"]}
             column_labels={List.duplicate("", 32)}
             highlight={[{@values.size, -1}]}
             cell={rows_cell(@values.size)}
@@ -1457,9 +1476,9 @@ defmodule TinyLlmTalkWeb.SlideComponents do
   defp plumbing_labels do
     [
       "blend + row",
-      "MLP hidden · ReLU (128, 4 per cell)",
+      "MLP hidden, ReLU (128, 4 per cell)",
       "MLP out + row",
-      "norm · project = logits"
+      "norm, project = logits"
     ]
   end
 
@@ -1533,12 +1552,12 @@ defmodule TinyLlmTalkWeb.SlideComponents do
   defp final_loss(_trainer), do: nil
 
   defp status_line(%Trainer{status: :running} = trainer, elapsed, final) do
-    "step #{trainer.step} of #{trainer.config.steps} · #{round(elapsed)}s" <>
-      if(final, do: " · loss #{format_loss(final)}", else: "")
+    "step #{trainer.step} of #{trainer.config.steps}, #{round(elapsed)}s" <>
+      if(final, do: ", loss #{format_loss(final)}", else: "")
   end
 
   defp status_line(%Trainer{status: :done} = trainer, _elapsed, final) do
-    "loss #{format_loss(final)} in #{trainer.seconds}s · " <>
+    "loss #{format_loss(final)} in #{trainer.seconds}s, " <>
       case trainer.matches do
         true -> "matches the checkpoint"
         false -> "does not match the checkpoint"
@@ -1857,9 +1876,9 @@ defmodule TinyLlmTalkWeb.SlideComponents do
   # wired to every node in the next column. A few nodes stand for each layer;
   # the dots say there are more. Each wire is one float in W1 or W2.
   @mlp_columns [
-    {60, "x · 32", [40, 85, 215, 260], "input"},
-    {280, "hidden · 128 · ReLU", [30, 75, 120, 180, 225, 270], "hidden"},
-    {500, "out · 32", [40, 85, 215, 260], "output"}
+    {60, "x (32)", [40, 85, 215, 260], "input"},
+    {280, "hidden (128), then ReLU", [30, 75, 120, 180, 225, 270], "hidden"},
+    {500, "out (32)", [40, 85, 215, 260], "output"}
   ]
 
   defp mlp_graph(assigns) do
@@ -1894,11 +1913,11 @@ defmodule TinyLlmTalkWeb.SlideComponents do
       <% end %>
       <text x="170" y="295" class="mlp-graph__weights">
         W<tspan baseline-shift="sub">1</tspan>
-        · 32 × 128, + b<tspan baseline-shift="sub">1</tspan>
+        (32 × 128), + b<tspan baseline-shift="sub">1</tspan>
       </text>
       <text x="390" y="295" class="mlp-graph__weights">
         W<tspan baseline-shift="sub">2</tspan>
-        · 128 × 32, + b<tspan baseline-shift="sub">2</tspan>
+        (128 × 32), + b<tspan baseline-shift="sub">2</tspan>
       </text>
     </svg>
     """

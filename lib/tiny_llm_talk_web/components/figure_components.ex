@@ -461,7 +461,7 @@ defmodule TinyLlmTalkWeb.FigureComponents do
           y={Chart.y(@chart, @knowing_nothing) - 10}
           text-anchor="end"
         >
-          knowing nothing &middot; ln(32) = {:erlang.float_to_binary(@knowing_nothing, decimals: 3)}
+          knowing nothing, ln(32) = {:erlang.float_to_binary(@knowing_nothing, decimals: 3)}
         </text>
 
         <line
@@ -477,7 +477,7 @@ defmodule TinyLlmTalkWeb.FigureComponents do
           y={Chart.y(@chart, @floor) + 26}
           text-anchor="end"
         >
-          {@floor_label} &middot; {:erlang.float_to_binary(@floor, decimals: 3)}
+          {@floor_label}, {:erlang.float_to_binary(@floor, decimals: 3)}
         </text>
 
         <polyline

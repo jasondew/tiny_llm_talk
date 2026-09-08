@@ -322,7 +322,7 @@ defmodule TinyLlmTalk.Deck do
         %Slide{
           id: :normalization,
           title: "Normalization",
-          steps: 5,
+          steps: 6,
           notes: """
           Say the idea first: rows come out of a stage at whatever size
           the stage made them, and the next stage wants them all at one
@@ -336,7 +336,10 @@ defmodule TinyLlmTalk.Deck do
           Step four, g, thirty-two learned floats, one per column, so the
           model can choose the size it wants per feature rather than
           being stuck at one. Step five, the product, which is what the
-          next stage receives. That is RMSNorm: no mean subtracted, no
+          next stage receives. Step six, the numbers become bars, all
+          thirty-two, on one scale: the row as it arrived is short, the
+          divided row is tall, g is a flat-ish row near one, and the
+          product is the tall row reshaped a little. That is RMSNorm: no mean subtracted, no
           bias, which is the difference from LayerNorm, and the paper
           found the recentring buys nothing. Say, do not show: this runs
           twice per block, before attention and before the network, lines

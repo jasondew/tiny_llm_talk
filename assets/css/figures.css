@@ -322,8 +322,17 @@
   min-width: 9em;
 }
 
+/* Printed numbers have to read on a dark cell as well as a bright one: dark
+ * ink on the bright half of the scale, light ink on the dark half. The clamp
+ * turns the heat into a hard switch at the middle, since a smooth blend is
+ * grey on brown exactly where the cells are mid-toned. */
 .vector__cell {
   font-size: 24px;
+  color: color-mix(
+    in oklab,
+    var(--paper) clamp(0%, calc((var(--heat) - 0.5) * 10000%), 100%),
+    var(--ink)
+  );
 }
 
 .vector--a .heatmap__row-label {
