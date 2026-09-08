@@ -481,6 +481,40 @@ defmodule TinyLlmTalk.Deck do
     Enum.find(@numbered_sections, &(&1.number == number))
   end
 
+  @doc "The whole talk's budget, in seconds: every section's minutes added up."
+  @spec total_seconds() :: non_neg_integer()
+  def total_seconds, do: Enum.sum(Enum.map(@sections, &(&1.minutes * 60)))
+
+  @doc """
+  The seconds the outline says should have passed when this slide comes up:
+  every earlier section in full, plus this section's minutes spread evenly
+  over its slides.
+  """
+  @spec expected_seconds(Slide.t()) :: non_neg_integer()
+  def expected_seconds(%Slide{} = slide) do
+    section = section(slide)
+
+    earlier =
+      @sections |> Enum.filter(&(&1.number < section.number)) |> Enum.map(&(&1.minutes * 60))
+
+    place = Enum.find_index(section.slides, &(&1.index == slide.index))
+
+    Enum.sum(earlier) + div(section.minutes * 60 * place, length(section.slides))
+  end
+
+  @doc """
+  The window the outline gives this slide, in seconds from the start of the
+  talk: from when it should come up to when the next one should. The
+  presenter is on pace while the clock is inside it.
+  """
+  @spec expected_window(Slide.t()) :: {non_neg_integer(), non_neg_integer()}
+  def expected_window(%Slide{} = slide) do
+    section = section(slide)
+    start = expected_seconds(slide)
+
+    {start, start + div(section.minutes * 60, length(section.slides))}
+  end
+
   @doc """
   The steps a slide plans for.
 

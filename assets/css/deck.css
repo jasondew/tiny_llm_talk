@@ -19,6 +19,7 @@
   --rule: #262c36;
   --accent: #f0b429;
   --accent-cool: #5cc8ff;
+  --alarm: #f2705e;
 
   --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
   --sans: ui-sans-serif, -apple-system, "Helvetica Neue", Arial, sans-serif;
@@ -392,12 +393,41 @@
   height: calc(720px * var(--next-scale));
 }
 
+.presenter__timing {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  text-align: right;
+}
+
 .presenter__clock {
   font-family: var(--mono);
   font-size: 40px;
   line-height: 1;
-  text-align: right;
   color: var(--accent);
+}
+
+/* Ahead of or behind the outline: quiet when on pace, cool when ahead, and
+ * loud when behind. */
+.presenter__pace {
+  font-family: var(--mono);
+  font-size: 22px;
+  color: var(--ink-dim);
+}
+
+.presenter__pace--ahead {
+  color: var(--accent-cool);
+}
+
+.presenter__pace--behind {
+  color: var(--alarm);
+}
+
+.presenter__section-clock {
+  font-family: var(--mono);
+  font-size: 14px;
+  color: var(--ink-dim);
 }
 
 .presenter__label {

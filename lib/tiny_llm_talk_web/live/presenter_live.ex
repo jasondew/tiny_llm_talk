@@ -7,8 +7,10 @@ defmodule TinyLlmTalkWeb.PresenterLive do
   drawn louder.
 
   The outline budgets minutes per section, so the clock shows elapsed time
-  against the budget spent so far. The only two questions asked mid-talk are
-  "where am I" and "am I behind."
+  against the whole talk, how long this section has taken against its own
+  minutes, and how far ahead of or behind the outline the talk is at this
+  slide. The only two questions asked mid-talk are "where am I" and "am I
+  behind."
 
   The preview is live. A control clicked in it is a control turned on the big
   screen, so every demo can be driven from the podium.
@@ -33,6 +35,7 @@ defmodule TinyLlmTalkWeb.PresenterLive do
     {:ok,
      assign(socket,
        elapsed: 0,
+       section_entered: 0,
        running?: true,
        controls: %{},
        trainer: Trainer.state(),
@@ -54,7 +57,7 @@ defmodule TinyLlmTalkWeb.PresenterLive do
   end
 
   def handle_event("key", %{"key" => "r"}, socket) do
-    {:noreply, assign(socket, elapsed: 0)}
+    {:noreply, assign(socket, elapsed: 0, section_entered: 0)}
   end
 
   def handle_event("key", %{"key" => key} = params, socket) do
@@ -83,7 +86,10 @@ defmodule TinyLlmTalkWeb.PresenterLive do
   def handle_info(:frame, socket), do: {:noreply, Animation.tick(socket)}
 
   def handle_info(:tick, %{assigns: %{running?: false}} = socket), do: {:noreply, socket}
-  def handle_info(:tick, socket), do: {:noreply, update(socket, :elapsed, &(&1 + 1))}
+
+  def handle_info(:tick, socket) do
+    {:noreply, socket |> update(:elapsed, &(&1 + 1)) |> assign_pace()}
+  end
 
   @impl true
   def render(assigns) do
@@ -98,9 +104,18 @@ defmodule TinyLlmTalkWeb.PresenterLive do
             training {@trainer.status} &middot; space/arrows move &middot; t pauses &middot; r resets &middot; click a preview to drive it
           </p>
         </div>
-        <p class="presenter__clock">
-          {format_clock(@elapsed)} <span class="presenter__budget">of {budget(@section)}</span>
-        </p>
+        <div class="presenter__timing">
+          <p class="presenter__clock">
+            {format_clock(@elapsed)}
+            <span class="presenter__budget">of {format_clock(Deck.total_seconds())}</span>
+          </p>
+          <p class={["presenter__pace", "presenter__pace--#{elem(@pace, 0)}"]}>
+            {pace_label(@pace)}
+          </p>
+          <p class="presenter__section-clock">
+            section {format_clock(@elapsed - @section_entered)} of {@section.minutes}:00
+          </p>
+        </div>
       </div>
       <p class="presenter__lands">{@section.lands}</p>
       <div class="presenter__current">
@@ -167,22 +182,51 @@ defmodule TinyLlmTalkWeb.PresenterLive do
         {index, step} -> {Deck.at(index), step}
       end
 
-    assign(socket, next: next, section: Deck.section(socket.assigns.slide))
+    section = Deck.section(socket.assigns.slide)
+    previous = socket.assigns[:section]
+
+    socket
+    |> assign(next: next, section: section)
+    |> assign_section_entered(previous)
+    |> assign_pace()
   end
+
+  # The clock reading when this section began, kept so the section has its
+  # own timer. Going back into an earlier section restarts it too.
+  defp assign_section_entered(socket, previous) do
+    if previous && previous.number == socket.assigns.section.number do
+      socket
+    else
+      assign(socket, section_entered: socket.assigns.elapsed)
+    end
+  end
+
+  # Ahead of or behind the outline, in seconds: on pace while the clock is
+  # inside the window the outline gives this slide, give or take a quarter
+  # minute, behind by how far past the window's end, ahead by how far short
+  # of its start.
+  defp assign_pace(socket) do
+    elapsed = socket.assigns.elapsed
+    {start, finish} = Deck.expected_window(socket.assigns.slide)
+
+    pace =
+      cond do
+        elapsed > finish + 15 -> {:behind, elapsed - finish}
+        elapsed < start - 15 -> {:ahead, start - elapsed}
+        true -> {:on, 0}
+      end
+
+    assign(socket, pace: pace)
+  end
+
+  defp pace_label({:on, _seconds}), do: "on pace"
+  defp pace_label({:behind, seconds}), do: "#{format_clock(seconds)} behind"
+  defp pace_label({:ahead, seconds}), do: "#{format_clock(seconds)} ahead"
 
   defp next_label(slide, _step, {next_slide, next_step}) when next_slide.index == slide.index,
     do: "step #{next_step} of #{slide.steps}"
 
   defp next_label(_slide, _step, {next_slide, _next_step}), do: next_slide.title
-
-  # The minutes the outline says should have passed by the end of this section.
-  defp budget(section) do
-    Deck.sections()
-    |> Enum.filter(&(&1.number <= section.number))
-    |> Enum.map(& &1.minutes)
-    |> Enum.sum()
-    |> then(&"#{&1}:00")
-  end
 
   defp format_clock(seconds) do
     minutes = div(seconds, 60)

@@ -24,6 +24,41 @@ defmodule TinyLlmTalk.DeckTest do
     end
   end
 
+  describe "the clock's budget" do
+    test "adds every section's minutes into the whole talk" do
+      minutes = Deck.sections() |> Enum.map(& &1.minutes) |> Enum.sum()
+
+      assert Deck.total_seconds() == minutes * 60
+    end
+
+    test "expects nothing at the very first slide" do
+      assert Deck.expected_seconds(Deck.at(1)) == 0
+    end
+
+    test "expects a section's earlier minutes in full at its first slide" do
+      [first, second | _rest] = Deck.sections()
+      opening = hd(second.slides)
+
+      assert Deck.expected_seconds(opening) == first.minutes * 60
+    end
+
+    test "gives a slide a window that ends where the next one begins" do
+      section = Enum.find(Deck.sections(), &(length(&1.slides) >= 2))
+      [first, second | _rest] = section.slides
+
+      assert Deck.expected_window(first) ==
+               {Deck.expected_seconds(first), Deck.expected_seconds(second)}
+    end
+
+    test "spreads a section's minutes evenly over its slides" do
+      section = Enum.find(Deck.sections(), &(length(&1.slides) >= 2))
+      [first, second | _rest] = section.slides
+
+      assert Deck.expected_seconds(second) - Deck.expected_seconds(first) ==
+               div(section.minutes * 60, length(section.slides))
+    end
+  end
+
   describe "position/2" do
     test "defaults to the first slide" do
       assert Deck.position(nil, nil) == {1, 1}
