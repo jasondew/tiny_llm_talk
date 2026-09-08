@@ -431,7 +431,7 @@ defmodule TinyLlmTalk.Deck do
       number: 5,
       title: "Back to words",
       minutes: 3,
-      lands: "rows become a distribution, the loop, and the knob",
+      lands: "rows become a distribution, every box ticked, the loop, and the knob",
       slides: [
         %Slide{
           id: :back_to_words,
@@ -451,11 +451,23 @@ defmodule TinyLlmTalk.Deck do
           """
         },
         %Slide{
-          id: :one_word_at_a_time,
-          title: "One word at a time",
+          id: :every_part,
+          title: "The transformer in this talk, every part",
           notes: """
-          Say the loop once: ask the function, pick a word, append it, ask
-          again, stop at the period; the whole prefix is re-read every time,
+          The diagram from the lid-off slide once more, and every box
+          wears a tick now: embedding and position, both normalizations,
+          attention, the network, and the thirty-two probabilities. That
+          is the whole forward pass, seen. What is left is using it, and
+          training it.
+          """
+        },
+        %Slide{
+          id: :one_word_at_a_time,
+          title: "How to eat an elephant",
+          notes: """
+          Answer the title: one bite at a time, and here one word at a
+          time. Say the loop once: ask the function, pick a word, append
+          it, ask again, stop at the period; the whole prefix is re-read every time,
           so a model cannot take back what it has said. Then press next and
           the room watches the bars, then the pick, then the append. Every
           press is a fresh draw, so it will surprise you too.

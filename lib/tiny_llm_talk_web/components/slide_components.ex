@@ -1123,6 +1123,28 @@ defmodule TinyLlmTalkWeb.SlideComponents do
     """
   end
 
+  # Every stage the diagram names, for the slide that ticks them all.
+  @every_stage [
+    "embedding + position",
+    "normalization",
+    "attention",
+    "neural network",
+    "32 probabilities"
+  ]
+
+  def slide(%{slide: %Slide{id: :every_part}} = assigns) do
+    assigns = assign(assigns, done: @every_stage)
+
+    ~H"""
+    <section class="slide slide--tight">
+      <h2 class="slide__title slide__title--small">The transformer in this talk</h2>
+      <div class="slide__fill">
+        <.block_diagram repeats="× 1" label="Block" done={@done} />
+      </div>
+    </section>
+    """
+  end
+
   def slide(%{slide: %Slide{id: :one_word_at_a_time}} = assigns) do
     words = Controls.generated(assigns.controls)
 
@@ -1138,7 +1160,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
 
     ~H"""
     <section class="slide">
-      <h2 class="slide__title slide__title--small">One word at a time</h2>
+      <h2 class="slide__title slide__title--small">How to eat an elephant</h2>
       <p class="written">
         <span class="written__word written__word--start">&lt;start&gt;</span>
         <span :for={word <- @words} class="written__word">{word}</span>
