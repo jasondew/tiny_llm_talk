@@ -327,35 +327,61 @@
 /* Presenter -------------------------------------------------------------- */
 
 .presenter {
+  /* The current slide takes the full width, unless the height would leave no
+   * room for the rest; the trig turns a length ratio into a plain number. */
+  --presenter-scale: min(
+    tan(atan2(100vw - 64px, 1280px)),
+    tan(atan2(100vh - 500px, 720px))
+  );
   position: fixed;
   inset: 0;
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr) auto;
-  gap: 24px;
-  padding: 28px 32px;
+  grid-template-rows: auto auto minmax(0, 1fr);
+  gap: 20px;
+  padding: 24px 32px;
   background: var(--paper);
   color: var(--ink);
   font-family: var(--sans);
 }
 
-/* The previews and the clock share the top row; the notes get the rest. */
-.presenter__top {
+.presenter__current .stage--preview {
+  --stage-scale: var(--presenter-scale);
+}
+
+.presenter__current .stage-preview {
+  width: calc(1280px * var(--presenter-scale));
+  height: calc(720px * var(--presenter-scale));
+  margin: 0 auto;
+}
+
+/* What is next, beside the clock and where the section has to land. */
+.presenter__middle {
   display: flex;
   gap: 32px;
   align-items: flex-start;
 }
 
+.presenter__middle .stage--preview-next {
+  --stage-scale: 0.25;
+}
+
+.presenter__middle .stage-preview--next {
+  width: calc(1280px * 0.25);
+  height: calc(720px * 0.25);
+}
+
 .presenter__head {
   flex: 1;
   min-width: 0;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 6px;
 }
 
 .presenter__clock {
   font-family: var(--mono);
-  font-size: 64px;
+  font-size: 48px;
   line-height: 1;
   color: var(--accent);
 }
@@ -369,7 +395,7 @@
 
 .presenter__lands {
   font-family: var(--serif);
-  font-size: 22px;
+  font-size: 18px;
   color: var(--accent-cool);
 }
 
@@ -377,9 +403,9 @@
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  font-size: 27px;
-  line-height: 1.35;
+  gap: 8px;
+  font-size: 24px;
+  line-height: 1.3;
 }
 
 .presenter__bullets {
@@ -423,7 +449,7 @@
 
 .presenter__keys {
   font-family: var(--mono);
-  font-size: 14px;
+  font-size: 12px;
   color: var(--ink-dim);
 }
 
@@ -2184,12 +2210,12 @@
 
 .presenter__training {
   font-family: var(--mono);
-  font-size: 20px;
+  font-size: 16px;
   color: var(--accent-cool);
 }
 
 .presenter__budget {
-  font-size: 24px;
+  font-size: 20px;
   color: var(--ink-dim);
 }
 

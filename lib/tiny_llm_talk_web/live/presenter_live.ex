@@ -1,7 +1,8 @@
 defmodule TinyLlmTalkWeb.PresenterLive do
   @moduledoc """
-  The laptop screen: the slide the room is looking at and what comes next
-  along the top, with the clock; the notes underneath, big enough to glance at.
+  The laptop screen: the slide the room is looking at, as wide as the screen
+  allows; under it what comes next beside the clock; under that the notes,
+  which are only what has to be said out loud.
 
   The outline budgets minutes per section, so the clock shows elapsed time
   against the budget spent so far. The only two questions asked mid-talk are
@@ -86,7 +87,7 @@ defmodule TinyLlmTalkWeb.PresenterLive do
   def render(assigns) do
     ~H"""
     <div class="presenter" phx-window-keydown="key">
-      <div class="presenter__top">
+      <div class="presenter__current">
         <div class="stage-preview">
           <div class="stage stage--preview">
             <SlideComponents.slide
@@ -98,6 +99,8 @@ defmodule TinyLlmTalkWeb.PresenterLive do
             />
           </div>
         </div>
+      </div>
+      <div class="presenter__middle">
         <div :if={@next} class="presenter__next">
           <p class="presenter__label">
             next: {next_label(@slide, @step, @next)}
@@ -119,13 +122,13 @@ defmodule TinyLlmTalkWeb.PresenterLive do
             {format_clock(@elapsed)} <span class="presenter__budget">of {budget(@section)}</span>
           </p>
           <p class="presenter__label">
-            {@section.number}. {@section.title} &middot; {@section.minutes} min
-          </p>
-          <p class="presenter__label">
-            slide {@slide.index} of {Deck.count()} &middot; step {@step} of {@slide.steps}
+            {@section.number}. {@section.title} &middot; {@section.minutes} min &middot; slide {@slide.index} of {Deck.count()} &middot; step {@step} of {@slide.steps}
           </p>
           <p class="presenter__lands">must land: {@section.lands}</p>
           <p class="presenter__training">training {@trainer.status}</p>
+          <p class="presenter__keys">
+            space/arrows move &middot; t pauses the clock &middot; r resets it &middot; click a preview to run a demo
+          </p>
         </div>
       </div>
       <div class="presenter__notes">
@@ -141,9 +144,6 @@ defmodule TinyLlmTalkWeb.PresenterLive do
           </dl>
         <% end %>
       </div>
-      <p class="presenter__keys">
-        space/arrows move &middot; t pauses the clock &middot; r resets it &middot; click the preview to run a demo
-      </p>
     </div>
     """
   end
