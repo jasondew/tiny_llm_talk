@@ -166,7 +166,8 @@ defmodule TinyLlmTalkWeb.SlideComponents do
   end
 
   # The nudges, written out: the whole backward pass, quoted from the repo's
-  # derivation. On screen first, for effect, then replaced by five sentences.
+  # derivation. The title alone first, then the math for effect, then five
+  # sentences in its place.
   # Each line is markup the deck wrote, so it is rendered raw for the
   # subscripts and transposes.
   @backward [
@@ -215,7 +216,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
     ~H"""
     <section class="slide">
       <h2 class="slide__title">Training</h2>
-      <div :if={@step == 1} class="two-up two-up--lists">
+      <div :if={@step == 2} class="two-up two-up--lists">
         <dl :for={column <- @columns} class="definitions definitions--math">
           <%= for {stage, lines} <- column do %>
             <dt>{stage}</dt>
@@ -225,23 +226,23 @@ defmodule TinyLlmTalkWeb.SlideComponents do
           <% end %>
         </dl>
       </div>
-      <ol :if={@step >= 2} class="beats beats--numbered">
+      <ol :if={@step >= 3} class="beats beats--numbered">
         <li>
           Take a prefix from the corpus, where we know the next word.
           <span :if={@corpus_size} class="beats__aside">
             {format_count(@corpus_size)} sentences the grammar wrote
           </span>
         </li>
-        <.step n={3} step={@step}>
+        <.step n={4} step={@step}>
           <li>Run the model: 32 probabilities.</li>
         </.step>
-        <.step n={4} step={@step}>
+        <.step n={5} step={@step}>
           <li>Measure how surprised it was by the real word.</li>
         </.step>
-        <.step n={5} step={@step}>
+        <.step n={6} step={@step}>
           <li>Nudge every number in the direction that makes the surprise smaller.</li>
         </.step>
-        <.step n={6} step={@step}>
+        <.step n={7} step={@step}>
           <li>Repeat a few hundred times.</li>
         </.step>
       </ol>

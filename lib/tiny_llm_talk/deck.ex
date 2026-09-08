@@ -388,8 +388,9 @@ defmodule TinyLlmTalk.Deck do
         %Slide{
           id: :live_training,
           title: "Training",
-          steps: 6,
+          steps: 7,
           notes: """
+          - Ask: how does it learn? Then the math
           ! Do not read the math
           ! Every gradient by hand, no autodiff, one file
           = corpus: 2,000 grammar sentences
