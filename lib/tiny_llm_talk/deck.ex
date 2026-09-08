@@ -1,6 +1,6 @@
 defmodule TinyLlmTalk.Deck do
   @moduledoc """
-  The deck as data: the nine sections of `docs/talk-outline.md`, in order,
+  The deck as data: the eight sections of `docs/talk-outline.md`, in order,
   with every slide the outline names.
 
   Nothing here draws anything. A slide is a title, a note, and a count of
@@ -22,14 +22,31 @@ defmodule TinyLlmTalk.Deck do
       title: "Cold open",
       minutes: 4,
       lands:
-        "the room has answered, a language model is one function, and a transformer is one block repeated",
+        "it trained while they sat down, the room has answered, a language model is one function, and a transformer is one block repeated",
       slides: [
+        %Slide{
+          id: :training_math,
+          title: "Training, live",
+          notes: """
+          On screen while the room arrives. Press start as soon as the
+          projector is up; it takes about seventy seconds, and it can run
+          under the chatter. Same config and seed as the checkpoint, so
+          the loss it lands on is the loss every figure in this deck was
+          drawn from, and the slide says whether it matched. If anyone
+          asks what it is: the model in this talk, training itself from
+          random, right now. Name the two lines only if asked: it starts
+          at knowing nothing, ln 32, and the dashed line is the best
+          anything can do seeing only the previous word; the curve going
+          well under it means it is using information the previous word
+          does not carry. When it is time, move on to the sentence.
+          """
+        },
         %Slide{
           id: :the_vote,
           title: "flees, or flee?",
           steps: 2,
           notes: """
-          On screen while the room arrives. Ask out loud, hands up for each,
+          The first slide after the run. Ask out loud, hands up for each,
           and do not fill the silence. The second step lights the answer.
           Everybody knew. Say, do not show: the rule is easy to name, the
           hard part is knowing which noun is the subject when a plural one
@@ -517,8 +534,9 @@ defmodule TinyLlmTalk.Deck do
           that really followed. Take a prefix; run the model for its 32
           probabilities; measure how surprised it was by the real word;
           nudge every number in the direction that makes the surprise
-          smaller; repeat a few hundred times. The loss falling live is
-          the last slide of the deck, if there is time.
+          smaller; repeat a few hundred times. The loss falling live was
+          the first slide, running while they sat down; step back to it
+          if there is time, the curve is still there.
           """
         }
       ]
@@ -560,28 +578,6 @@ defmodule TinyLlmTalk.Deck do
           papers along the bottom where its controls were. Everything quoted
           about the frontier models came from the reports listed there.
           Leave it running through the questions. Stop talking.
-          """
-        }
-      ]
-    },
-    %Section{
-      number: 8,
-      title: "If there is time",
-      minutes: 3,
-      lands: "the loss falls live",
-      slides: [
-        %Slide{
-          id: :training_math,
-          title: "Training, live",
-          notes: """
-          Only if there is time. Press start, then talk over it; it takes
-          about seventy seconds. Same config and seed as the checkpoint,
-          so the loss it lands on is the loss every figure in this deck
-          was drawn from, and the slide says whether it matched. Name the
-          two lines: it starts at knowing nothing, ln 32, and the dashed
-          line is the best anything can do seeing only the previous word.
-          The point lands when the curve goes well under the dashed line:
-          it is using information the previous word does not carry.
           """
         }
       ]

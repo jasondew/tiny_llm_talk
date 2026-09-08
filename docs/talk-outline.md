@@ -18,7 +18,7 @@ the sentence, the picture of where attention looks, and the score.
 
 | # | section | min | slides | interactive |
 | --- | --- | --- | --- | --- |
-| 0 | Cold open | 4 | **flees, or flee** (the sentence, on screen while the room arrives; asked out loud), title, a language model is one function, the transformer (one block, drawn, × N then × 1) | asked out loud |
+| 0 | Cold open | 4 | **training, live** (on screen while the room arrives; press start and let it run), **flees, or flee** (asked out loud), title, a language model is one function, the transformer (one block, drawn, × N then × 1) | asked out loud |
 | 1 | Words become numbers | 4 | vocabulary (32 words), grammar, parameters (every table, by stage, with its shape and count), **it writes** (the writer: the whole path once, fast) | presenter pace |
 | 2 | Embedding and position | 3 | each word is a row and its position is added on, the model forgets it saw words | |
 | 3 | Attention | 11 | math break: **dot product** with two arrows to drag and **softmax playground**; then ask/offer/hand over with the formula, **a small example by hand** on a toy map, one head of attention (the formula over sixteen annotated lines, the heatmap beside them going dark when the focus reaches the mask), **where will the blank look** (asked out loud), **the walkthrough**, LLMs are weird | presenter drags, slider, picks |
@@ -26,7 +26,6 @@ the sentence, the picture of where attention looks, and the score.
 | 5 | Back to words | 3 | rows become a distribution, the block diagram with every box ticked, this was all of it (the seven lines, walked), **one word at a time** with the **temperature dial** | presenter |
 | 6 | Training | 3 | the whole backward pass on screen for effect, then the five beats in its place | |
 | 7 | Did it learn it | 2 | what is not here, the sentence again, **it writes** again under the repo link, with the sources along its foot | |
-| 8 | If there is time | 3 | **training, live** (press start, talk over it) | presenter start |
 
 ## Live training and the writer
 

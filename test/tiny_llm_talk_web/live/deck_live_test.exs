@@ -6,19 +6,19 @@ defmodule TinyLlmTalkWeb.DeckLiveTest do
   alias TinyLlmTalk.Deck
   alias TinyLlmTalkWeb.SlideComponents
 
-  test "opens on the sentence", %{conn: conn} do
+  test "opens on the first slide with the talk named in the footer", %{conn: conn} do
     {:ok, _view, html} = live(conn, ~p"/")
 
-    assert html =~ "llama"
     assert html =~ TinyLlmTalk.Deck.title()
   end
 
   test "puts the position in the address bar so a crash can recover it", %{conn: conn} do
-    {:ok, view, _html} = live(conn, ~p"/s/2")
+    single = Enum.find(Deck.slides(), &(&1.steps == 1))
+    {:ok, view, _html} = live(conn, ~p"/s/#{single.index}")
 
     render_keydown(view, "key", %{"key" => "ArrowRight"})
 
-    assert_patched(view, "/s/3/1")
+    assert_patched(view, "/s/#{single.index + 1}/1")
   end
 
   test "walks a slide's steps before moving on", %{conn: conn} do
