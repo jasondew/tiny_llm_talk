@@ -783,93 +783,34 @@
   fill: var(--rule);
 }
 
-/* Normalization: the why on the left, the arithmetic on the right. */
+/* Normalization: the two definitions, then the dogs row as printed numbers,
+ * every row's label in the same column so the cells line up. */
 .rmsnorm {
-  grid-template-columns: 1fr 1fr;
-}
-
-/* Six rows of arithmetic have to fit, so the cells are narrower than the
- * dot product's and the numbers shrink to match. */
-.rmsnorm .vector__cell {
-  font-size: 17px;
-}
-
-.rmsnorm__real {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-.formula__aside {
-  margin-left: 32px;
-  font-size: 0.7em;
-  color: var(--ink-dim);
-}
-
-.rms-table {
-  display: grid;
-  grid-template-columns: auto 260px auto;
-  justify-content: start;
-  align-items: center;
-  gap: 4px 16px;
-  font-family: var(--mono);
-  font-size: 16px;
-}
-
-.rms-table__head {
-  font-size: 13px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--ink-dim);
-}
-
-.rms-table__word {
-  color: var(--ink-dim);
-  text-align: right;
-}
-
-.rms-table__bar {
-  position: relative;
-  display: flex;
-  align-items: center;
   gap: 10px;
-  height: 22px;
 }
 
-.rms-table__fill {
-  display: block;
-  height: 14px;
-  border-radius: 3px;
-  background: var(--accent);
-  opacity: 0.85;
+.rmsnorm .vector__cell {
+  font-size: 19px;
 }
 
-.rms-table__number {
-  color: var(--ink);
+.rmsnorm .vector__label {
+  width: 200px;
+  box-sizing: border-box;
 }
 
-.rms-table__after {
+.rmsnorm .vector {
+  justify-content: start;
+}
+
+.formula--stacked {
+  margin: 0;
+}
+
+.formula__gloss {
+  margin-left: 24px;
+  font-family: var(--sans);
+  font-size: 0.6em;
   color: var(--ink-dim);
-}
-
-.spark-rows {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  align-items: end;
-  gap: 6px 16px;
-}
-
-.spark-rows .spark {
-  height: 44px;
-}
-
-.spark-rows__label {
-  padding-bottom: 2px;
-  font-family: var(--mono);
-  font-size: 14px;
-  color: var(--ink-dim);
-  text-align: right;
-  white-space: nowrap;
 }
 
 .dot__arithmetic {
