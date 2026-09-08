@@ -203,7 +203,7 @@ defmodule TinyLlmTalkWeb.DeckLiveTest do
     # The trainer is shared, and another test may have run it, so this checks
     # the slide reads whatever state it is in rather than that it is idle.
     test "draws the training slide from the trainer's state", %{conn: conn} do
-      slide = Enum.find(Deck.slides(), &(&1.id == :live_training))
+      slide = Enum.find(Deck.slides(), &(&1.id == :training_math))
       {:ok, _view, html} = live(conn, ~p"/s/#{slide.index}")
 
       assert html =~ "Training, live"

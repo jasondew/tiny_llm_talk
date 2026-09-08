@@ -24,8 +24,9 @@ the sentence, the picture of where attention looks, and the score.
 | 3 | Attention | 11 | math break: **dot product** with two arrows to drag and **softmax playground**; then ask/offer/hand over with the formula, **a small example by hand** on a toy map, one head of attention (the formula over sixteen annotated lines, the heatmap beside them going dark when the focus reaches the mask), **where will the blank look** (asked out loud), **the walkthrough**, LLMs are weird | presenter drags, slider, picks |
 | 4 | The rest of the block | 6 | the transformer in this talk (the block diagram again, × 1, the box named), normalization (the two definitions, then the dogs row as printed numbers through rms, the divide, and g), the ReLU with its graph, a neural network from one node up to the full graph, the network in the block with the dogs row, then Block.forward stepped down its nine lines with the flow and its two skips lit beside it | |
 | 5 | Back to words | 3 | rows become a distribution, the block diagram with every box ticked, this was all of it (the seven lines, walked), **one word at a time** with the **temperature dial** | presenter |
-| 6 | Training | 3 | **training, live** (press start, talk over it, the four beats stepped beside the curve) | presenter start |
+| 6 | Training | 3 | the five beats, stepped | |
 | 7 | Did it learn it | 2 | what is not here, the sentence again, **it writes** again under the repo link, with the sources along its foot | |
+| 8 | If there is time | 3 | **training, live** (press start, talk over it) beside the whole backward pass written out | presenter start |
 
 ## Live training and the writer
 

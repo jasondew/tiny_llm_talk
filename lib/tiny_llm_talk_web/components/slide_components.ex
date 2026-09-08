@@ -166,6 +166,65 @@ defmodule TinyLlmTalkWeb.SlideComponents do
   end
 
   def slide(%{slide: %Slide{id: :live_training}} = assigns) do
+    config = Trainer.checkpoint_config()
+    assigns = assign(assigns, corpus_size: Map.get(config, :training_corpus_size))
+
+    ~H"""
+    <section class="slide">
+      <h2 class="slide__title">Training</h2>
+      <ol class="beats beats--numbered">
+        <.step n={1} step={@step}>
+          <li>
+            Take a prefix from the corpus, where we know the next word.
+            <span :if={@corpus_size} class="beats__aside">
+              {format_count(@corpus_size)} sentences the grammar wrote
+            </span>
+          </li>
+        </.step>
+        <.step n={2} step={@step}>
+          <li>Run the model: 32 probabilities.</li>
+        </.step>
+        <.step n={3} step={@step}>
+          <li>Measure how surprised it was by the real word.</li>
+        </.step>
+        <.step n={4} step={@step}>
+          <li>Nudge every number in the direction that makes the surprise smaller.</li>
+        </.step>
+        <.step n={5} step={@step}>
+          <li>Repeat a few hundred times.</li>
+        </.step>
+      </ol>
+    </section>
+    """
+  end
+
+  # The nudges, written out: the whole backward pass, quoted from the repo's
+  # derivation, beside the loss falling live.
+  @backward [
+    {"loss", ["L = −(1/N) Σₜ log p[t][yₜ]"]},
+    {"output", ["dZ = (p − onehot(y)) / N", "dWᵤ = N₃ᵀ dZ      dN₃ = dZ Wᵤᵀ"]},
+    {"rmsnorm",
+     [
+       "dgᵢ = Σₜ dyₜᵢ nₜᵢ",
+       "dxⱼ = (dnⱼ − nⱼ · mean(dn ⊙ n)) / rms",
+       "∂(1/r)/∂xⱼ = −xⱼ / (d r³)"
+     ]},
+    {"network",
+     ["dW₂ = Hᵀ dY      dH = dY W₂ᵀ", "dPre = dH ⊙ [Pre > 0]", "dW₁ = N₂ᵀ dPre    db = Σₜ dPreₜ"]},
+    {"residual", ["dR = dY + dR_norm2      dX = dR + dX_norm1"]},
+    {"attention",
+     [
+       "dA = dC Vᵀ      dV = Aᵀ dC",
+       "dM[t][j] = A[t][j] (dA[t][j] − dA[t] · A[t])",
+       "dU = dM / √d      dQ = dU K      dK = dUᵀ Q",
+       "dW_Q = Xᵀ dQ    dW_K = Xᵀ dK    dW_V = Xᵀ dV",
+       "dX = dQ W_Qᵀ + dK W_Kᵀ + dV W_Vᵀ"
+     ]},
+    {"tables", ["dE[aₜ] += dXₜ      dP[t] += dXₜ"]},
+    {"update", ["θ ← θ − η ∂L/∂θ"]}
+  ]
+
+  def slide(%{slide: %Slide{id: :training_math}} = assigns) do
     trainer = assigns.trainer || Trainer.state()
     config = trainer.config || Trainer.checkpoint_config()
 
@@ -174,9 +233,9 @@ defmodule TinyLlmTalkWeb.SlideComponents do
         trainer: trainer,
         losses: Trainer.losses(trainer),
         steps: config.steps,
-        corpus_size: Map.get(config, :training_corpus_size),
         elapsed: elapsed(trainer),
-        final: final_loss(trainer)
+        final: final_loss(trainer),
+        backward: @backward
       )
 
     ~H"""
@@ -201,28 +260,6 @@ defmodule TinyLlmTalkWeb.SlideComponents do
         </div>
       </div>
       <div class="two-up two-up--training">
-        <ol class="beats beats--numbered beats--compact">
-          <.step n={1} step={@step}>
-            <li>
-              Take a prefix from the corpus, where we know the next word.
-              <span :if={@corpus_size} class="beats__aside">
-                {format_count(@corpus_size)} sentences the grammar wrote
-              </span>
-            </li>
-          </.step>
-          <.step n={2} step={@step}>
-            <li>Run the model: 32 probabilities.</li>
-          </.step>
-          <.step n={3} step={@step}>
-            <li>Measure how surprised it was by the real word.</li>
-          </.step>
-          <.step n={4} step={@step}>
-            <li>Nudge every number in the direction that makes the surprise smaller.</li>
-          </.step>
-          <.step n={5} step={@step}>
-            <li>Repeat a few hundred times.</li>
-          </.step>
-        </ol>
         <.loss_chart
           losses={@losses}
           knowing_nothing={Model.knowing_nothing()}
@@ -230,9 +267,17 @@ defmodule TinyLlmTalkWeb.SlideComponents do
           floor_label="the best any one-word model can do"
           series_label={"held-out loss, one block, seed #{config_seed(@trainer)}"}
           steps={@steps}
-          width={640}
+          width={600}
           height={380}
         />
+        <dl class="definitions definitions--math">
+          <%= for {stage, lines} <- @backward do %>
+            <dt>{stage}</dt>
+            <dd>
+              <span :for={line <- lines} class="definitions__line">{line}</span>
+            </dd>
+          <% end %>
+        </dl>
       </div>
     </section>
     """
@@ -1086,7 +1131,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
         path="lib/tiny_llm/transformer.ex"
         range={118..120}
         step={@step}
-        focus={[3..3, 3..3, 3..3, 3..3]}
+        focus={[3..3, 3..3, 3..3]}
       />
       <.step :if={@logits} n={2} step={@step} class="strip-stack strip-stack--tight">
         <.strips rows={[@logits]} labels={["logits, one score per word"]} cell={20} />
@@ -1109,7 +1154,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
           <output class="dial__value">T = {:erlang.float_to_binary(@temperature, decimals: 2)}</output>
         </form>
       </.step>
-      <.step :if={@distribution} n={4} step={@step}>
+      <.step :if={@distribution} n={3} step={@step}>
         <.bars
           values={@distribution}
           words={Vocab.words()}
@@ -1222,7 +1267,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
             <li>One more norm.</li>
           </.step>
           <.step n={5} step={@step}>
-            <li>Thirty-two floats become thirty-two probabilities.</li>
+            <li>Thirty-two floats become thirty-two logits; a softmax makes them probabilities.</li>
           </.step>
         </ol>
       </div>

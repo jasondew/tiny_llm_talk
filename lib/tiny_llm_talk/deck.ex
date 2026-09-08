@@ -1,6 +1,6 @@
 defmodule TinyLlmTalk.Deck do
   @moduledoc """
-  The deck as data: the eight sections of `docs/talk-outline.md`, in order,
+  The deck as data: the nine sections of `docs/talk-outline.md`, in order,
   with every slide the outline names.
 
   Nothing here draws anything. A slide is a title, a note, and a count of
@@ -437,18 +437,18 @@ defmodule TinyLlmTalk.Deck do
         %Slide{
           id: :back_to_words,
           title: "Thirty-two floats become thirty-two probabilities",
-          steps: 4,
+          steps: 3,
           notes: """
-          Four steps. First the code: one more norm, then one more
+          Three steps. First the code: one more norm, then one more
           weighted sum takes the last row from 32 wide to 32 scores, one
           per word. Second, those scores: the logits, as a strip. Third,
-          the softmax from the math break, with one new knob: divide the
-          logits by a temperature first. T of one is the raw softmax. Drag
-          it down and the top word takes everything, since dividing by a
-          small number stretches the gaps before the exponential; drag it
-          up and the bars flatten toward equal. Fourth, the bars for the
-          probe: flees is the top of all thirty-two. The dial carries to
-          the next slide.
+          the softmax from the math break with its bars, and one new
+          knob: divide the logits by a temperature first. T of one is the
+          raw softmax. Drag it down and the top word takes everything,
+          since dividing by a small number stretches the gaps before the
+          exponential; drag it up and the bars flatten toward equal. The
+          bars are the probe's: flees is the top of all thirty-two. The
+          dial carries to the next slide.
           """
         },
         %Slide{
@@ -472,7 +472,8 @@ defmodule TinyLlmTalk.Deck do
           them, read out loud now. A word
           becomes a row, position is added. The block: attention gathers,
           the residual keeps, the MLP thinks. One more norm. Thirty-two floats
-          become thirty-two probabilities. Nobody in the room needed a
+          become thirty-two logits, and the softmax from the last slide
+          makes them probabilities. Nobody in the room needed a
           library to follow that. Next, using it.
           """
         },
@@ -503,25 +504,18 @@ defmodule TinyLlmTalk.Deck do
       slides: [
         %Slide{
           id: :live_training,
-          title: "Training, live",
+          title: "Training",
           steps: 5,
           notes: """
-          Press start, then talk over it; it takes about seventy seconds.
-          Same config and seed as the checkpoint, so the loss it lands on is
-          the loss every figure in this deck was drawn from, and the slide
-          says whether it matched. While it draws, step the five beats
-          beside it. The corpus is sentences the grammar wrote, two thousand
-          of them, so every prefix comes with the word that really followed.
-          Take a prefix; run the model for its 32 probabilities; measure how
-          surprised it was by the real word; nudge every number in the
-          direction that makes the surprise smaller; repeat a few hundred
-          times. No chain rule on
-          screen; the nudges are derived by hand in the repo, with no
-          autodiff to hide behind. Name the two lines: it starts at knowing
-          nothing, ln 32, and the dashed line is the best anything can do
-          seeing only the previous word. The point lands when the curve
-          goes well under the dashed line: it is using information the
-          previous word does not carry.
+          Five beats, one a step. The corpus is sentences the grammar
+          wrote, two thousand of them, so every prefix comes with the word
+          that really followed. Take a prefix; run the model for its 32
+          probabilities; measure how surprised it was by the real word;
+          nudge every number in the direction that makes the surprise
+          smaller; repeat a few hundred times. No chain rule here; the
+          nudges are derived by hand in the repo, with no autodiff to hide
+          behind, and the last slide of the deck has them written out with
+          the loss falling live, if there is time.
           """
         }
       ]
@@ -563,6 +557,35 @@ defmodule TinyLlmTalk.Deck do
           papers along the bottom where its controls were. Everything quoted
           about the frontier models came from the reports listed there.
           Leave it running through the questions. Stop talking.
+          """
+        }
+      ]
+    },
+    %Section{
+      number: 8,
+      title: "If there is time",
+      minutes: 3,
+      lands: "the loss falls live, beside every derivative that moves it",
+      slides: [
+        %Slide{
+          id: :training_math,
+          title: "Training, live",
+          notes: """
+          Only if there is time. Press start, then talk over it; it takes
+          about seventy seconds. Same config and seed as the checkpoint,
+          so the loss it lands on is the loss every figure in this deck
+          was drawn from, and the slide says whether it matched. Name the
+          two lines: it starts at knowing nothing, ln 32, and the dashed
+          line is the best anything can do seeing only the previous word.
+          The point lands when the curve goes well under the dashed line:
+          it is using information the previous word does not carry. The
+          column beside it is the whole backward pass, every gradient the
+          nudge needs, derived by hand in the repo's backprop notes: the
+          softmax and cross-entropy collapsing to p minus one-hot, the
+          two matmul rules, RMSNorm's row-scalar, the ReLU gate, the
+          residual sums, attention's Jacobian, the scatter back to the
+          tables, and the update. Do not read it. Let them look at how
+          much of it there is, and say that it all fit in one file.
           """
         }
       ]

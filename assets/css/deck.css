@@ -480,9 +480,34 @@
 }
 
 .two-up--training {
-  grid-template-columns: 1fr auto;
+  grid-template-columns: auto 1fr;
   align-items: center;
   gap: 24px 40px;
+}
+
+/* The backward pass, dense on purpose: the point is how much of it there is. */
+.definitions.definitions--math {
+  grid-template-columns: 110px 1fr;
+  gap: 6px 16px;
+  align-items: start;
+  font-size: 15px;
+}
+
+.definitions.definitions--math dt {
+  padding-top: 1px;
+  font-size: 14px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.definitions.definitions--math dd {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-family: var(--mono);
+  color: var(--ink);
+  line-height: 1.4;
+  white-space: pre;
 }
 
 .beats--numbered li::before {

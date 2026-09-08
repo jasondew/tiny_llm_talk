@@ -4,8 +4,8 @@ defmodule TinyLlmTalk.DeckTest do
   alias TinyLlmTalk.Deck
 
   describe "the arc" do
-    test "covers the eight sections of the outline, in order" do
-      assert Enum.map(Deck.sections(), & &1.number) == Enum.to_list(0..7)
+    test "covers the nine sections of the outline, in order" do
+      assert Enum.map(Deck.sections(), & &1.number) == Enum.to_list(0..8)
     end
 
     test "gives every slide a unique id" do
