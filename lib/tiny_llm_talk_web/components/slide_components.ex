@@ -826,7 +826,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
     <section class="slide slide--tight">
       <h2 class="slide__title slide__title--small">The transformer in this talk</h2>
       <div class="slide__fill">
-        <.block_diagram repeats="× 1" label="Block" />
+        <.block_diagram repeats="× 1" label="Block" done={["embedding + position", "attention"]} />
       </div>
     </section>
     """
@@ -889,28 +889,23 @@ defmodule TinyLlmTalkWeb.SlideComponents do
         x̂ = <span class="formula__group">x / rms(x)</span> · g
       </p>
       <dl class="definitions definitions--formula">
-        <.step n={1} step={@step}>
-          <dt>x</dt>
-          <dd>the dogs row, as it arrived</dd>
-        </.step>
-        <.step n={2} step={@step}>
-          <dt>rms(x) = √mean(x²)</dt>
-          <dd>root mean square: square each float, average them, take the root</dd>
-        </.step>
-        <.step n={3} step={@step}>
-          <dt>x / rms(x) · g</dt>
-          <dd>the row at size one, times {@width} learned floats, one per column</dd>
-        </.step>
+        <dt>rms(x) = √mean(x²)</dt>
+        <dd>root mean square: square each float, average them, take the root</dd>
+        <dt>g</dt>
+        <dd>{@width} learned floats, one per column</dd>
       </dl>
+      <.step :if={@block} n={2} step={@step}>
+        <p class="row-caption">the dogs row</p>
+      </.step>
       <div :if={@block} class="strip-stack strip-stack--tight">
-        <.step n={1} step={@step}>
+        <.step n={2} step={@step}>
           <.strips rows={[@block.input]} labels={["x · rms #{@rms}"]} cell={20} />
         </.step>
         <.step n={3} step={@step}>
           <.strips rows={[@scaled]} labels={["x / rms(x) · rms 1.00"]} cell={20} />
         </.step>
-        <.step n={3} step={@step}>
-          <.strips rows={[@block.norm1]} labels={["· g"]} cell={20} />
+        <.step n={4} step={@step}>
+          <.strips rows={[@block.norm1]} labels={["x / rms(x) · g"]} cell={20} />
         </.step>
       </div>
       <.untrained :if={is_nil(@block)} what="This row" />
@@ -1560,6 +1555,7 @@ defmodule TinyLlmTalkWeb.SlideComponents do
   attr :repeats, :string, default: nil
   attr :label, :string, default: nil, doc: "a name for the dashed box, at its left"
   attr :outputs, :string, default: nil, doc: "what the last layer says, if not this model's 32"
+  attr :done, :list, default: [], doc: "the labels of the stages the talk has covered"
 
   defp block_diagram(assigns) do
     layers = @block_layers
@@ -1574,29 +1570,32 @@ defmodule TinyLlmTalkWeb.SlideComponents do
 
     ~H"""
     <div class="stack stack--diagram">
-      <.block_layer layer={@first} />
+      <.block_layer layer={@first} done={@done} />
       <span class="stack__arrow">&darr;</span>
       <div class="stack__block">
         <span :if={@label} class="stack__block-label">{@label}</span>
         <span :if={@repeats} class="stack__repeats">{@repeats}</span>
         <%= for {layer, index} <- Enum.with_index(@block) do %>
           <span :if={index > 0} class="stack__arrow">&darr;</span>
-          <.block_layer layer={layer} />
+          <.block_layer layer={layer} done={@done} />
         <% end %>
       </div>
       <span class="stack__arrow">&darr;</span>
-      <.block_layer layer={@last} />
+      <.block_layer layer={@last} done={@done} />
     </div>
     """
   end
 
   attr :layer, :any, required: true
+  attr :done, :list, default: []
 
   defp block_layer(%{layer: {label, kind}} = assigns) do
-    assigns = assign(assigns, label: label, kind: kind)
+    assigns = assign(assigns, label: label, kind: kind, done?: label in assigns.done)
 
     ~H"""
-    <div class={["stack__layer", @kind && "stack__layer--#{@kind}"]}>{@label}</div>
+    <div class={["stack__layer", @kind && "stack__layer--#{@kind}", @done? && "stack__layer--done"]}>
+      {@label}<span :if={@done?} class="stack__layer-check">&check;</span>
+    </div>
     """
   end
 

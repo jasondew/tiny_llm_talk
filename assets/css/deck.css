@@ -814,6 +814,20 @@
   font-size: 18px;
 }
 
+/* A stage the talk has already covered wears a tick. */
+.stack__layer--done {
+  position: relative;
+}
+
+.stack__layer-check {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-family: var(--serif);
+  color: var(--accent);
+}
+
 /* The block itself, boxed, with how many times it repeats beside it. */
 .stack__block {
   position: relative;

@@ -312,7 +312,8 @@ defmodule TinyLlmTalk.Deck do
           title: "The transformer in this talk",
           notes: """
           The picture from slide 4 again, with the 1, and the dashed box
-          named: the block. Attention is done; what is left of the block is
+          named: the block. Embedding and attention wear ticks, the two
+          stages covered so far; what is left of the block is
           the two normalizations and the neural network, and the arrows
           between them. The next two slides take those two stages, then
           the block as code.
@@ -321,20 +322,21 @@ defmodule TinyLlmTalk.Deck do
         %Slide{
           id: :normalization,
           title: "Normalization",
-          steps: 3,
+          steps: 4,
           notes: """
           Say the idea first, nothing on the slide for it: rows come out
           of attention at whatever size attention made them, and the next
           stage wants them all at one size, or the big rows shout and the
           small ones vanish. Normalization rescales every row before
-          handing it on. Then three steps on the dogs row. First, x, the
-          row as it arrived, with its rms. Second, rms: root mean square.
-          Square every float so signs do not cancel, average the squares,
-          take the square root; one number per row, the row's typical
-          size. Third, divide the row by it, same direction at size one,
-          then multiply by g, thirty-two learned floats, one per column,
-          so the model can choose the size it wants per feature rather
-          than being stuck at one; the two strips show both. That is
+          handing it on. The formula and its two definitions are up from
+          the start: rms, root mean square, square every float so signs do
+          not cancel, average the squares, take the square root, one
+          number per row, the row's typical size; and g, thirty-two
+          learned floats, one per column. Then the dogs row, one strip a
+          step. First, x as it arrived, with its rms. Second, x divided
+          by it: same direction, size one. Third, times g, so the model
+          can choose the size it wants per feature rather than being
+          stuck at one. That is
           RMSNorm: no mean subtracted, no bias, which is the difference
           from LayerNorm, and the paper found the recentring buys nothing.
           Say, do not show: this runs twice per block, before attention and
